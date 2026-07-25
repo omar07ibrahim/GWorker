@@ -1,0 +1,295 @@
+{
+  "capture": {
+    "base_input_commit": "261dfd6694b6e80045ccfc9476270f10daa51a80",
+    "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
+    "environment": {
+      "HOME": ".gworker/terminal-capture-runtime/home",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "PYTHONHASHSEED": "0",
+      "PYTHONIOENCODING": "utf-8",
+      "PYTHONPATH": "src",
+      "TMPDIR": ".gworker/terminal-capture-runtime/tmp",
+      "TZ": "UTC"
+    },
+    "interpreter": {
+      "implementation": "CPython",
+      "version": "3.12.3"
+    },
+    "normalization": {
+      "absolute_paths": "<REPO> or <RUNTIME>",
+      "ansi_controls": "rejected",
+      "hostname": "<HOST>",
+      "runtime_timings": "not emitted by allowlisted commands",
+      "secret_signatures": "<REDACTED>",
+      "semantic_numbers": "preserved verbatim"
+    },
+    "working_directory": "."
+  },
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "scripts/demo_policy.py"
+      ],
+      "capture_id": "policy-demo",
+      "description": "Real output from the deterministic public policy demo. It shows the review history, evidence transition, arm scores, and selected next focus duration; it is not locked-evaluation evidence.",
+      "exit_code": 0,
+      "expected_exit_codes": [
+        0
+      ],
+      "host_dependent": false,
+      "host_note": null,
+      "sources": [
+        {
+          "byte_count": 12139,
+          "path": "scripts/demo_policy.py",
+          "sha256": "a9e4d6a459af30a5d920cead9b20d3a80b67c9a86b7b17ad05a34b419e8faa83"
+        },
+        {
+          "byte_count": 25419,
+          "path": "src/gworker/policy.py",
+          "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 1484,
+        "path": "docs/visuals/terminal/policy-demo.txt",
+        "sha256": "406f72a524554a7d71ed1c5deda699ce2d049fa7862b45deae28614fbeb03f3e"
+      },
+      "title": "Adaptive policy \u00b7 12 verified reviews",
+      "visual": {
+        "byte_count": 7606,
+        "path": "docs/visuals/terminal/policy-demo.svg",
+        "sha256": "9c263b3ce0045268b9eee4d0d8e2683aa933595241e9bf43d0cd7dcfd3cebf06"
+      }
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/demo_journal.py",
+        "--repo-root",
+        ".",
+        "--workspace",
+        ".gworker/visual-demo/terminal-capture",
+        "--reset"
+      ],
+      "capture_id": "journal-recovery",
+      "description": "Real output from the descriptor-safe synthetic journal demo. It writes the production SQLiteEventStore, reopens and replays it, then detects a logical mutation in a separate copy.",
+      "exit_code": 0,
+      "expected_exit_codes": [
+        0
+      ],
+      "host_dependent": false,
+      "host_note": null,
+      "sources": [
+        {
+          "byte_count": 28774,
+          "path": "scripts/demo_journal.py",
+          "sha256": "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
+          "byte_count": 22350,
+          "path": "src/gworker/storage.py",
+          "sha256": "f43d0c735fac30862bb8c33aa555dfd8e113038f3d00ad2f6d8f4320bf4249e3"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 1069,
+        "path": "docs/visuals/terminal/journal-recovery.txt",
+        "sha256": "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91"
+      },
+      "title": "SQLite journal \u00b7 reopen, replay, detect tamper",
+      "visual": {
+        "byte_count": 6454,
+        "path": "docs/visuals/terminal/journal-recovery.svg",
+        "sha256": "08cc240fd28121cd9f09a9029fcc16631232f4b568383cd340e6fe8759c582d7"
+      }
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/protocol_inventory.py"
+      ],
+      "capture_id": "protocol-inventory",
+      "description": "Real output from the read-only locked protocol inventory. It validates configuration and computes expected cardinalities without calling the evaluator or publication runner.",
+      "exit_code": 0,
+      "expected_exit_codes": [
+        0
+      ],
+      "host_dependent": false,
+      "host_note": null,
+      "sources": [
+        {
+          "byte_count": 7507,
+          "path": "scripts/protocol_inventory.py",
+          "sha256": "7b81d54c902dd837a9d3d7fefa2465dcbd0d778830e7879b1ee156830d1159d4"
+        },
+        {
+          "byte_count": 111328,
+          "path": "src/gworker/evaluation.py",
+          "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+        },
+        {
+          "byte_count": 97084,
+          "path": "src/gworker/evidence.py",
+          "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+        },
+        {
+          "byte_count": 25419,
+          "path": "src/gworker/policy.py",
+          "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+        },
+        {
+          "byte_count": 57791,
+          "path": "src/gworker/reporting.py",
+          "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 1547,
+        "path": "docs/visuals/terminal/protocol-inventory.txt",
+        "sha256": "306534aa044285aa55e06c86d275a00ea752a660f89caaf4d6f2e231d36ee31a"
+      },
+      "title": "Locked protocol \u00b7 expected inventory, zero results",
+      "visual": {
+        "byte_count": 8096,
+        "path": "docs/visuals/terminal/protocol-inventory.svg",
+        "sha256": "f207b34179dd8b49d32bb2edc496dadd7b3150719f7ebb5921cbfc3f43c8b510"
+      }
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.publication_runner",
+        "status"
+      ],
+      "capture_id": "publication-status",
+      "description": "Real path-free output from the publication runner's read-only status command. No publication run or evaluator is invoked.",
+      "exit_code": 0,
+      "expected_exit_codes": [
+        0
+      ],
+      "host_dependent": false,
+      "host_note": null,
+      "sources": [
+        {
+          "byte_count": 77982,
+          "path": "src/gworker/publication_runner.py",
+          "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
+        },
+        {
+          "byte_count": 70911,
+          "path": "src/gworker/publication_state.py",
+          "sha256": "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 75,
+        "path": "docs/visuals/terminal/publication-status.txt",
+        "sha256": "2834937ead3d73afdabee5aa5f3e96ad4bb4d3a0f60a63cf23d145ccce42abd4"
+      },
+      "title": "Publication gate \u00b7 unspent claim",
+      "visual": {
+        "byte_count": 2603,
+        "path": "docs/visuals/terminal/publication-status.svg",
+        "sha256": "8ca14d43b5b66a17da61d1f8045ba26e09d84f25f55d80133975252e267c8170"
+      }
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.publication_runner",
+        "preflight"
+      ],
+      "capture_id": "publication-preflight",
+      "description": "Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked.",
+      "exit_code": 2,
+      "expected_exit_codes": [
+        0,
+        2
+      ],
+      "host_dependent": true,
+      "host_note": "CAPTURED ON THIS HOST \u00b7 readiness may vary elsewhere",
+      "sources": [
+        {
+          "byte_count": 77982,
+          "path": "src/gworker/publication_runner.py",
+          "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
+        },
+        {
+          "byte_count": 61778,
+          "path": "src/gworker/resource_preflight.py",
+          "sha256": "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 249,
+        "path": "docs/visuals/terminal/publication-preflight.txt",
+        "sha256": "bc8d9c4b3b596d14813fe4bb41c10498432ea83bdedda75b6681ee71ca1e02cd"
+      },
+      "title": "Publication gate \u00b7 capacity preflight",
+      "visual": {
+        "byte_count": 3417,
+        "path": "docs/visuals/terminal/publication-preflight.svg",
+        "sha256": "6e594cae6792954c6b9c9170d5151c7323b4630514d6732fea5209a0ff69e739"
+      }
+    }
+  ],
+  "reproduction": {
+    "check": "PYTHONPATH=src python scripts/visuals/capture_terminal.py check",
+    "record": "PYTHONPATH=src python scripts/visuals/capture_terminal.py record",
+    "render_without_execution": "PYTHONPATH=src python scripts/visuals/capture_terminal.py render"
+  },
+  "safety": {
+    "arbitrary_commands_accepted": false,
+    "evaluator_executed": false,
+    "journal_workspace": ".gworker/visual-demo/terminal-capture",
+    "publication_run_executed": false,
+    "shell_used": false,
+    "synthetic_demo_data_only": true
+  },
+  "schema_version": "gworker-terminal-capture-manifest-v1",
+  "tool": {
+    "name": "gworker-terminal-capture",
+    "source": {
+      "byte_count": 36362,
+      "path": "scripts/visuals/capture_terminal.py",
+      "sha256": "b165a9199d5fd19d16573fc5859ca456c2769544c3fee24dbcc00686be6a7ad6"
+    },
+    "stdlib_only": true,
+    "version": "1"
+  }
+}

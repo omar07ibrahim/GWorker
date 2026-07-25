@@ -1,0 +1,23 @@
+GWorker journal demo | real SQLite store, synthetic events
+Workspace: .gworker/visual-demo/terminal-capture
+Database:  .gworker/visual-demo/terminal-capture/live/events.sqlite3
+Security:  file 0600, directory 0700, owner=current-user
+
+Append-only event stream
+ seq  occurred_at                  event_type
+   1  2026-07-24T09:00:00.000000Z  session_planned
+   2  2026-07-24T09:00:05.000000Z  focus_started
+   3  2026-07-24T09:12:30.000000Z  interruption_recorded
+   4  2026-07-24T09:40:05.000000Z  focus_completed
+   5  2026-07-24T09:40:10.000000Z  break_started
+   6  2026-07-24T09:48:10.000000Z  break_completed
+
+Reopen + replay: phase=completed, revision=6, terminal=True
+Durations: focus=2382s, break=480s, interruptions=1
+Integrity: PRAGMA quick_check=ok, sessions=1, events=6
+
+Safe synthetic tamper copy
+Copy:      .gworker/visual-demo/terminal-capture/tamper-copy/events.sqlite3
+SQLite:    quick_check=ok
+Replay:    detected=true (CorruptJournal: cannot decode stored event at 018f4f69-e7a2-7f84-8c2d-9f531c4e1000:3)
+Live journal remains verified and unchanged.

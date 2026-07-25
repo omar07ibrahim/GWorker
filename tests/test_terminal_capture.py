@@ -5,13 +5,14 @@ import hashlib
 import io
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ElementTree
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import cast
 from unittest.mock import call, patch
@@ -19,6 +20,99 @@ from unittest.mock import call, patch
 from scripts.visuals import capture_terminal
 
 TEST_TEMP_ROOT = capture_terminal.ROOT / ".gworker" / "terminal-capture-tests"
+FROZEN_BASE_INPUT_COMMIT = "261dfd6694b6e80045ccfc9476270f10daa51a80"
+FROZEN_TERMINAL_SHA256 = {
+    "journal-recovery.svg": (
+        "08cc240fd28121cd9f09a9029fcc16631232f4b568383cd340e6fe8759c582d7"
+    ),
+    "journal-recovery.txt": (
+        "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91"
+    ),
+    "manifest.json": (
+        "7c0d6c8435874a155ac650816bc0364351a9bae204549a03ec2d610be8a2c92c"
+    ),
+    "policy-demo.svg": (
+        "9c263b3ce0045268b9eee4d0d8e2683aa933595241e9bf43d0cd7dcfd3cebf06"
+    ),
+    "policy-demo.txt": (
+        "406f72a524554a7d71ed1c5deda699ce2d049fa7862b45deae28614fbeb03f3e"
+    ),
+    "protocol-inventory.svg": (
+        "f207b34179dd8b49d32bb2edc496dadd7b3150719f7ebb5921cbfc3f43c8b510"
+    ),
+    "protocol-inventory.txt": (
+        "306534aa044285aa55e06c86d275a00ea752a660f89caaf4d6f2e231d36ee31a"
+    ),
+    "publication-preflight.svg": (
+        "6e594cae6792954c6b9c9170d5151c7323b4630514d6732fea5209a0ff69e739"
+    ),
+    "publication-preflight.txt": (
+        "bc8d9c4b3b596d14813fe4bb41c10498432ea83bdedda75b6681ee71ca1e02cd"
+    ),
+    "publication-status.svg": (
+        "8ca14d43b5b66a17da61d1f8045ba26e09d84f25f55d80133975252e267c8170"
+    ),
+    "publication-status.txt": (
+        "2834937ead3d73afdabee5aa5f3e96ad4bb4d3a0f60a63cf23d145ccce42abd4"
+    ),
+}
+FROZEN_TERMINAL_BYTE_COUNTS = {
+    "journal-recovery.svg": 6_454,
+    "journal-recovery.txt": 1_069,
+    "manifest.json": 10_301,
+    "policy-demo.svg": 7_606,
+    "policy-demo.txt": 1_484,
+    "protocol-inventory.svg": 8_096,
+    "protocol-inventory.txt": 1_547,
+    "publication-preflight.svg": 3_417,
+    "publication-preflight.txt": 249,
+    "publication-status.svg": 2_603,
+    "publication-status.txt": 75,
+}
+FROZEN_CAPTURE_SOURCE_SHA256 = {
+    "scripts/demo_journal.py": (
+        "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
+    ),
+    "scripts/demo_policy.py": (
+        "a9e4d6a459af30a5d920cead9b20d3a80b67c9a86b7b17ad05a34b419e8faa83"
+    ),
+    "scripts/protocol_inventory.py": (
+        "7b81d54c902dd837a9d3d7fefa2465dcbd0d778830e7879b1ee156830d1159d4"
+    ),
+    "scripts/visuals/capture_terminal.py": (
+        "b165a9199d5fd19d16573fc5859ca456c2769544c3fee24dbcc00686be6a7ad6"
+    ),
+    "src/gworker/codec.py": (
+        "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+    ),
+    "src/gworker/domain.py": (
+        "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+    ),
+    "src/gworker/evaluation.py": (
+        "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+    ),
+    "src/gworker/evidence.py": (
+        "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+    ),
+    "src/gworker/policy.py": (
+        "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+    ),
+    "src/gworker/publication_runner.py": (
+        "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
+    ),
+    "src/gworker/publication_state.py": (
+        "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+    ),
+    "src/gworker/reporting.py": (
+        "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+    ),
+    "src/gworker/resource_preflight.py": (
+        "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+    ),
+    "src/gworker/storage.py": (
+        "f43d0c735fac30862bb8c33aa555dfd8e113038f3d00ad2f6d8f4320bf4249e3"
+    ),
+}
 
 
 def sha256(content: bytes) -> str:
@@ -638,6 +732,331 @@ class ManifestAndCheckTests(unittest.TestCase):
             commit = capture_terminal._head_commit()
 
         self.assertRegex(commit, r"^[0-9a-f]{40,64}$")
+        run.assert_not_called()
+
+
+class CommittedTerminalBundleTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.root = capture_terminal.TERMINAL_ROOT
+        self.manifest = cast(
+            dict[str, object],
+            json.loads((self.root / capture_terminal.MANIFEST_NAME).read_bytes()),
+        )
+        raw_commands = cast(list[dict[str, object]], self.manifest["commands"])
+        self.commands = {
+            cast(str, command["capture_id"]): command for command in raw_commands
+        }
+
+    def transcript(self, capture_id: str) -> str:
+        spec = capture_terminal.COMMAND_BY_ID[capture_id]
+        return (self.root / spec.transcript_name).read_text("utf-8")
+
+    def test_frozen_ten_assets_and_manifest_match_exact_bytes(self) -> None:
+        paths = {path.name: path for path in self.root.iterdir() if path.is_file()}
+
+        self.assertEqual(set(paths), set(FROZEN_TERMINAL_SHA256))
+        self.assertEqual(
+            {name: sha256(path.read_bytes()) for name, path in paths.items()},
+            FROZEN_TERMINAL_SHA256,
+        )
+        self.assertEqual(
+            {name: path.stat().st_size for name, path in paths.items()},
+            FROZEN_TERMINAL_BYTE_COUNTS,
+        )
+        for path in paths.values():
+            self.assertFalse(path.is_symlink())
+            self.assertTrue(path.is_file())
+        self.assertEqual(
+            capture_terminal._canonical_json(self.manifest),
+            paths[capture_terminal.MANIFEST_NAME].read_bytes(),
+        )
+        self.assertEqual(capture_terminal.check_bundle(), ())
+
+    def test_manifest_binds_exact_base_commit_and_source_bytes(self) -> None:
+        capture = cast(dict[str, object], self.manifest["capture"])
+        self.assertEqual(
+            capture["base_input_commit"],
+            FROZEN_BASE_INPUT_COMMIT,
+        )
+        self.assertEqual(
+            capture["base_input_commit_role"],
+            "Git HEAD at record time; per-file hashes bind exact source bytes.",
+        )
+        self.assertEqual(
+            capture["environment"],
+            {
+                "HOME": ".gworker/terminal-capture-runtime/home",
+                "LANG": "C",
+                "LC_ALL": "C",
+                "PYTHONHASHSEED": "0",
+                "PYTHONIOENCODING": "utf-8",
+                "PYTHONPATH": "src",
+                "TMPDIR": ".gworker/terminal-capture-runtime/tmp",
+                "TZ": "UTC",
+            },
+        )
+        self.assertEqual(
+            capture["interpreter"],
+            {"implementation": "CPython", "version": "3.12.3"},
+        )
+
+        observed_sources: dict[str, str] = {}
+        observed_sizes: dict[str, int] = {}
+        for command in self.commands.values():
+            sources = cast(list[dict[str, object]], command["sources"])
+            for source in sources:
+                path = cast(str, source["path"])
+                digest = cast(str, source["sha256"])
+                byte_count = cast(int, source["byte_count"])
+                if path in observed_sources:
+                    self.assertEqual(observed_sources[path], digest)
+                    self.assertEqual(observed_sizes[path], byte_count)
+                observed_sources[path] = digest
+                observed_sizes[path] = byte_count
+
+        tool = cast(dict[str, object], self.manifest["tool"])
+        tool_source = cast(dict[str, object], tool["source"])
+        tool_path = cast(str, tool_source["path"])
+        observed_sources[tool_path] = cast(str, tool_source["sha256"])
+        observed_sizes[tool_path] = cast(int, tool_source["byte_count"])
+
+        self.assertEqual(observed_sources, FROZEN_CAPTURE_SOURCE_SHA256)
+        for relative, expected_sha256 in FROZEN_CAPTURE_SOURCE_SHA256.items():
+            source_path = capture_terminal.ROOT / relative
+            self.assertEqual(sha256(source_path.read_bytes()), expected_sha256)
+            self.assertEqual(source_path.stat().st_size, observed_sizes[relative])
+
+    def test_policy_transcript_proves_evidence_and_preserves_nonclaim(self) -> None:
+        content = self.transcript("policy-demo")
+        rows = re.findall(
+            r"^\s+(\d+)\s+(focus-\d+)\s+\d+\.\d+\s+"
+            r"(global|exact)\s+(too_short|just_right|too_long)\s+"
+            r"(true|false)$",
+            content,
+            flags=re.MULTILINE,
+        )
+
+        self.assertEqual(len(rows), 12)
+        self.assertEqual(tuple(int(row[0]) for row in rows), tuple(range(1, 13)))
+        self.assertEqual(
+            tuple(row[2] for row in rows),
+            ("global",) * 6 + ("exact",) * 6,
+        )
+        self.assertEqual(rows[0][1:], ("focus-25", "global", "too_short", "false"))
+        self.assertEqual(rows[4][1:], ("focus-50", "global", "too_long", "true"))
+        self.assertIn("Decision 13: focus-40 at p=0.732265", content)
+        self.assertIn("Evidence: exact:deep_work:medium (12 reviews)", content)
+        self.assertIn(
+            "Reasons: exact_evidence, bounded_exploration, one_step_guardrail",
+            content,
+        )
+        self.assertIn("probabilities sum to 1.000000000000", content)
+        self.assertIn(
+            "Notice: synthetic API demo, not locked-evaluation evidence.",
+            content,
+        )
+        self.assertNotIn("optimal", content.lower())
+
+    def test_journal_transcript_proves_real_reopen_replay_and_tamper_detection(
+        self,
+    ) -> None:
+        content = self.transcript("journal-recovery")
+        event_rows = re.findall(
+            r"^\s+(\d+)\s+\d{4}-\d{2}-\d{2}T\S+\s+([a-z_]+)$",
+            content,
+            flags=re.MULTILINE,
+        )
+
+        self.assertEqual(
+            event_rows,
+            [
+                ("1", "session_planned"),
+                ("2", "focus_started"),
+                ("3", "interruption_recorded"),
+                ("4", "focus_completed"),
+                ("5", "break_started"),
+                ("6", "break_completed"),
+            ],
+        )
+        self.assertIn(
+            "Workspace: .gworker/visual-demo/terminal-capture",
+            content,
+        )
+        self.assertIn("file 0600, directory 0700, owner=current-user", content)
+        self.assertIn(
+            "Reopen + replay: phase=completed, revision=6, terminal=True",
+            content,
+        )
+        self.assertIn(
+            "Integrity: PRAGMA quick_check=ok, sessions=1, events=6",
+            content,
+        )
+        self.assertIn("Safe synthetic tamper copy", content)
+        self.assertIn(
+            "Replay:    detected=true (CorruptJournal:",
+            content,
+        )
+        self.assertIn("Live journal remains verified and unchanged.", content)
+
+    def test_inventory_transcript_is_expectation_only_with_zero_result_data(
+        self,
+    ) -> None:
+        content = self.transcript("protocol-inventory")
+
+        self.assertIn(
+            "GWorker locked protocol inventory | no evaluation executed",
+            content,
+        )
+        self.assertIn("split=eval  horizon=288  policy_replicas=4", content)
+        self.assertIn(
+            "seeds=128 (0..127)  personas=9  availability_modes=2",
+            content,
+        )
+        self.assertIn("decisions                         6,635,520", content)
+        self.assertIn("raw_trace_points                  1,032,192", content)
+        self.assertIn(
+            "Call surface: validate_experiment_config, "
+            "expected_publication_cardinalities",
+            content,
+        )
+        self.assertTrue(
+            content.endswith("Result data: none (inventory arithmetic only).\n")
+        )
+        self.assertNotIn("evaluation completed", content.lower())
+
+    def test_status_and_host_preflight_are_exact_fail_closed_observations(
+        self,
+    ) -> None:
+        status = json.loads(self.transcript("publication-status"))
+        preflight = json.loads(self.transcript("publication-preflight"))
+
+        self.assertEqual(
+            status,
+            {
+                "artifacts": [],
+                "disposition": "not-started",
+                "ok": True,
+                "stage": "unclaimed",
+            },
+        )
+        self.assertEqual(
+            preflight,
+            {
+                "effective_memory_bytes": 1_944_449_024,
+                "effective_swap_bytes": 36_864,
+                "failure_codes": ["memory-headroom", "swap-headroom"],
+                "filesystem_available_bytes": 36_196_450_304,
+                "filesystem_available_inodes": 24_646_833,
+                "nofile_soft_limit": 1_024,
+                "ok": False,
+                "ready": False,
+            },
+        )
+        status_record = self.commands["publication-status"]
+        preflight_record = self.commands["publication-preflight"]
+        self.assertEqual(status_record["exit_code"], 0)
+        self.assertIs(status_record["host_dependent"], False)
+        self.assertEqual(preflight_record["exit_code"], 2)
+        self.assertIs(preflight_record["host_dependent"], True)
+        self.assertEqual(
+            preflight_record["host_note"],
+            "CAPTURED ON THIS HOST · readiness may vary elsewhere",
+        )
+        safety = cast(dict[str, object], self.manifest["safety"])
+        self.assertIs(safety["publication_run_executed"], False)
+        self.assertIs(safety["evaluator_executed"], False)
+        for command in self.commands.values():
+            argv = cast(list[str], command["argv"])
+            self.assertNotIn("run", argv)
+            self.assertNotIn("run_experiment", argv)
+
+    def test_bundle_has_no_host_paths_personal_data_or_secret_signatures(
+        self,
+    ) -> None:
+        forbidden_literals = (
+            str(capture_terminal.ROOT),
+            "/home/",
+            "/Users/",
+            "C:\\Users\\",
+            "github_pat_",
+            "ghp_",
+            "AWS_SECRET_ACCESS_KEY",
+            "BEGIN PRIVATE KEY",
+            "31526072+",
+            "@users.noreply.github.com",
+        )
+        for path in sorted(self.root.iterdir()):
+            with self.subTest(path=path.name):
+                content = path.read_text("utf-8")
+                for forbidden in forbidden_literals:
+                    self.assertNotIn(forbidden, content)
+                self.assertIsNone(capture_terminal.SECRET_PATTERN.search(content))
+                self.assertNotRegex(
+                    content,
+                    r"\b(?:elapsed|wall[_ -]?time|real\s+\d+m)\b",
+                )
+                if path.suffix in {".txt", ".json"}:
+                    self.assertIsNone(capture_terminal.ABSOLUTE_PATH.search(content))
+
+    def test_every_svg_is_accessible_and_matches_transcript_render_exactly(
+        self,
+    ) -> None:
+        namespace = {"svg": "http://www.w3.org/2000/svg"}
+        for spec in capture_terminal.COMMANDS:
+            with self.subTest(capture_id=spec.capture_id):
+                command = self.commands[spec.capture_id]
+                exit_code = cast(int, command["exit_code"])
+                transcript = (self.root / spec.transcript_name).read_bytes()
+                visual = (self.root / spec.visual_name).read_bytes()
+                record = capture_terminal.CaptureRecord(
+                    stdout=transcript,
+                    stderr=b"",
+                    exit_code=exit_code,
+                )
+                self.assertEqual(
+                    visual,
+                    capture_terminal.render_svg(spec, record),
+                )
+                self.assertEqual(
+                    capture_terminal._validate_svg(visual, spec),
+                    (),
+                )
+                root = ElementTree.fromstring(visual)
+                title = root.find("svg:title", namespace)
+                description = root.find("svg:desc", namespace)
+                labelled_by = root.attrib["aria-labelledby"].split()
+                self.assertEqual(root.attrib["role"], "img")
+                self.assertIsNotNone(title)
+                self.assertIsNotNone(description)
+                self.assertIn(
+                    title.attrib["id"],  # type: ignore[union-attr]
+                    labelled_by,
+                )
+                self.assertIn(
+                    description.attrib["id"],  # type: ignore[union-attr]
+                    labelled_by,
+                )
+                text = visual.decode("utf-8")
+                self.assertIn(spec.title, text)
+                self.assertIn(
+                    f"REAL OUTPUT · EXIT {exit_code}",
+                    text,
+                )
+                self.assertIn(sha256(transcript), text)
+
+    def test_committed_check_cli_is_subprocess_free(self) -> None:
+        output = io.StringIO()
+        with (
+            patch.object(subprocess, "run") as run,
+            redirect_stdout(output),
+        ):
+            code = capture_terminal.main(["check"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            output.getvalue(),
+            "verified 5 terminal captures without command execution\n",
+        )
         run.assert_not_called()
 
 

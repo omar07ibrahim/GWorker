@@ -1,0 +1,31 @@
+GWorker policy demo | deterministic synthetic scenario
+Policy: hierarchical-softmax-ucb-v1.8c10875dd38a025d
+Reviewed decisions: 12 | target: 40 minutes
+
+Review history
+ seq  selected   propensity  bucket   feedback     completed
+   1  focus-25     0.250000  global   too_short    false
+   2  focus-40     0.529519  global   just_right   true
+   3  focus-40     0.546124  global   just_right   true
+   4  focus-40     0.585824  global   just_right   true
+   5  focus-50     0.304643  global   too_long     true
+   6  focus-40     0.833220  global   just_right   true
+   7  focus-40     0.742099  exact    just_right   true
+   8  focus-40     0.743087  exact    just_right   true
+   9  focus-40     0.742256  exact    just_right   true
+  10  focus-40     0.740410  exact    just_right   true
+  11  focus-40     0.737981  exact    just_right   true
+  12  focus-40     0.735216  exact    just_right   true
+
+Decision 13: focus-40 at p=0.732265
+Evidence: exact:deep_work:medium (12 reviews)
+Reasons: exact_evidence, bounded_exploration, one_step_guardrail
+
+Arm scores
+ arm        n  posterior  direction  exploration  score      probability
+ focus-25    1   0.366667   0.010714     0.332534  0.709915     0.115064
+ focus-40   10   0.925000   0.021429     0.166267  1.112695     0.732265
+ focus-50    1   0.433333   0.010714     0.332534  0.776581     0.152672
+
+Checks: review provenance bound; probabilities sum to 1.000000000000
+Notice: synthetic API demo, not locked-evaluation evidence.

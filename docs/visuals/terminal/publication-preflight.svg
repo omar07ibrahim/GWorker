@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" role="img" aria-labelledby="publication-preflight-title publication-preflight-description" data-capture-id="publication-preflight">
+<title id="publication-preflight-title">Publication gate · capacity preflight</title>
+<desc id="publication-preflight-description">Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked. The canonical plain-text transcript is stored beside this SVG.</desc>
+<rect x="0" y="0" width="1280" height="440" fill="#0B1220"/>
+<rect x="34" y="30" width="1212" height="380" rx="16" fill="#101828" stroke="#344054" stroke-width="2"/>
+<circle cx="64" cy="60" r="7" fill="#F97066"/>
+<circle cx="88" cy="60" r="7" fill="#FDB022"/>
+<circle cx="112" cy="60" r="7" fill="#6CE9A6"/>
+<text x="640" y="66" fill="#98A2B3" font-size="15" font-family="monospace" text-anchor="middle">GWORKER · REPRODUCIBLE TERMINAL EVIDENCE</text>
+<text x="62" y="112" fill="#F2F4F7" font-size="25" font-weight="700" font-family="monospace">Publication gate · capacity preflight</text>
+<rect x="1016" y="88" width="196" height="34" rx="17" fill="#0B1220" stroke="#FDB022" stroke-width="1"/>
+<text x="1114" y="111" fill="#FDB022" font-size="14" font-weight="700" font-family="monospace" text-anchor="middle">REAL OUTPUT · EXIT 2</text>
+<text x="62" y="144" fill="#7CD4FD" font-size="14" font-family="monospace">TRANSCRIPT SHA-256 · bc8d9c4b3b596d14813fe4bb41c10498432ea83bdedda75b6681ee71ca1e02cd</text>
+<rect x="62" y="160" width="1150" height="28" rx="6" fill="#0B1220" stroke="#FDB022" stroke-width="1"/>
+<text x="76" y="180" fill="#FDB022" font-size="14" font-weight="700" font-family="monospace">CAPTURED ON THIS HOST · readiness may vary elsewhere</text>
+<text x="62" y="204" fill="#6CE9A6" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">$ python -m gworker.publication_runner preflight</text>
+<text x="62" y="226" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="248" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">{&quot;effective_memory_bytes&quot;:1944449024,&quot;effective_swap_bytes&quot;:36864,&quot;failure_codes&quot;:[&quot;memory-headroom&quot;,&quot;swap-h</text>
+<text x="62" y="270" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">eadroom&quot;],&quot;filesystem_available_bytes&quot;:36196450304,&quot;filesystem_available_inodes&quot;:24646833,&quot;nofile_soft_limit</text>
+<text x="62" y="292" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">&quot;:1024,&quot;ok&quot;:false,&quot;ready&quot;:false}</text>
+<text x="62" y="314" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="336" fill="#FDB022" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">[exit 2]</text>
+<line x1="62" y1="370" x2="1212" y2="370" stroke="#344054" stroke-width="1"/>
+<text x="62" y="397" fill="#98A2B3" font-size="13" font-family="monospace">Canonical transcript · docs/visuals/terminal/publication-preflight.txt</text>
+</svg>

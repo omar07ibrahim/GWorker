@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="874" viewBox="0 0 1280 874" role="img" aria-labelledby="journal-recovery-title journal-recovery-description" data-capture-id="journal-recovery">
+<title id="journal-recovery-title">SQLite journal · reopen, replay, detect tamper</title>
+<desc id="journal-recovery-description">Real output from the descriptor-safe synthetic journal demo. It writes the production SQLiteEventStore, reopens and replays it, then detects a logical mutation in a separate copy. The canonical plain-text transcript is stored beside this SVG.</desc>
+<rect x="0" y="0" width="1280" height="874" fill="#0B1220"/>
+<rect x="34" y="30" width="1212" height="814" rx="16" fill="#101828" stroke="#344054" stroke-width="2"/>
+<circle cx="64" cy="60" r="7" fill="#F97066"/>
+<circle cx="88" cy="60" r="7" fill="#FDB022"/>
+<circle cx="112" cy="60" r="7" fill="#6CE9A6"/>
+<text x="640" y="66" fill="#98A2B3" font-size="15" font-family="monospace" text-anchor="middle">GWORKER · REPRODUCIBLE TERMINAL EVIDENCE</text>
+<text x="62" y="112" fill="#F2F4F7" font-size="25" font-weight="700" font-family="monospace">SQLite journal · reopen, replay, detect tamper</text>
+<rect x="1016" y="88" width="196" height="34" rx="17" fill="#0B1220" stroke="#6CE9A6" stroke-width="1"/>
+<text x="1114" y="111" fill="#6CE9A6" font-size="14" font-weight="700" font-family="monospace" text-anchor="middle">REAL OUTPUT · EXIT 0</text>
+<text x="62" y="144" fill="#7CD4FD" font-size="14" font-family="monospace">TRANSCRIPT SHA-256 · bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91</text>
+<text x="62" y="176" fill="#6CE9A6" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">$ python scripts/demo_journal.py --repo-root . --workspace .gworker/visual-demo/terminal-capture --reset</text>
+<text x="62" y="198" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="220" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">GWorker journal demo | real SQLite store, synthetic events</text>
+<text x="62" y="242" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Workspace: .gworker/visual-demo/terminal-capture</text>
+<text x="62" y="264" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Database:  .gworker/visual-demo/terminal-capture/live/events.sqlite3</text>
+<text x="62" y="286" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Security:  file 0600, directory 0700, owner=current-user</text>
+<text x="62" y="308" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="330" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Append-only event stream</text>
+<text x="62" y="352" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"> seq  occurred_at                  event_type</text>
+<text x="62" y="374" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   1  2026-07-24T09:00:00.000000Z  session_planned</text>
+<text x="62" y="396" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   2  2026-07-24T09:00:05.000000Z  focus_started</text>
+<text x="62" y="418" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   3  2026-07-24T09:12:30.000000Z  interruption_recorded</text>
+<text x="62" y="440" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   4  2026-07-24T09:40:05.000000Z  focus_completed</text>
+<text x="62" y="462" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   5  2026-07-24T09:40:10.000000Z  break_started</text>
+<text x="62" y="484" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">   6  2026-07-24T09:48:10.000000Z  break_completed</text>
+<text x="62" y="506" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="528" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Reopen + replay: phase=completed, revision=6, terminal=True</text>
+<text x="62" y="550" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Durations: focus=2382s, break=480s, interruptions=1</text>
+<text x="62" y="572" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Integrity: PRAGMA quick_check=ok, sessions=1, events=6</text>
+<text x="62" y="594" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="616" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Safe synthetic tamper copy</text>
+<text x="62" y="638" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Copy:      .gworker/visual-demo/terminal-capture/tamper-copy/events.sqlite3</text>
+<text x="62" y="660" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">SQLite:    quick_check=ok</text>
+<text x="62" y="682" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Replay:    detected=true (CorruptJournal: cannot decode stored event at </text>
+<text x="62" y="704" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">018f4f69-e7a2-7f84-8c2d-9f531c4e1000:3)</text>
+<text x="62" y="726" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">Live journal remains verified and unchanged.</text>
+<text x="62" y="748" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
+<text x="62" y="770" fill="#6CE9A6" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">[exit 0]</text>
+<line x1="62" y1="804" x2="1212" y2="804" stroke="#344054" stroke-width="1"/>
+<text x="62" y="831" fill="#98A2B3" font-size="13" font-family="monospace">Canonical transcript · docs/visuals/terminal/journal-recovery.txt</text>
+</svg>
