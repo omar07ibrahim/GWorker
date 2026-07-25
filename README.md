@@ -3,12 +3,13 @@
 GWorker is becoming a local-first engine for adaptive focus experiments. Instead
 of treating a timer as the product, it models each work block as an auditable
 sequence of domain events that can later be replayed, evaluated, and used by a
-privacy-preserving recommendation policy.
+privacy-conscious recommendation policy.
 
 > **Development status:** the event-sourced domain foundation and transactional
-> local journal are implemented. The adaptive policy, counterfactual evaluation,
-> the CLI, and reproducible visual evidence are the next incremental milestones.
-> This README deliberately does not claim that those pieces exist yet.
+> local journal are implemented, together with an explainable adaptive-duration
+> policy. Synthetic evaluation, journal integration, the CLI, and reproducible
+> visual evidence remain incremental milestones. This README deliberately does
+> not claim that those pieces exist yet.
 
 ## Why an event log?
 
@@ -31,9 +32,67 @@ stateDiagram-v2
 ```
 
 The reducer rejects gaps, out-of-order timestamps, cross-session events, and
-invalid transitions. A future policy can therefore learn from an explicit
-outcome history instead of silently inferring success from a countdown reaching
-zero.
+invalid transitions. The policy can therefore learn from an explicit outcome
+history instead of silently inferring success from a countdown reaching zero.
+
+## How the duration policy works
+
+The policy chooses among four bounded focus/break templates: 15/3, 25/5, 40/8,
+and 50/10 minutes. It uses only a coarse task category, self-reported energy,
+available time, the previous template, and completed explicit reviews. It never
+reads objective text.
+
+```mermaid
+flowchart LR
+    C[Explicit context] --> G[Availability and one-step guardrails]
+    H[Explicit reviewed decisions] --> W[Bounded sliding window]
+    W --> B[Exact context, task, or global backoff]
+    B --> S[Posterior mean + ordinal hint + UCB bonus]
+    G --> S
+    S --> P[Softmax with probability floor]
+    P --> R[Recommendation + propensity + reasons]
+    R --> F[Explicit fit and completion review]
+    F --> H
+```
+
+For each feasible template, the scorer combines:
+
+- a shrinkage posterior over a bounded reward: 80% “duration felt right” and
+  20% explicit objective completion;
+- a small, separately exposed ordinal adjustment when the user says a reviewed
+  duration was too short or too long;
+- an uncertainty bonus that keeps under-observed templates discoverable.
+
+Softmax sampling converts those scores into logged action probabilities. Every
+feasible action retains a configured probability floor (2% by default), which
+supports later propensity-aware evaluation instead of hiding deterministic
+selection bias. Availability is checked against the complete focus-plus-break
+budget. If a previous duration exists, the recommendation normally moves at
+most one adjacent template.
+
+Each recommendation carries its caller-supplied UUID and monotonic sequence,
+exact propensity, evidence bucket, per-arm score decomposition, and reason
+codes. Its policy ID contains a deterministic SHA-256 fingerprint of the full
+configuration and template set. Numerically equivalent configuration values are
+canonicalized before hashing.
+
+The kernel inspects at most the final configured number of reviews and requires
+that tail to be ordered oldest-to-newest by a strictly increasing decision
+sequence. Within that bounded tail it fails closed on a duplicate decision,
+foreign policy configuration, unknown template, or guardrail-violating action.
+The future journal integration will own global uniqueness across reviews that
+have already fallen out of the learning window.
+
+`Recommendation.review()` preserves the chosen action and its propensity.
+Directly constructing a `ReviewedDecision` validates its structure but cannot
+prove that the probability originated from a recommendation. Propensity-aware
+evaluation will therefore wait for journal-backed recommendation/review
+linkage; the current implementation makes no verified-log claim.
+
+The ordinal adjustment is a transparent preference heuristic, not observed
+counterfactual reward and not evidence that a longer or shorter session causes
+better work. The upcoming simulator will evaluate it against fixed and adaptive
+baselines under controlled synthetic preference drift.
 
 ## Current scope
 
@@ -44,6 +103,9 @@ zero.
 - A canonical, versioned JSON event codec that rejects unknown fields.
 - A private SQLite journal using WAL, `synchronous=FULL`, transactional appends,
   unique aggregate revisions, integrity checks, and full replay verification.
+- A sliding-window hierarchical softmax-UCB duration policy with explicit
+  feedback, bounded exploration, logged propensities, and explainable arm
+  scores.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
@@ -60,10 +122,13 @@ GWorker is intended for personal self-experimentation, not employee monitoring.
 It has no dedicated identity fields, device fingerprinting, remote analytics, or
 background surveillance. A local journal still contains sensitive behavioral
 data: objective text, UTC timestamps, durations, interruptions, and abandonment
-reasons. Journals therefore stay on the user's machine by default and are
-ignored by Git. An objective can itself contain a name or account identifier;
-GWorker cannot infer and redact that safely. Synthetic fixtures—not a
-developer's real work history—will power committed demos and screenshots.
+reasons. Explicit policy reviews additionally retain coarse task kind,
+self-reported energy, availability, prior duration, chosen template, fit,
+completion, and propensity. Journals therefore stay on the user's machine by
+default and are ignored by Git. An objective can itself contain a name or
+account identifier; GWorker cannot infer and redact that safely. Synthetic
+fixtures—not a developer's real work history—will power committed demos and
+screenshots.
 
 The journal is permission-hardened, not encrypted by GWorker. Device or
 full-disk encryption remains the protection against an attacker who can read the
@@ -76,10 +141,12 @@ user is outside this boundary: it can read or rewrite that user's database
 directly. Replay verification detects malformed or inconsistent data; it is not
 a cryptographic authenticity proof against such a process.
 
-The adaptive milestone will recommend a work-block duration and expose the
-evidence behind that choice. It will not assign a universal “productivity
-score,” diagnose health conditions, or claim causal effects from observational
-data.
+The adaptive policy recommends a work-block duration and exposes the evidence
+behind that choice. It does not assign a universal “productivity score,”
+diagnose health conditions, or claim causal effects from observational data.
+Only an explicit reviewed decision can enter its learning history; merely
+starting a timer, leaving a window open, or generating a recommendation creates
+no learning signal.
 
 ## Rehabilitation note
 
@@ -95,8 +162,11 @@ release decision for Omar.
 
 ## Roadmap
 
-1. Deterministic CLI simulation and crash-recovery workflow.
-2. Contextual duration policy with logged action probabilities.
-3. Offline replay evaluation with uncertainty and baseline comparisons.
-4. Reproducible CLI captures, architecture diagrams, result plots, and a short
-   terminal demo generated from synthetic data.
+1. Deterministic synthetic preference-drift evaluation with paired baselines,
+   uncertainty intervals, and generated result plots.
+2. Journal integration plus a deterministic CLI simulation and crash-recovery
+   workflow.
+3. Offline replay evaluation with propensity diagnostics and baseline
+   comparisons.
+4. Reproducible CLI captures and a short terminal demo generated from synthetic
+   data.
