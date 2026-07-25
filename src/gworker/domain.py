@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import ClassVar, TypeAlias
+from unicodedata import category
 from uuid import UUID
 
 MAX_OBJECTIVE_LENGTH = 240
@@ -85,6 +86,44 @@ def _validate_duration(
         )
 
 
+def _validate_safe_text(value: object, field_name: str, maximum_length: int) -> str:
+    if not isinstance(value, str):
+        raise InvalidEvent(f"{field_name} must be a string")
+    if value != value.strip():
+        raise InvalidEvent(f"{field_name} must not have surrounding whitespace")
+    if not 1 <= len(value) <= maximum_length:
+        raise InvalidEvent(
+            f"{field_name} must contain 1 to {maximum_length} characters"
+        )
+    if any(category(character).startswith("C") for character in value):
+        raise InvalidEvent(
+            f"{field_name} must not contain control or format characters"
+        )
+    return value
+
+
+def _validate_nonnegative_integer(value: object, field_name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise InvalidEvent(f"{field_name} must be an integer")
+    if value < 0:
+        raise InvalidEvent(f"{field_name} must not be negative")
+    return value
+
+
+def _validate_policy_id(value: object) -> str:
+    policy_id = _validate_safe_text(value, "policy_id", MAX_POLICY_ID_LENGTH)
+    if not all(
+        character.isascii()
+        and (character.islower() or character.isdigit() or character in ".-_")
+        for character in policy_id
+    ):
+        raise InvalidEvent(
+            "policy_id may contain lowercase ASCII letters, digits, dot, dash, "
+            "and underscore"
+        )
+    return policy_id
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class EventMetadata:
     """Fields shared by every event in the v1 domain schema."""
@@ -119,29 +158,14 @@ class SessionPlanned(EventMetadata):
 
     def __post_init__(self) -> None:
         super(SessionPlanned, self).__post_init__()
-        if not isinstance(self.objective, str):
-            raise InvalidEvent("objective must be a string")
-        if self.objective != self.objective.strip():
-            raise InvalidEvent("objective must not have surrounding whitespace")
-        if not 1 <= len(self.objective) <= MAX_OBJECTIVE_LENGTH:
-            raise InvalidEvent(
-                f"objective must contain 1 to {MAX_OBJECTIVE_LENGTH} characters"
-            )
-        if any(
-            character.isspace() and character not in {" ", "\t"}
-            for character in self.objective
-        ):
-            raise InvalidEvent("objective must be a single line")
+        _validate_safe_text(
+            self.objective,
+            "objective",
+            MAX_OBJECTIVE_LENGTH,
+        )
         _validate_duration(self.target_focus_seconds, "target_focus_seconds")
         _validate_duration(self.target_break_seconds, "target_break_seconds")
-        if not isinstance(self.policy_id, str):
-            raise InvalidEvent("policy_id must be a string")
-        if self.policy_id != self.policy_id.strip():
-            raise InvalidEvent("policy_id must not have surrounding whitespace")
-        if not 1 <= len(self.policy_id) <= MAX_POLICY_ID_LENGTH:
-            raise InvalidEvent(
-                f"policy_id must contain 1 to {MAX_POLICY_ID_LENGTH} characters"
-            )
+        _validate_policy_id(self.policy_id)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -230,6 +254,7 @@ class SessionState:
     """Projection obtained solely by replaying a session's events."""
 
     session_id: UUID
+    event_ids: frozenset[UUID]
     revision: int
     phase: SessionPhase
     objective: str
@@ -242,6 +267,96 @@ class SessionState:
     actual_break_seconds: int | None
     abandon_reason: AbandonReason | None
     last_occurred_at: datetime
+
+    def __post_init__(self) -> None:
+        _validate_identifier(self.session_id, "session_id")
+        if not isinstance(self.event_ids, frozenset):
+            raise InvalidEvent("event_ids must be a frozenset")
+        for event_id in self.event_ids:
+            _validate_identifier(event_id, "event_ids entry")
+        if isinstance(self.revision, bool) or not isinstance(self.revision, int):
+            raise InvalidEvent("revision must be an integer")
+        if self.revision < 1 or self.revision != len(self.event_ids):
+            raise InvalidEvent("revision must equal the number of unique event_ids")
+        if not isinstance(self.phase, SessionPhase):
+            raise InvalidEvent("phase must be a SessionPhase")
+        _validate_safe_text(self.objective, "objective", MAX_OBJECTIVE_LENGTH)
+        _validate_policy_id(self.policy_id)
+        _validate_duration(self.target_focus_seconds, "target_focus_seconds")
+        _validate_duration(self.target_break_seconds, "target_break_seconds")
+        _validate_nonnegative_integer(
+            self.interruption_count,
+            "interruption_count",
+        )
+        _validate_nonnegative_integer(
+            self.interruption_seconds,
+            "interruption_seconds",
+        )
+        if self.interruption_count == 0 and self.interruption_seconds != 0:
+            raise InvalidEvent(
+                "interruption_seconds must be zero without interruptions"
+            )
+        if self.actual_focus_seconds is not None:
+            _validate_duration(self.actual_focus_seconds, "actual_focus_seconds")
+        if self.actual_break_seconds is not None:
+            _validate_duration(self.actual_break_seconds, "actual_break_seconds")
+        if self.abandon_reason is not None and not isinstance(
+            self.abandon_reason,
+            AbandonReason,
+        ):
+            raise InvalidEvent("abandon_reason must be an AbandonReason or None")
+        _validate_timestamp(self.last_occurred_at)
+
+        before_focus_completion = {
+            SessionPhase.PLANNED,
+            SessionPhase.FOCUSING,
+        }
+        after_focus_completion = {
+            SessionPhase.FOCUS_COMPLETE,
+            SessionPhase.BREAKING,
+            SessionPhase.COMPLETED,
+        }
+        if (
+            self.phase in before_focus_completion
+            and self.actual_focus_seconds is not None
+        ):
+            raise InvalidEvent("focus duration is not valid before focus completion")
+        if self.phase in after_focus_completion and self.actual_focus_seconds is None:
+            raise InvalidEvent("focus duration is required after focus completion")
+        if self.phase is SessionPhase.COMPLETED:
+            if self.actual_break_seconds is None:
+                raise InvalidEvent("break duration is required for a completed session")
+        elif self.actual_break_seconds is not None:
+            raise InvalidEvent("break duration is only valid for a completed session")
+        if self.phase is SessionPhase.ABANDONED:
+            if self.abandon_reason is None:
+                raise InvalidEvent("abandon_reason is required for abandonment")
+        elif self.abandon_reason is not None:
+            raise InvalidEvent("abandon_reason is only valid for abandonment")
+
+        expected_revision = {
+            SessionPhase.PLANNED: 1,
+            SessionPhase.FOCUSING: 2 + self.interruption_count,
+            SessionPhase.FOCUS_COMPLETE: 3 + self.interruption_count,
+            SessionPhase.BREAKING: 4 + self.interruption_count,
+            SessionPhase.COMPLETED: 5 + self.interruption_count,
+        }.get(self.phase)
+        if expected_revision is not None and self.revision != expected_revision:
+            raise InvalidEvent(
+                f"revision is inconsistent with phase {self.phase.value}"
+            )
+        if self.phase is SessionPhase.ABANDONED:
+            if self.actual_focus_seconds is not None:
+                allowed_revisions = {
+                    4 + self.interruption_count,
+                    5 + self.interruption_count,
+                }
+            elif self.interruption_count:
+                allowed_revisions = {3 + self.interruption_count}
+            else:
+                allowed_revisions = {2, 3}
+            if self.revision not in allowed_revisions:
+                raise InvalidEvent("revision is inconsistent with abandonment history")
 
     @property
     def is_terminal(self) -> bool:
@@ -268,6 +383,8 @@ def _ensure_contiguous(state: SessionState, event: DomainEvent) -> None:
         )
     if event.occurred_at < state.last_occurred_at:
         raise InvalidTransition("event timestamp precedes the current projection")
+    if event.event_id in state.event_ids:
+        raise InvalidTransition("event_id has already been applied")
     if state.is_terminal:
         raise InvalidTransition(f"session is already {state.phase.value}")
 
@@ -285,6 +402,7 @@ def apply_event(
             raise InvalidTransition("the first event must have sequence 1")
         return SessionState(
             session_id=event.session_id,
+            event_ids=frozenset({event.event_id}),
             revision=event.sequence,
             phase=SessionPhase.PLANNED,
             objective=event.objective,
@@ -303,6 +421,7 @@ def apply_event(
     if isinstance(event, SessionAbandoned):
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             phase=SessionPhase.ABANDONED,
@@ -312,6 +431,7 @@ def apply_event(
     if isinstance(event, FocusStarted) and state.phase is SessionPhase.PLANNED:
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             phase=SessionPhase.FOCUSING,
@@ -320,6 +440,7 @@ def apply_event(
     if isinstance(event, InterruptionRecorded) and state.phase is SessionPhase.FOCUSING:
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             interruption_count=state.interruption_count + 1,
@@ -329,6 +450,7 @@ def apply_event(
     if isinstance(event, FocusCompleted) and state.phase is SessionPhase.FOCUSING:
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             phase=SessionPhase.FOCUS_COMPLETE,
@@ -338,6 +460,7 @@ def apply_event(
     if isinstance(event, BreakStarted) and state.phase is SessionPhase.FOCUS_COMPLETE:
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             phase=SessionPhase.BREAKING,
@@ -346,6 +469,7 @@ def apply_event(
     if isinstance(event, BreakCompleted) and state.phase is SessionPhase.BREAKING:
         return replace(
             state,
+            event_ids=state.event_ids | {event.event_id},
             revision=event.sequence,
             last_occurred_at=event.occurred_at,
             phase=SessionPhase.COMPLETED,

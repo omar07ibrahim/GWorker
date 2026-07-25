@@ -18,11 +18,21 @@ from .domain import (
     apply_event,
     reduce_events,
 )
+from .storage import (
+    CorruptJournal,
+    JournalConflict,
+    JournalError,
+    JournalSecurityError,
+    JournalVerification,
+    SQLiteEventStore,
+    default_journal_path,
+)
 
 __all__ = [
     "AbandonReason",
     "BreakCompleted",
     "BreakStarted",
+    "CorruptJournal",
     "DomainEvent",
     "FocusCompleted",
     "FocusStarted",
@@ -30,10 +40,16 @@ __all__ = [
     "InterruptionRecorded",
     "InvalidEvent",
     "InvalidTransition",
+    "JournalConflict",
+    "JournalError",
+    "JournalSecurityError",
+    "JournalVerification",
+    "SQLiteEventStore",
     "SessionAbandoned",
     "SessionPhase",
     "SessionPlanned",
     "SessionState",
     "apply_event",
+    "default_journal_path",
     "reduce_events",
 ]

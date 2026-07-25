@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone
 from uuid import UUID
 
@@ -83,7 +84,14 @@ class EventValidationTests(unittest.TestCase):
             planned(occurred_at=BASE_TIME.astimezone(timezone(timedelta(hours=2))))
 
     def test_plan_rejects_private_multiline_or_padded_objective(self) -> None:
-        for objective in ("", " padded", "padded ", "first\nsecond"):
+        for objective in (
+            "",
+            " padded",
+            "padded ",
+            "first\nsecond",
+            "nul\x00byte",
+            "right\u202eto-left",
+        ):
             with self.subTest(objective=objective), self.assertRaises(InvalidEvent):
                 planned(objective=objective)
 
@@ -93,7 +101,15 @@ class EventValidationTests(unittest.TestCase):
                 planned(target_focus_seconds=duration)
 
     def test_plan_rejects_empty_or_padded_policy_identifier(self) -> None:
-        for policy_id in ("", " fixed", "fixed "):
+        for policy_id in (
+            "",
+            " fixed",
+            "fixed ",
+            "fixed\nv1",
+            "fixed\x00v1",
+            "fixed\u2066v1",
+            "UPPERCASE",
+        ):
             with self.subTest(policy_id=policy_id), self.assertRaises(InvalidEvent):
                 planned(policy_id=policy_id)
 
@@ -174,6 +190,16 @@ class ReducerTests(unittest.TestCase):
         state = apply_event(state, focus_started())
         with self.assertRaisesRegex(InvalidTransition, "expected sequence 3"):
             apply_event(state, FocusStarted(**metadata(2)))
+
+    def test_rejects_duplicate_event_id_at_a_new_revision(self) -> None:
+        state = apply_event(None, planned())
+        with self.assertRaisesRegex(InvalidTransition, "event_id has already"):
+            apply_event(
+                state,
+                FocusStarted(
+                    **metadata(2, event_id=planned().event_id),
+                ),
+            )
 
     def test_rejects_cross_session_event(self) -> None:
         state = apply_event(None, planned())
@@ -278,6 +304,74 @@ class ReducerTests(unittest.TestCase):
         state = reduce_events([planned(), focus_started()])
         self.assertIsNone(state.focus_completion_ratio)
         self.assertFalse(state.is_terminal)
+
+    def test_state_rejects_forged_invariants(self) -> None:
+        focusing = reduce_events([planned(), focus_started()])
+        invalid_changes = [
+            {"revision": -1},
+            {"event_ids": frozenset()},
+            {"interruption_count": -1},
+            {"interruption_seconds": 10},
+            {"actual_break_seconds": 10},
+            {"abandon_reason": AbandonReason.OTHER},
+            {"policy_id": "INVALID"},
+            {
+                "phase": SessionPhase.PLANNED,
+                "revision": 2,
+            },
+            {
+                "phase": SessionPhase.PLANNED,
+                "interruption_count": 1,
+                "interruption_seconds": 10,
+            },
+        ]
+        for changes in invalid_changes:
+            with self.subTest(changes=changes), self.assertRaises(InvalidEvent):
+                replace(focusing, **changes)
+
+        completed = reduce_events(
+            [
+                planned(),
+                focus_started(),
+                FocusCompleted(**metadata(3), elapsed_seconds=1_500),
+                BreakStarted(**metadata(4)),
+                BreakCompleted(**metadata(5), elapsed_seconds=300),
+            ]
+        )
+        with self.assertRaisesRegex(InvalidEvent, "break duration is required"):
+            replace(completed, actual_break_seconds=None)
+
+        planned_state = reduce_events([planned()])
+        with self.assertRaisesRegex(InvalidEvent, "revision is inconsistent"):
+            replace(
+                planned_state,
+                phase=SessionPhase.FOCUS_COMPLETE,
+                actual_focus_seconds=1,
+            )
+
+        abandoned_from_plan = reduce_events(
+            [
+                planned(),
+                SessionAbandoned(
+                    **metadata(2),
+                    reason=AbandonReason.OTHER,
+                ),
+            ]
+        )
+        for impossible_revision in (4, 5):
+            forged_ids = abandoned_from_plan.event_ids | {
+                UUID(f"018f4f69-e7a2-7f84-8c2d-{suffix:012d}")
+                for suffix in range(10, 10 + impossible_revision - 2)
+            }
+            with (
+                self.subTest(revision=impossible_revision),
+                self.assertRaisesRegex(InvalidEvent, "abandonment history"),
+            ):
+                replace(
+                    abandoned_from_plan,
+                    revision=impossible_revision,
+                    event_ids=forged_ids,
+                )
 
 
 if __name__ == "__main__":

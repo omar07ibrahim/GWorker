@@ -11,6 +11,11 @@ requires-python = ">=3.11"
 authors = [
     { name = "Omar Ibrahim", email = "31526072+omar07ibrahim@users.noreply.github.com" },
 ]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Typing :: Typed",
+]
 dependencies = []
 
 [project.optional-dependencies]
@@ -24,6 +29,9 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+gworker = ["py.typed"]
 
 [tool.ruff]
 line-length = 88
