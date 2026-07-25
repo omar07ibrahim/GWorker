@@ -63,6 +63,10 @@ LOCK_FILE_NAME: Final = "lock"
 STATE_DIRECTORY_NAME: Final = "states"
 SOURCE_PROVENANCE_FILE_NAME: Final = "source-provenance.json"
 
+_PLATFORM_PATH_TYPE: Final = type(Path())
+_PATH_RAW_COMPONENTS_SLOT: Final = (
+    "_raw_paths" if hasattr(_PLATFORM_PATH_TYPE(), "_raw_paths") else "_parts"
+)
 _MAX_STATE_BYTES: Final = 64 * 1024
 _MAX_STATE_CONTAINERS: Final = 256
 _MAX_JSON_DEPTH: Final = 16
@@ -936,14 +940,31 @@ def _fsync(descriptor: int, *, field: str) -> None:
 
 
 def _validate_run_path(path: str | Path) -> Path:
-    try:
-        raw = os.fspath(path)
-    except (TypeError, ValueError) as error:
-        raise PublicationStateSecurityError(
-            "publication run path must be text or Path"
-        ) from error
-    if type(raw) is not str:
-        raise PublicationStateSecurityError("publication run path must be text")
+    if type(path) is str:
+        raw = path
+    elif type(path) is _PLATFORM_PATH_TYPE:
+        try:
+            raw_components = object.__getattribute__(
+                path,
+                _PATH_RAW_COMPONENTS_SLOT,
+            )
+        except AttributeError as error:
+            raise PublicationStateSecurityError(
+                "publication run path must be text or Path"
+            ) from error
+        if type(raw_components) is not list:
+            raise PublicationStateSecurityError(
+                "publication run path must be text or Path"
+            )
+        components = tuple(raw_components)
+        if any(type(component) is not str for component in components):
+            raise PublicationStateSecurityError(
+                "publication run path must be text or Path"
+            )
+        rebuilt = _PLATFORM_PATH_TYPE(*components)
+        raw = rebuilt.as_posix()
+    else:
+        raise PublicationStateSecurityError("publication run path must be text or Path")
     try:
         raw.encode("utf-8")
     except UnicodeEncodeError as error:

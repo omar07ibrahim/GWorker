@@ -572,6 +572,48 @@ class PublicationStateStoreTests(unittest.TestCase):
             ):
                 initialize_store(cast(str | Path, candidate))
 
+    def test_path_validation_rejects_subclasses_and_corrupt_exact_paths(
+        self,
+    ) -> None:
+        class RaisingPath(type(Path())):
+            fspath_reads = 0
+
+            def __fspath__(self) -> str:
+                type(self).fspath_reads += 1
+                raise RuntimeError("attacker-controlled path conversion")
+
+        hostile = RaisingPath(self.run_directory)
+        with self.assertRaisesRegex(
+            PublicationStateSecurityError,
+            "text or Path",
+        ):
+            initialize_store(cast(Path, hostile))
+        self.assertEqual(RaisingPath.fspath_reads, 0)
+
+        empty_path = object.__new__(type(Path()))
+        with self.assertRaisesRegex(
+            PublicationStateSecurityError,
+            "text or Path",
+        ):
+            initialize_store(empty_path)
+
+        corrupt_path = Path(self.run_directory)
+        raw_components = cast(
+            list[str],
+            object.__getattribute__(
+                corrupt_path,
+                state_module._PATH_RAW_COMPONENTS_SLOT,
+            ),
+        )
+        raw_components[0] = cast(str, object())
+        with self.assertRaisesRegex(
+            PublicationStateSecurityError,
+            "text or Path",
+        ):
+            initialize_store(corrupt_path)
+
+        self.assertFalse(self.run_directory.exists())
+
     def test_parent_path_symlink_is_rejected(self) -> None:
         actual = self.root / "actual"
         actual.mkdir(mode=0o700)
