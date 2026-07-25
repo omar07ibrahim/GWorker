@@ -34,7 +34,15 @@ from .policy import (
 
 EVALUATOR_VERSION = "synthetic-eval-v3"
 RESULT_SCHEMA_VERSION = "synthetic-eval-result-v1"
+LOCKED_EVALUATOR_ID = (
+    "synthetic-eval-v3.caf02b5aced57470dfa96c2952df7402dbd5944b7d394a5a95729ef3e6d09045"
+)
+LOCKED_DESIGN_ID = (
+    "synthetic-eval-v3-design."
+    "503fe85fb1ff862383812f74eb9b6ce89fdc2a7811f44a83d53ca42c1634ebfd"
+)
 LOCKED_POLICY_ID = "hierarchical-softmax-ucb-v1.8c10875dd38a025d"
+LOCKED_MINIMUM_PROPENSITY = 0.02
 LOCKED_POPULATION_ID = (
     "synthetic-eval-v3-population."
     "dc3f496427d8b78e742eed763ad494902660e50aa4ad45000008854edcaaab83"
@@ -1919,7 +1927,13 @@ def _metrics_are_finite(metrics: TrajectoryMetrics) -> None:
                 raise EvaluationInvariantError(
                     f"metric {definition.name} is not numeric"
                 )
-            if not math.isfinite(float(item)):
+            try:
+                finite = math.isfinite(float(item))
+            except OverflowError as error:
+                raise EvaluationInvariantError(
+                    f"metric {definition.name} is not finite"
+                ) from error
+            if not finite:
                 raise EvaluationInvariantError(
                     f"metric {definition.name} is not finite"
                 )
@@ -2039,6 +2053,14 @@ def _validate_summary_metrics(
         raise EvaluationInvariantError("maximum_arm_transition is out of range")
     if not 1.0 <= metrics.mean_feasible_set_size <= len(DEFAULT_TEMPLATES):
         raise EvaluationInvariantError("mean_feasible_set_size is out of range")
+    if not metrics.feasible_set_size_sum.is_integer():
+        raise EvaluationInvariantError("feasible_set_size_sum must be integer-valued")
+    _require_close(
+        metrics.mean_realized_reward,
+        FIT_REWARD_WEIGHT * metrics.right_fit_rate
+        + COMPLETION_REWARD_WEIGHT * metrics.completion_rate,
+        field="realized reward identity",
+    )
 
     trace_fields = (
         metrics.common_regret_trace,
@@ -2129,11 +2151,44 @@ def _validate_summary_metrics(
             count / metrics.action_count,
             field=f"{label} rate",
         )
+    if (
+        metrics.one_step_guardrail_count + metrics.availability_override_count
+        != metrics.action_count - replicas
+    ):
+        raise EvaluationInvariantError("guardrail decision counts do not reconcile")
+    if metrics.availability_override_count > metrics.availability_guardrail_count:
+        raise EvaluationInvariantError(
+            "availability overrides exceed availability guardrails"
+        )
+    expected_availability_guardrails = (
+        0
+        if summary.availability_mode is AvailabilityMode.UNCONSTRAINED
+        else 3 * metrics.action_count // 4
+    )
+    if metrics.availability_guardrail_count != expected_availability_guardrails:
+        raise EvaluationInvariantError(
+            "availability guardrail count disagrees with the frozen schedule"
+        )
+    if (metrics.maximum_arm_transition > 1) != (
+        metrics.availability_override_count > 0
+    ):
+        raise EvaluationInvariantError(
+            "maximum arm transition disagrees with availability overrides"
+        )
     _require_close(
         metrics.mean_feasible_set_size,
         metrics.feasible_set_size_sum / metrics.action_count,
         field="mean feasible set size",
     )
+    if summary.strategy is Strategy.MYOPIC_ORACLE and (
+        metrics.mean_conditional_expected_regret != 0.0
+        or metrics.cumulative_conditional_expected_regret != 0.0
+        or metrics.mean_conditional_oracle_distance != 0.0
+        or any(value != 0.0 for value in metrics.conditional_regret_trace)
+    ):
+        raise EvaluationInvariantError(
+            "myopic oracle must have zero conditional regret and distance"
+        )
 
     if len(metrics.template_exposures) != len(DEFAULT_TEMPLATES):
         raise EvaluationInvariantError("template exposure vector has wrong length")
@@ -2149,16 +2204,34 @@ def _validate_summary_metrics(
         == calibration_length
     ):
         raise EvaluationInvariantError("calibration vectors have an invalid length")
-    for predicted, observed, count in zip(
-        metrics.calibration_predicted_sums,
-        metrics.calibration_observed_sums,
-        metrics.calibration_counts,
-        strict=True,
+    for bin_index, (predicted, observed, count) in enumerate(
+        zip(
+            metrics.calibration_predicted_sums,
+            metrics.calibration_observed_sums,
+            metrics.calibration_counts,
+            strict=True,
+        )
     ):
         if not (0.0 <= predicted <= count and 0.0 <= observed <= count):
             raise EvaluationInvariantError(
                 "calibration sufficient statistic is out of range"
             )
+        if not float(observed).is_integer():
+            raise EvaluationInvariantError(
+                "calibration observed sum must be integer-valued"
+            )
+        if count:
+            mean_prediction = predicted / count
+            lower = CALIBRATION_EDGES[bin_index]
+            upper = CALIBRATION_EDGES[bin_index + 1]
+            if mean_prediction < lower or (
+                mean_prediction > upper
+                if bin_index == len(CALIBRATION_EDGES) - 2
+                else mean_prediction >= upper
+            ):
+                raise EvaluationInvariantError(
+                    "calibration mean is outside its declared bin"
+                )
 
     propensity_fields = (
         metrics.selected_propensity_count,
@@ -2240,6 +2313,37 @@ def _validate_summary_metrics(
         )
         if weight_sum <= 0 or squared_weight_sum <= 0:
             raise EvaluationInvariantError("inverse propensity sums must be positive")
+        maximum_weight = metrics.maximum_inverse_propensity
+        minimum_propensity = metrics.minimum_propensity
+        assert maximum_weight is not None
+        assert minimum_propensity is not None
+        tolerance = 1e-12
+        impossible_weight_sums = (
+            weight_sum < selected_count,
+            squared_weight_sum < weight_sum,
+            weight_sum < selected_count - 1 + maximum_weight,
+            squared_weight_sum < selected_count - 1 + maximum_weight**2,
+            weight_sum**2 > selected_count * squared_weight_sum
+            and not math.isclose(
+                weight_sum**2,
+                selected_count * squared_weight_sum,
+                rel_tol=tolerance,
+                abs_tol=1e-9,
+            ),
+            squared_weight_sum > maximum_weight * weight_sum
+            and not math.isclose(
+                squared_weight_sum,
+                maximum_weight * weight_sum,
+                rel_tol=tolerance,
+                abs_tol=1e-9,
+            ),
+            weight_sum > selected_count * maximum_weight,
+            squared_weight_sum > selected_count * maximum_weight**2,
+        )
+        if any(impossible_weight_sums):
+            raise EvaluationInvariantError(
+                "inverse propensity sums violate weight bounds"
+            )
         _require_close(
             metrics.low_propensity_rate or 0.0,
             low_count / selected_count,
@@ -2273,10 +2377,15 @@ def _validate_summary_metrics(
         if (
             metrics.minimum_propensity is None
             or metrics.maximum_inverse_propensity is None
-            or metrics.minimum_propensity <= 0
+            or metrics.minimum_propensity < LOCKED_MINIMUM_PROPENSITY
             or metrics.maximum_inverse_propensity < 1
+            or metrics.maximum_inverse_propensity > 1.0 / LOCKED_MINIMUM_PROPENSITY
         ):
             raise EvaluationInvariantError("propensity extrema are invalid")
+        if (low_count > 0) != (metrics.minimum_propensity < LOW_PROPENSITY_THRESHOLD):
+            raise EvaluationInvariantError(
+                "low propensity count disagrees with minimum propensity"
+            )
         _require_close(
             metrics.maximum_inverse_propensity,
             1.0 / metrics.minimum_propensity,
@@ -2287,6 +2396,8 @@ def _validate_summary_metrics(
             raise EvaluationInvariantError(
                 "baseline contains adaptive propensity diagnostics"
             )
+        if metrics.review_count != 0 or metrics.review_rate != 0.0:
+            raise EvaluationInvariantError("baseline contains adaptive reviews")
         if (
             any(metrics.evidence_bucket_counts)
             or any(metrics.calibration_counts)
@@ -2354,6 +2465,8 @@ def _validate_summary_metrics(
             raise EvaluationInvariantError(
                 "recovered_lag_sum is outside the searchable recovery window"
             )
+        if not recovered_lag_sum.is_integer():
+            raise EvaluationInvariantError("recovered_lag_sum must be integer-valued")
         if recovered_count:
             if metrics.recovery_lag is None:
                 raise EvaluationInvariantError(
@@ -2407,11 +2520,15 @@ def _validate_summary_metrics(
 def validate_experiment_result(result: ExperimentResult) -> None:
     """Fail closed unless a result exactly matches its declared Cartesian run."""
 
-    if not isinstance(result, ExperimentResult):
-        raise EvaluationInputError("result must be an ExperimentResult")
+    if type(result) is not ExperimentResult:
+        raise EvaluationInputError("result must be an exact ExperimentResult")
     if result.schema_version != RESULT_SCHEMA_VERSION:
         raise EvaluationInvariantError("result schema_version is invalid")
     config = result.config
+    if type(config) is not ExperimentConfig:
+        raise EvaluationInvariantError("result config has an invalid type")
+    if any(type(persona) is not Persona for persona in config.personas):
+        raise EvaluationInvariantError("config persona set contains an invalid type")
     if result.evaluator_id != evaluator_fingerprint(config):
         raise EvaluationInvariantError("result evaluator_id is invalid")
     if result.design_id != evaluator_design_fingerprint():
@@ -2438,6 +2555,12 @@ def validate_experiment_result(result: ExperimentResult) -> None:
         ClusterSummary,
     ] = {}
     for summary in result.cluster_summaries:
+        if type(summary) is not ClusterSummary:
+            raise EvaluationInvariantError(
+                "result cluster summaries contain an invalid type"
+            )
+        if type(summary.metrics) is not TrajectoryMetrics:
+            raise EvaluationInvariantError("summary metrics have an invalid type")
         key = (
             summary.persona_id,
             summary.availability_mode,
@@ -2505,6 +2628,10 @@ def validate_experiment_result(result: ExperimentResult) -> None:
         TraceRecord,
     ] = {}
     for trace in result.abrupt_traces:
+        if type(trace) is not TraceRecord:
+            raise EvaluationInvariantError(
+                "result abrupt traces contain an invalid type"
+            )
         if type(trace.availability_mode) is not AvailabilityMode:
             raise EvaluationInvariantError(
                 "trace availability_mode has an invalid type"

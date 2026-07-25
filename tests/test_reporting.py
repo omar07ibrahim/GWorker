@@ -6,7 +6,7 @@ import os
 import subprocess
 import tempfile
 import unittest
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import ClassVar, cast
 from unittest.mock import patch
@@ -27,6 +27,9 @@ from gworker.reporting import (
     DEFAULT_BOOTSTRAP_RESAMPLES,
     LOCKED_AUTHOR_EMAIL,
     LOCKED_AUTHOR_NAME,
+    LOCKED_BOOTSTRAP_INDICES_SHA256,
+    LOCKED_BOOTSTRAP_MODE_INDICES_SHA256,
+    LOCKED_BOOTSTRAP_NAMESPACE_SHA256,
     NORMAL_95_CRITICAL_VALUE,
     BootstrapMetadata,
     BootstrapPlan,
@@ -46,6 +49,16 @@ from gworker.reporting import (
     stratified_seed_standard_error,
     type7_quantile,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class MutableIntervalEstimate(IntervalEstimate):
+    payload: list[str]
+
+
+@dataclass(frozen=True, slots=True)
+class MutableContrastEstimate(ContrastEstimate):
+    payload: list[str]
 
 
 def reporting_fixture_config() -> ExperimentConfig:
@@ -212,18 +225,18 @@ class QuantileAndBootstrapTests(unittest.TestCase):
 
         self.assertEqual(
             plan.namespace_sha256,
-            "0ec40605618d9532544b868463cf2c6ec75f8a5818a660054eb6d15f25c62e71",
+            LOCKED_BOOTSTRAP_NAMESPACE_SHA256,
         )
         self.assertEqual(
             plan.indices_sha256,
-            "a89de114bb2299c37192beafc724e4c993ee8484ad7d2cc7c76e6d1da8979318",
+            LOCKED_BOOTSTRAP_INDICES_SHA256,
         )
         self.assertEqual(
-            tuple(item.indices_sha256 for item in plan.mode_plans),
-            (
-                "c7d76cd354ee4aae29fc752b40e853def5aa1fb51893aeefa5b8a3d624c8d8b8",
-                "bee073df927c228c651cdfb42e27968be95d59294ac04054679b8d9a2dd3069e",
+            tuple(
+                (item.availability_mode, item.indices_sha256)
+                for item in plan.mode_plans
             ),
+            LOCKED_BOOTSTRAP_MODE_INDICES_SHA256,
         )
 
     def test_bootstrap_plans_fail_closed_on_tampering_and_unsafe_size(self) -> None:
@@ -480,9 +493,12 @@ class ReportValueValidationTests(unittest.TestCase):
         for interval_changes in (
             {"lower_95": 0.2},
             {"seed_cluster_standard_error": -0.1},
+            {"seed_cluster_standard_error": None},
+            {"seed_count_per_stratum": 1},
             {"seed_count_per_stratum": 0},
             {"stratum_count": 0},
             {"point_estimate": math.nan},
+            {"point_estimate": 10**1_000},
         ):
             with (
                 self.subTest(changes=interval_changes),
@@ -510,6 +526,37 @@ class ReportValueValidationTests(unittest.TestCase):
                 self.assertRaises(ReportingInputError),
             ):
                 replace(valid, **contrast_changes)
+
+        mutable_interval = MutableIntervalEstimate(
+            point_estimate=interval.point_estimate,
+            lower_95=interval.lower_95,
+            upper_95=interval.upper_95,
+            seed_cluster_standard_error=interval.seed_cluster_standard_error,
+            seed_count_per_stratum=interval.seed_count_per_stratum,
+            stratum_count=interval.stratum_count,
+            payload=[],
+        )
+        with self.assertRaisesRegex(ReportingInputError, "IntervalEstimate"):
+            replace(valid, interval=mutable_interval)
+
+        cell = self.report.cell_contrasts[0]
+        mutable_cell = MutableContrastEstimate(
+            scope=cell.scope,
+            persona_id=cell.persona_id,
+            availability_mode=cell.availability_mode,
+            comparator=cell.comparator,
+            interval=cell.interval,
+            interval_relation_to_zero=cell.interval_relation_to_zero,
+            payload=[],
+        )
+        with self.assertRaisesRegex(ReportingInputError, "invalid type"):
+            replace(
+                self.report,
+                cell_contrasts=(
+                    mutable_cell,
+                    *self.report.cell_contrasts[1:],
+                ),
+            )
 
         for bounds, relation in (
             ((-0.3, -0.1), "below-zero"),
@@ -631,6 +678,16 @@ class ReportValueValidationTests(unittest.TestCase):
             {"bootstrap": cast("BootstrapMetadata", "invalid")},
             {"primary_contrast": self.report.macro_contrasts[0]},
             {"macro_contrasts": self.report.macro_contrasts[:-1]},
+            {"macro_contrasts": tuple(reversed(self.report.macro_contrasts))},
+            {
+                "macro_contrasts": (
+                    replace(
+                        self.report.macro_contrasts[0],
+                        scope="primary-macro",
+                    ),
+                    *self.report.macro_contrasts[1:],
+                )
+            },
             {"cell_contrasts": self.report.cell_contrasts[:-1]},
             {"strategy_cells": self.report.strategy_cells[:-1]},
             {"strategy_cells": ()},

@@ -33,6 +33,22 @@ DEFAULT_BOOTSTRAP_RESAMPLES = 5_000
 BOOTSTRAP_CONFIDENCE = 0.95
 NORMAL_95_CRITICAL_VALUE = 1.959963984540054
 MAX_BOOTSTRAP_DRAW_COUNT = 5_000_000
+LOCKED_BOOTSTRAP_NAMESPACE_SHA256 = (
+    "0ec40605618d9532544b868463cf2c6ec75f8a5818a660054eb6d15f25c62e71"
+)
+LOCKED_BOOTSTRAP_INDICES_SHA256 = (
+    "a89de114bb2299c37192beafc724e4c993ee8484ad7d2cc7c76e6d1da8979318"
+)
+LOCKED_BOOTSTRAP_MODE_INDICES_SHA256 = (
+    (
+        AvailabilityMode.UNCONSTRAINED,
+        "c7d76cd354ee4aae29fc752b40e853def5aa1fb51893aeefa5b8a3d624c8d8b8",
+    ),
+    (
+        AvailabilityMode.GUARDRAILED,
+        "bee073df927c228c651cdfb42e27968be95d59294ac04054679b8d9a2dd3069e",
+    ),
+)
 LOCKED_AUTHOR_NAME = "Omar Ibrahim"
 LOCKED_AUTHOR_EMAIL = "31526072+omar07ibrahim@users.noreply.github.com"
 
@@ -48,7 +64,10 @@ class ReportingInvariantError(RuntimeError):
 def _finite(value: object, field: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ReportingInputError(f"{field} must be numeric")
-    result = float(value)
+    try:
+        result = float(value)
+    except OverflowError as error:
+        raise ReportingInputError(f"{field} must be finite") from error
     if not math.isfinite(result):
         raise ReportingInputError(f"{field} must be finite")
     return 0.0 if result == 0 else result
@@ -288,7 +307,7 @@ class BootstrapPlan:
             )
         ):
             raise ReportingInputError("availability mode strata are invalid")
-        if any(not isinstance(plan, ModeBootstrapPlan) for plan in self.mode_plans):
+        if any(type(plan) is not ModeBootstrapPlan for plan in self.mode_plans):
             raise ReportingInputError("mode plans contain an invalid member")
         if tuple(plan.availability_mode for plan in self.mode_plans) != (
             self.availability_modes
@@ -511,6 +530,12 @@ class IntervalEstimate:
             or self.stratum_count < 1
         ):
             raise ReportingInputError("stratum_count must be a positive integer")
+        if (self.seed_count_per_stratum == 1) != (
+            self.seed_cluster_standard_error is None
+        ):
+            raise ReportingInputError(
+                "standard error presence disagrees with seed count"
+            )
         object.__setattr__(self, "point_estimate", point)
         object.__setattr__(self, "lower_95", lower)
         object.__setattr__(self, "upper_95", upper)
@@ -620,8 +645,17 @@ class ContrastEstimate:
             raise ReportingInputError("contrast comparator must be a Strategy")
         if self.comparator is Strategy.ADAPTIVE:
             raise ReportingInputError("adaptive cannot compare with itself")
-        if not isinstance(self.interval, IntervalEstimate):
+        if type(self.interval) is not IntervalEstimate:
             raise ReportingInputError("contrast interval must be an IntervalEstimate")
+        if any(
+            not -1.0 <= value <= 1.0
+            for value in (
+                self.interval.point_estimate,
+                self.interval.lower_95,
+                self.interval.upper_95,
+            )
+        ):
+            raise ReportingInputError("common-regret contrast is outside [-1, 1]")
         if self.scope == "cell":
             if self.persona_id is None or self.availability_mode is None:
                 raise ReportingInputError(
@@ -707,6 +741,10 @@ class StrategyCellEstimate:
                 "common_regret_standard_error",
                 standard_error,
             )
+        if (self.seed_count == 1) != (self.common_regret_standard_error is None):
+            raise ReportingInputError(
+                "common regret standard error presence disagrees with seed count"
+            )
         if not math.isclose(
             self.mean_common_expected_regret,
             self.mean_conditional_expected_regret + self.mean_path_opportunity_cost,
@@ -790,14 +828,14 @@ class StatisticalReport:
             raise ReportingInputError("report schema version is invalid")
         for field in ("evaluator_id", "design_id", "policy_id"):
             _safe_identifier(getattr(self, field), field)
-        if not isinstance(self.bootstrap, BootstrapMetadata):
+        if type(self.bootstrap) is not BootstrapMetadata:
             raise ReportingInputError("report bootstrap metadata is invalid")
-        if not isinstance(self.primary_contrast, ContrastEstimate):
+        if type(self.primary_contrast) is not ContrastEstimate:
             raise ReportingInputError("primary contrast is invalid")
         if any(
-            not isinstance(contrast, ContrastEstimate)
+            type(contrast) is not ContrastEstimate
             for contrast in (*macro_contrasts, *cell_contrasts)
-        ) or any(not isinstance(cell, StrategyCellEstimate) for cell in strategy_cells):
+        ) or any(type(cell) is not StrategyCellEstimate for cell in strategy_cells):
             raise ReportingInputError("report collection member has an invalid type")
         if (
             self.primary_contrast.scope != "primary-macro"
@@ -810,6 +848,13 @@ class StatisticalReport:
         expected_comparators = {
             strategy for strategy in Strategy if strategy is not Strategy.ADAPTIVE
         }
+        expected_comparator_order = tuple(
+            strategy for strategy in Strategy if strategy is not Strategy.ADAPTIVE
+        )
+        expected_macro_scopes = tuple(
+            ("primary-macro" if comparator is Strategy.FIXED_25 else "macro")
+            for comparator in expected_comparator_order
+        )
         if (
             any(
                 contrast.scope not in {"primary-macro", "macro"}
@@ -818,6 +863,10 @@ class StatisticalReport:
             or len(macro_contrasts) != len(expected_comparators)
             or {contrast.comparator for contrast in macro_contrasts}
             != expected_comparators
+            or tuple(contrast.comparator for contrast in macro_contrasts)
+            != expected_comparator_order
+            or tuple(contrast.scope for contrast in macro_contrasts)
+            != expected_macro_scopes
         ):
             raise ReportingInputError("macro contrast set is incomplete or duplicated")
         if any(contrast.scope != "cell" for contrast in cell_contrasts):
@@ -1219,9 +1268,7 @@ class SourceProvenance:
             _safe_identifier(getattr(self, field), field)
         if (
             not loaded_sources
-            or any(
-                not isinstance(source, SourceFileIdentity) for source in loaded_sources
-            )
+            or any(type(source) is not SourceFileIdentity for source in loaded_sources)
             or tuple(
                 sorted(
                     loaded_sources,

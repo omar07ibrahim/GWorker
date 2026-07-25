@@ -6,7 +6,7 @@ import math
 import random
 import unittest
 from collections import Counter
-from dataclasses import replace
+from dataclasses import dataclass, field, fields, replace
 from typing import cast
 from unittest.mock import patch
 from uuid import UUID
@@ -17,15 +17,21 @@ from gworker.evaluation import (
     CONTEXT_BLOCK_SIZE,
     DEFAULT_EXPERIMENT_CONFIG,
     DEFAULT_PERSONAS,
+    LOCKED_DESIGN_ID,
+    LOCKED_EVALUATOR_ID,
+    LOCKED_MINIMUM_PROPENSITY,
     LOCKED_POLICY_ID,
     LOCKED_POPULATION_ID,
     AvailabilityMode,
+    ClusterSummary,
     EvaluationInputError,
     EvaluationInvariantError,
     ExperimentConfig,
     ExperimentResult,
     Persona,
     Strategy,
+    TraceRecord,
+    TrajectoryMetrics,
     evaluator_design_fingerprint,
     evaluator_fingerprint,
     generate_environment,
@@ -43,6 +49,36 @@ from gworker.policy import (
     HierarchicalSoftmaxUCB,
     TaskKind,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class MutablePersona(Persona):
+    payload: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class MutableExperimentConfig(ExperimentConfig):
+    payload: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class MutableTrajectoryMetrics(TrajectoryMetrics):
+    payload: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class MutableClusterSummary(ClusterSummary):
+    payload: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class MutableTraceRecord(TraceRecord):
+    payload: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class MutableExperimentResult(ExperimentResult):
+    payload: list[str] = field(default_factory=list)
 
 
 def small_config(
@@ -68,6 +104,14 @@ def small_config(
 class EvaluationDefinitionTests(unittest.TestCase):
     def test_locked_population_has_an_independent_golden_identity(self) -> None:
         self.assertEqual(
+            evaluator_fingerprint(DEFAULT_EXPERIMENT_CONFIG),
+            LOCKED_EVALUATOR_ID,
+        )
+        self.assertEqual(
+            evaluator_design_fingerprint(),
+            LOCKED_DESIGN_ID,
+        )
+        self.assertEqual(
             population_fingerprint(DEFAULT_EXPERIMENT_CONFIG),
             LOCKED_POPULATION_ID,
         )
@@ -81,6 +125,10 @@ class EvaluationDefinitionTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(EvaluationInputError, "ExperimentConfig"):
             population_fingerprint(cast("ExperimentConfig", object()))
+        self.assertEqual(
+            LOCKED_MINIMUM_PROPENSITY,
+            HierarchicalSoftmaxUCB().config.minimum_probability,
+        )
 
     def test_persona_rejects_unsafe_or_ambiguous_fields(self) -> None:
         invalid = (
@@ -857,7 +905,7 @@ class ExperimentTests(unittest.TestCase):
                 summary.metrics.action_count,
             )
 
-    def test_result_validator_rejects_duplicates_and_bad_denominators(self) -> None:
+    def test_result_validator_rejects_duplicate_clusters(self) -> None:
         config = small_config(
             personas=(DEFAULT_PERSONAS[4],),
             availability_modes=(AvailabilityMode.UNCONSTRAINED,),
@@ -876,6 +924,306 @@ class ExperimentTests(unittest.TestCase):
                         *result.cluster_summaries,
                         first,
                     ),
+                )
+            )
+
+    def test_result_validator_rejects_impossible_cross_metric_states(self) -> None:
+        config = small_config(
+            personas=(DEFAULT_PERSONAS[4],),
+            availability_modes=tuple(AvailabilityMode),
+        )
+        result = run_experiment(config)
+        adaptive_index, adaptive = next(
+            (index, summary)
+            for index, summary in enumerate(result.cluster_summaries)
+            if summary.strategy is Strategy.ADAPTIVE
+        )
+        baseline_index, baseline = next(
+            (index, summary)
+            for index, summary in enumerate(result.cluster_summaries)
+            if summary.strategy is Strategy.FIXED_25
+        )
+        myopic_index, myopic = next(
+            (index, summary)
+            for index, summary in enumerate(result.cluster_summaries)
+            if summary.strategy is Strategy.MYOPIC_ORACLE
+        )
+
+        def with_summary(index: int, summary: ClusterSummary) -> ExperimentResult:
+            return replace(
+                result,
+                cluster_summaries=(
+                    *result.cluster_summaries[:index],
+                    summary,
+                    *result.cluster_summaries[index + 1 :],
+                ),
+            )
+
+        invalid = (
+            (
+                adaptive_index,
+                replace(
+                    adaptive,
+                    metrics=replace(
+                        adaptive.metrics,
+                        feasible_set_size_sum=(
+                            adaptive.metrics.feasible_set_size_sum + 0.5
+                        ),
+                        mean_feasible_set_size=(
+                            (adaptive.metrics.feasible_set_size_sum + 0.5)
+                            / adaptive.metrics.action_count
+                        ),
+                    ),
+                ),
+                "integer-valued",
+            ),
+            (
+                adaptive_index,
+                replace(
+                    adaptive,
+                    metrics=replace(
+                        adaptive.metrics,
+                        mean_realized_reward=(
+                            adaptive.metrics.mean_realized_reward + 0.001
+                        ),
+                    ),
+                ),
+                "realized reward identity",
+            ),
+            (
+                baseline_index,
+                replace(
+                    baseline,
+                    metrics=replace(
+                        baseline.metrics,
+                        review_count=1,
+                        review_rate=1 / baseline.metrics.action_count,
+                    ),
+                ),
+                "adaptive reviews",
+            ),
+            (
+                adaptive_index,
+                replace(
+                    adaptive,
+                    metrics=replace(
+                        adaptive.metrics,
+                        maximum_arm_transition=3,
+                    ),
+                ),
+                "maximum arm transition",
+            ),
+            (
+                adaptive_index,
+                replace(
+                    adaptive,
+                    metrics=replace(
+                        adaptive.metrics,
+                        mean_expected_reward=10**10_000,
+                    ),
+                ),
+                "not finite",
+            ),
+            (
+                myopic_index,
+                replace(
+                    myopic,
+                    metrics=replace(
+                        myopic.metrics,
+                        mean_conditional_oracle_distance=0.5,
+                    ),
+                ),
+                "myopic oracle",
+            ),
+        )
+        for index, summary, message in invalid:
+            with (
+                self.subTest(message=message),
+                self.assertRaisesRegex(EvaluationInvariantError, message),
+            ):
+                validate_experiment_result(with_summary(index, summary))
+
+        guardrailed_index, guardrailed = next(
+            (index, summary)
+            for index, summary in enumerate(result.cluster_summaries)
+            if summary.availability_mode is AvailabilityMode.GUARDRAILED
+            and summary.strategy is Strategy.FIXED_25
+        )
+        changed_guardrail_count = guardrailed.metrics.availability_guardrail_count - 1
+        with self.assertRaisesRegex(
+            EvaluationInvariantError,
+            "frozen schedule",
+        ):
+            validate_experiment_result(
+                with_summary(
+                    guardrailed_index,
+                    replace(
+                        guardrailed,
+                        metrics=replace(
+                            guardrailed.metrics,
+                            availability_guardrail_count=changed_guardrail_count,
+                            availability_guardrail_rate=(
+                                changed_guardrail_count
+                                / guardrailed.metrics.action_count
+                            ),
+                        ),
+                    ),
+                )
+            )
+
+        selected_count = adaptive.metrics.selected_propensity_count
+        assert selected_count is not None
+        impossible_weights = replace(
+            adaptive,
+            metrics=replace(
+                adaptive.metrics,
+                minimum_propensity=0.04,
+                maximum_inverse_propensity=25.0,
+                low_propensity_count=1,
+                low_propensity_rate=1 / selected_count,
+                inverse_propensity_sum=float(selected_count),
+                inverse_propensity_squared_sum=float(selected_count),
+                inverse_propensity_ess_ratio=1.0,
+            ),
+        )
+        with self.assertRaisesRegex(
+            EvaluationInvariantError,
+            "weight bounds",
+        ):
+            validate_experiment_result(with_summary(adaptive_index, impossible_weights))
+
+        recovered_count = adaptive.metrics.recovered_count
+        assert recovered_count is not None
+        if recovered_count:
+            fractional_lag_sum = adaptive.metrics.recovered_lag_sum
+            assert fractional_lag_sum is not None
+            changed_sum = fractional_lag_sum + 0.5
+            censor = config.horizon - config.drift_index + 1
+            fractional_recovery = replace(
+                adaptive,
+                metrics=replace(
+                    adaptive.metrics,
+                    recovered_lag_sum=changed_sum,
+                    recovery_lag=changed_sum / recovered_count,
+                    conservative_recovery_lag=(
+                        changed_sum
+                        + (adaptive.policy_replica_count - recovered_count) * censor
+                    )
+                    / adaptive.policy_replica_count,
+                ),
+            )
+            with self.assertRaisesRegex(
+                EvaluationInvariantError,
+                "integer-valued",
+            ):
+                validate_experiment_result(
+                    with_summary(adaptive_index, fractional_recovery)
+                )
+
+    def test_result_validator_rejects_subtypes_and_malformed_rows(self) -> None:
+        config = small_config(
+            personas=(DEFAULT_PERSONAS[4],),
+            availability_modes=(AvailabilityMode.UNCONSTRAINED,),
+        )
+        result = run_experiment(config)
+        first_summary = result.cluster_summaries[0]
+        first_trace = result.abrupt_traces[0]
+        first = first_summary
+
+        mutable_result = MutableExperimentResult(
+            schema_version=result.schema_version,
+            config=result.config,
+            evaluator_id=result.evaluator_id,
+            design_id=result.design_id,
+            policy_id=result.policy_id,
+            cluster_summaries=result.cluster_summaries,
+            abrupt_traces=result.abrupt_traces,
+            hard_failure_count=result.hard_failure_count,
+        )
+        with self.assertRaisesRegex(EvaluationInputError, "exact ExperimentResult"):
+            validate_experiment_result(mutable_result)
+
+        mutable_config = MutableExperimentConfig(
+            split=config.split,
+            environment_seeds=config.environment_seeds,
+            policy_replicas=config.policy_replicas,
+            personas=config.personas,
+            availability_modes=config.availability_modes,
+            horizon=config.horizon,
+            drift_decision=config.drift_decision,
+            recovery_block_size=config.recovery_block_size,
+            recovery_blocks=config.recovery_blocks,
+        )
+        with self.assertRaisesRegex(EvaluationInvariantError, "config.*type"):
+            validate_experiment_result(replace(result, config=mutable_config))
+
+        persona = config.personas[0]
+        mutable_persona = MutablePersona(
+            persona_id=persona.persona_id,
+            label=persona.label,
+            primary=persona.primary,
+            sigma_minutes=persona.sigma_minutes,
+            selective_reviews=persona.selective_reviews,
+        )
+        with self.assertRaisesRegex(EvaluationInvariantError, "persona set"):
+            validate_experiment_result(
+                replace(
+                    result,
+                    config=replace(config, personas=(mutable_persona,)),
+                )
+            )
+
+        mutable_summary = MutableClusterSummary(
+            persona_id=first_summary.persona_id,
+            persona_primary=first_summary.persona_primary,
+            availability_mode=first_summary.availability_mode,
+            environment_seed=first_summary.environment_seed,
+            strategy=first_summary.strategy,
+            policy_replica_count=first_summary.policy_replica_count,
+            metrics=first_summary.metrics,
+        )
+        with self.assertRaisesRegex(EvaluationInvariantError, "cluster summaries"):
+            validate_experiment_result(
+                replace(
+                    result,
+                    cluster_summaries=(
+                        mutable_summary,
+                        *result.cluster_summaries[1:],
+                    ),
+                )
+            )
+
+        mutable_metrics = object.__new__(MutableTrajectoryMetrics)
+        for definition in fields(TrajectoryMetrics):
+            object.__setattr__(
+                mutable_metrics,
+                definition.name,
+                getattr(first_summary.metrics, definition.name),
+            )
+        object.__setattr__(mutable_metrics, "payload", [])
+        with self.assertRaisesRegex(EvaluationInvariantError, "summary metrics"):
+            validate_experiment_result(
+                replace(
+                    result,
+                    cluster_summaries=(
+                        replace(first_summary, metrics=mutable_metrics),
+                        *result.cluster_summaries[1:],
+                    ),
+                )
+            )
+
+        mutable_trace = MutableTraceRecord(
+            persona_id=first_trace.persona_id,
+            availability_mode=first_trace.availability_mode,
+            environment_seed=first_trace.environment_seed,
+            strategy=first_trace.strategy,
+            common_expected_regret=first_trace.common_expected_regret,
+        )
+        with self.assertRaisesRegex(EvaluationInvariantError, "abrupt traces"):
+            validate_experiment_result(
+                replace(
+                    result,
+                    abrupt_traces=(mutable_trace, *result.abrupt_traces[1:]),
                 )
             )
 
@@ -924,7 +1272,7 @@ class ExperimentTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             EvaluationInvariantError,
-            "calibration predicted total",
+            "calibration mean|calibration predicted total",
         ):
             validate_experiment_result(
                 replace(

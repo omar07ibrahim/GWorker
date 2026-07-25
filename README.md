@@ -9,9 +9,11 @@ privacy-conscious recommendation policy.
 > local journal are implemented, together with an explainable adaptive-duration
 > policy. A locked synthetic evaluation engine and its pre-registered protocol
 > are also implemented. Seed-level stratified bootstrap statistics and a clean
-> source-provenance gate are in place; the publication runner, full locked run,
-> and generated result visuals have not been produced yet. Journal integration
-> and the end-user CLI remain later milestones.
+> source-provenance gate are in place. A fail-closed
+> [publication evidence contract](docs/publication-evidence.md) now preserves
+> all result denominators and required visual rows; the publication runner,
+> full locked run, and generated result visuals have not been produced yet.
+> Journal integration and the end-user CLI remain later milestones.
 
 ## Why an event log?
 
