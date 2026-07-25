@@ -7,9 +7,10 @@ privacy-conscious recommendation policy.
 
 > **Development status:** the event-sourced domain foundation and transactional
 > local journal are implemented, together with an explainable adaptive-duration
-> policy. Synthetic evaluation, journal integration, the CLI, and reproducible
-> visual evidence remain incremental milestones. This README deliberately does
-> not claim that those pieces exist yet.
+> policy. A locked synthetic evaluation engine and its pre-registered protocol
+> are also implemented; the full locked run and generated result visuals have
+> not been produced yet. Journal integration and the end-user CLI remain later
+> milestones.
 
 ## Why an event log?
 
@@ -91,8 +92,12 @@ linkage; the current implementation makes no verified-log claim.
 
 The ordinal adjustment is a transparent preference heuristic, not observed
 counterfactual reward and not evidence that a longer or shorter session causes
-better work. The upcoming simulator will evaluate it against fixed and adaptive
-baselines under controlled synthetic preference drift.
+better work. The [locked synthetic evaluation
+protocol](docs/evaluation-protocol.md) freezes the personas, randomization,
+baselines, common availability-only primary contrast, diagnostics, and
+interpretation boundary before the full evaluation seeds are run. A separate
+path-opportunity term prevents a strategy from looking good merely because its
+previous choices trapped it behind the one-step guardrail.
 
 ## Current scope
 
@@ -106,6 +111,11 @@ baselines under controlled synthetic preference drift.
 - A sliding-window hierarchical softmax-UCB duration policy with explicit
   feedback, bounded exploration, logged propensities, and explainable arm
   scores.
+- A standard-library synthetic evaluation engine with balanced contexts,
+  coherent paired potential outcomes, four fixed baselines, a last-choice
+  baseline, an analytic myopic oracle that never sees realized outcomes,
+  common/path regret decomposition, pooled sufficient statistics, runtime
+  completeness checks, and seed-level adaptive-replica aggregation.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
@@ -162,8 +172,9 @@ release decision for Omar.
 
 ## Roadmap
 
-1. Deterministic synthetic preference-drift evaluation with paired baselines,
-   uncertainty intervals, and generated result plots.
+1. Run the pre-registered synthetic evaluation, calculate paired seed-level
+   uncertainty, and generate the complete result tables and plots without
+   changing the locked policy or evaluator.
 2. Journal integration plus a deterministic CLI simulation and crash-recovery
    workflow.
 3. Offline replay evaluation with propensity diagnostics and baseline

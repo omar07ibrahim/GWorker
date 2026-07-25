@@ -15,6 +15,8 @@ POLICY_FAMILY = "hierarchical-softmax-ucb-v1"
 MAX_AVAILABLE_SECONDS = 24 * 60 * 60
 MAX_DECISION_SEQUENCE = 2**63 - 1
 MAX_TEMPLATES = 32
+FIT_REWARD_WEIGHT = 0.8
+COMPLETION_REWARD_WEIGHT = 0.2
 
 
 class PolicyInputError(ValueError):
@@ -212,7 +214,10 @@ class ReviewedDecision:
 
         fit_reward = 1.0 if self.fit is DurationFit.JUST_RIGHT else 0.0
         completion_reward = 1.0 if self.objective_completed else 0.0
-        return 0.8 * fit_reward + 0.2 * completion_reward
+        return (
+            FIT_REWARD_WEIGHT * fit_reward
+            + COMPLETION_REWARD_WEIGHT * completion_reward
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -471,7 +476,7 @@ class HierarchicalSoftmaxUCB:
                     f"history references unknown template_id: {review.template_id}"
                 )
             template = self._template_by_id[review.template_id]
-            feasible, _ = self._feasible_templates(review.context)
+            feasible, _ = self.feasible_templates(review.context)
             if template not in feasible:
                 raise PolicyInputError(
                     "history contains a template that violated policy guardrails"
@@ -505,10 +510,14 @@ class HierarchicalSoftmaxUCB:
 
         return EvidenceBucket.GLOBAL, "global", reviews
 
-    def _feasible_templates(
+    def feasible_templates(
         self,
         context: FocusContext,
     ) -> tuple[tuple[FocusTemplate, ...], tuple[str, ...]]:
+        """Return arms allowed by availability and one-step guardrails."""
+
+        if not isinstance(context, FocusContext):
+            raise PolicyInputError("context must be a FocusContext")
         available = tuple(
             template
             for template in self.templates
@@ -670,7 +679,7 @@ class HierarchicalSoftmaxUCB:
                 "decision_sequence must be newer than the history tail"
             )
         bucket, bucket_label, evidence = self._select_bucket(context, window)
-        feasible, guardrail_reasons = self._feasible_templates(context)
+        feasible, guardrail_reasons = self.feasible_templates(context)
         arm_scores = self._normalize(self._score_arms(feasible, evidence))
         selected = self._sample(arm_scores, rng)
 

@@ -371,6 +371,8 @@ class RecommendationTests(unittest.TestCase):
 
     def test_availability_filters_before_scoring(self) -> None:
         policy = HierarchicalSoftmaxUCB()
+        with self.assertRaisesRegex(PolicyInputError, "FocusContext"):
+            policy.feasible_templates(object())  # type: ignore[arg-type]
         recommendation = policy.recommend(
             context(available_seconds=18 * 60),
             [],
