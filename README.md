@@ -11,9 +11,12 @@ privacy-conscious recommendation policy.
 > are also implemented. Seed-level stratified bootstrap statistics and a clean
 > source-provenance gate are in place. A fail-closed
 > [publication evidence contract](docs/publication-evidence.md) now preserves
-> all result denominators and required visual rows; the publication runner,
-> full locked run, and generated result visuals have not been produced yet.
-> Journal integration and the end-user CLI remain later milestones.
+> all result denominators and required visual rows. The single-use publication
+> runner now binds the clean source, checks conservative host capacity before
+> claiming the held-out namespace, and can resume deterministic materialization
+> without retrying evaluation. The full locked run and its outcome visuals have
+> not been produced. Journal integration and the end-user CLI remain later
+> milestones.
 
 ## Why an event log?
 
@@ -119,6 +122,11 @@ previous choices trapped it behind the one-step guardrail.
   baseline, an analytic myopic oracle that never sees realized outcomes,
   common/path regret decomposition, pooled sufficient statistics, runtime
   completeness checks, and seed-level adaptive-replica aggregation.
+- A canonical binary result codec, canonical report/evidence documents, and an
+  append-only publication state chain bound to the exact clean source.
+- A Linux fail-closed publication runner with private descriptor-relative I/O,
+  immutable artifact publication, crash recovery, burn-on-reopen semantics for
+  an interrupted evaluation, and a read-only resource preflight.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
@@ -128,6 +136,24 @@ Run the foundation checks:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 -m compileall -q src tests
 ```
+
+Inspect the held-out publication run without claiming it:
+
+```bash
+PYTHONPATH=src python3 -m gworker.publication_runner --repo-root "$PWD" status
+PYTHONPATH=src python3 -m gworker.publication_runner --repo-root "$PWD" preflight
+```
+
+`preflight` is read-only. It first requires an exact clean committed checkout,
+then checks effective cgroup-aware memory, swap, filesystem bytes, inodes, and
+the file-descriptor limit. A failing preflight exits with code 2 and creates no
+run directory or evaluation permit.
+
+The `run` command is intentionally not a routine demo command. It has no force,
+reset, or evaluation-retry flag. Once it durably enters `EVALUATING`, a process
+restart treats that run as burned rather than silently consuming the held-out
+namespace again. Run it only on the clean source commit that will be published,
+and only after `preflight` reports `"ready":true`.
 
 ## Design boundaries
 
@@ -175,12 +201,14 @@ release decision for Omar.
 
 ## Roadmap
 
-1. Run the pre-registered synthetic evaluation, calculate paired seed-level
-   uncertainty, and generate the complete result tables and plots without
-   changing the locked policy or evaluator.
-2. Journal integration plus a deterministic CLI simulation and crash-recovery
-   workflow.
-3. Offline replay evaluation with propensity diagnostics and baseline
+1. Generate reproducible synthetic journal/policy demos and non-result
+   architecture visuals from the implemented code.
+2. On a host that passes the frozen resource gate, run the pre-registered
+   synthetic evaluation once, calculate paired seed-level uncertainty, and
+   generate the complete result tables and plots without changing the locked
+   policy or evaluator.
+3. Journal integration plus an end-user CLI workflow.
+4. Offline replay evaluation with propensity diagnostics and baseline
    comparisons.
-4. Reproducible CLI captures and a short terminal demo generated from synthetic
+5. Reproducible CLI captures and a short terminal demo generated from synthetic
    data.

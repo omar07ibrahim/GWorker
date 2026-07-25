@@ -188,4 +188,6 @@ renderer fixtures. A future fixture renderer must visibly mark its output
 and never link it from the root README.
 
 Neither evidence builder runs the evaluator. The single-use publication runner
-will remain the only component allowed to consume the held-out namespace.
+is the only component allowed to consume the held-out namespace. It binds the
+clean source before issuing a permit and may resume deterministic
+materialization, but it never retries a reopened `EVALUATING` run.
