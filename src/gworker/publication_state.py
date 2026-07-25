@@ -58,9 +58,10 @@ from .evidence import (
 )
 from .policy import POLICY_ID
 
-STATE_SCHEMA_VERSION: Final = "gworker-publication-state-v1"
+STATE_SCHEMA_VERSION: Final = "gworker-publication-state-v2"
 LOCK_FILE_NAME: Final = "lock"
 STATE_DIRECTORY_NAME: Final = "states"
+SOURCE_PROVENANCE_FILE_NAME: Final = "source-provenance.json"
 
 _MAX_STATE_BYTES: Final = 64 * 1024
 _MAX_STATE_CONTAINERS: Final = 256
@@ -464,14 +465,21 @@ def _validate_record(
         raise error_type("publication cardinalities are not uniquely canonical")
 
     if record.stage in {PublicationStage.PREPARED, PublicationStage.EVALUATING}:
-        if record.artifacts or record.cardinalities:
-            raise error_type(f"{record.stage.value} state cannot bind output")
+        if artifact_names != (SOURCE_PROVENANCE_FILE_NAME,):
+            raise error_type(f"{record.stage.value} state must bind source provenance")
+        if record.cardinalities:
+            raise error_type(f"{record.stage.value} state cannot bind cardinalities")
         return
 
     result_values = _expected_result_cardinality_values()
     if record.stage is PublicationStage.EVALUATED:
-        if artifact_names != (_RESULT_ARTIFACT_NAME,):
-            raise error_type("evaluated state must bind only result.bin")
+        if artifact_names != (
+            _RESULT_ARTIFACT_NAME,
+            SOURCE_PROVENANCE_FILE_NAME,
+        ):
+            raise error_type(
+                "evaluated state must bind result.bin and source provenance"
+            )
         if cardinality_names != _RESULT_CARDINALITY_NAMES:
             raise error_type("evaluated state cardinalities are invalid")
         if {
@@ -484,6 +492,7 @@ def _validate_record(
         _EVIDENCE_ARTIFACT_NAME,
         _REPORT_ARTIFACT_NAME,
         _RESULT_ARTIFACT_NAME,
+        SOURCE_PROVENANCE_FILE_NAME,
     )
     expected_cardinalities = {
         **_expected_cardinality_values(),
@@ -1258,6 +1267,7 @@ class PublicationStateStore:
         cls,
         run_directory: str | Path,
         *,
+        source_provenance: ArtifactBinding,
         config: ExperimentConfig = DEFAULT_EXPERIMENT_CONFIG,
     ) -> PublicationStateStore:
         """Claim a new locked run and durably append ``PREPARED``.
@@ -1277,6 +1287,18 @@ class PublicationStateStore:
         if config != DEFAULT_EXPERIMENT_CONFIG:
             raise PublicationStateConflict(
                 "publication state requires the exact locked config"
+            )
+        if type(source_provenance) is not ArtifactBinding:
+            raise PublicationStateConflict(
+                "publication state requires source provenance"
+            )
+        _validate_artifact_binding(
+            source_provenance,
+            error_type=PublicationStateConflict,
+        )
+        if source_provenance.name != SOURCE_PROVENANCE_FILE_NAME:
+            raise PublicationStateConflict(
+                "publication state requires source-provenance.json"
             )
         run_path = _validate_run_path(run_directory)
         parent_fd, parent_id, run_fd, run_id = _create_or_open_run_directory(
@@ -1330,7 +1352,7 @@ class PublicationStateStore:
             prepared = store._new_record(
                 stage=PublicationStage.PREPARED,
                 previous_sha256=None,
-                artifacts=(),
+                artifacts=(source_provenance,),
                 cardinalities=(),
             )
             store._write_record(prepared)
@@ -1684,10 +1706,11 @@ class PublicationStateStore:
     def begin_evaluation(self) -> _LockedEvaluationPermit:
         """Durably claim held-out computation, then issue its one-use permit."""
 
+        inspection = self.inspect()
         replayed = self._append(
             expected_current=PublicationStage.PREPARED,
             stage=PublicationStage.EVALUATING,
-            artifacts=(),
+            artifacts=inspection.current.artifacts,
             cardinalities=(),
         )
         claim_sha256 = replayed.current_sha256
@@ -1773,10 +1796,16 @@ class PublicationStateStore:
             CardinalityBinding(name, supplied[name])
             for name in _RESULT_CARDINALITY_NAMES
         )
+        artifacts = tuple(
+            sorted(
+                (*inspection.current.artifacts, result),
+                key=lambda binding: binding.name,
+            )
+        )
         replayed = self._append(
             expected_current=PublicationStage.EVALUATING,
             stage=PublicationStage.EVALUATED,
-            artifacts=(result,),
+            artifacts=artifacts,
             cardinalities=cardinalities,
         )
         self._live_evaluation_claim = None

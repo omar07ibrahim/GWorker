@@ -15,9 +15,11 @@ import gworker.publication_state as state_module
 from gworker.evaluation import (
     DEFAULT_EXPERIMENT_CONFIG,
     LOCKED_EVALUATION_RUN_KEY,
+    ExperimentConfig,
 )
 from gworker.evidence import expected_publication_cardinalities
 from gworker.publication_state import (
+    SOURCE_PROVENANCE_FILE_NAME,
     ArtifactBinding,
     CardinalityBinding,
     PublicationRunBusy,
@@ -44,6 +46,22 @@ def artifact(name: str, content: bytes | None = None) -> ArtifactBinding:
     )
 
 
+def source_provenance_artifact() -> ArtifactBinding:
+    return artifact(SOURCE_PROVENANCE_FILE_NAME, b'{"source":"committed"}')
+
+
+def initialize_store(
+    run_directory: str | Path,
+    *,
+    config: ExperimentConfig = DEFAULT_EXPERIMENT_CONFIG,
+) -> PublicationStateStore:
+    return PublicationStateStore.initialize(
+        run_directory,
+        source_provenance=source_provenance_artifact(),
+        config=config,
+    )
+
+
 class PublicationStateStoreTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary_directory = tempfile.TemporaryDirectory()
@@ -54,7 +72,7 @@ class PublicationStateStoreTests(unittest.TestCase):
         self.temporary_directory.cleanup()
 
     def initialize(self) -> PublicationStateStore:
-        return PublicationStateStore.initialize(self.run_directory)
+        return initialize_store(self.run_directory)
 
     @staticmethod
     def evaluate(store: PublicationStateStore) -> None:
@@ -122,6 +140,64 @@ class PublicationStateStoreTests(unittest.TestCase):
             self.state_path(0).read_bytes(),
         )
 
+    def test_initialize_requires_exact_source_provenance_binding(self) -> None:
+        with self.assertRaises(TypeError):
+            PublicationStateStore.initialize(self.run_directory)
+        self.assertFalse(self.run_directory.exists())
+
+        for supplied, pattern in (
+            (cast(ArtifactBinding, object()), "requires source provenance"),
+            (artifact("result.bin"), "source-provenance.json"),
+        ):
+            with (
+                self.subTest(supplied=supplied),
+                self.assertRaisesRegex(PublicationStateConflict, pattern),
+            ):
+                PublicationStateStore.initialize(
+                    self.run_directory,
+                    source_provenance=supplied,
+                )
+            self.assertFalse(self.run_directory.exists())
+
+    def test_prepared_record_binds_exact_source_provenance(self) -> None:
+        expected = source_provenance_artifact()
+        with self.initialize() as store:
+            prepared = store.inspect().current
+        self.assertEqual(prepared.artifacts, (expected,))
+        self.assertEqual(prepared.cardinalities, ())
+
+    def test_replay_rejects_changed_source_provenance_binding(self) -> None:
+        store = self.initialize()
+        store.begin_evaluation()
+        store.close()
+        evaluating_path = self.state_path(1)
+        evaluating = decode_state_record(evaluating_path.read_bytes())
+        changed = replace(
+            evaluating.artifacts[0],
+            content_sha256="0" * 64,
+        )
+        tampered = replace(evaluating, artifacts=(changed,))
+        evaluating_path.write_bytes(encode_state_record(tampered))
+        with self.assertRaisesRegex(
+            PublicationStateCorrupt,
+            "changed an artifact",
+        ):
+            PublicationStateStore.open(self.run_directory)
+
+    def test_v1_state_schema_is_rejected(self) -> None:
+        with self.initialize() as store:
+            prepared = store.inspect().current
+        object.__setattr__(
+            prepared,
+            "schema_version",
+            "gworker-publication-state-v1",
+        )
+        with self.assertRaisesRegex(
+            PublicationStateConflict,
+            "schema version",
+        ):
+            encode_state_record(prepared)
+
     def test_full_lifecycle_preserves_chain_artifacts_and_counts(self) -> None:
         with self.initialize() as store:
             self.evaluate(store)
@@ -155,8 +231,12 @@ class PublicationStateStoreTests(unittest.TestCase):
                 "manifest.json",
                 "report.json",
                 "result.bin",
+                SOURCE_PROVENANCE_FILE_NAME,
             ),
         )
+        provenance = source_provenance_artifact()
+        for record in inspection.records:
+            self.assertIn(provenance, record.artifacts)
         self.assertIn(
             CardinalityBinding("hard_failure_count", 0),
             sealed.cardinalities,
@@ -306,7 +386,7 @@ class PublicationStateStoreTests(unittest.TestCase):
         ):
             with self.subTest(field=field), tempfile.TemporaryDirectory() as temp:
                 run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-                with PublicationStateStore.initialize(run) as store:
+                with initialize_store(run) as store:
                     permit = store.begin_evaluation()
                     permit.consume()
                     object.__delattr__(permit, field)
@@ -483,14 +563,14 @@ class PublicationStateStoreTests(unittest.TestCase):
                 self.subTest(candidate=candidate),
                 self.assertRaises(PublicationStateSecurityError),
             ):
-                PublicationStateStore.initialize(candidate)
+                initialize_store(candidate)
 
         for candidate in (None, b"/tmp/synthetic-eval-v3-eval"):
             with (
                 self.subTest(candidate=candidate),
                 self.assertRaises(PublicationStateSecurityError),
             ):
-                PublicationStateStore.initialize(cast(str | Path, candidate))
+                initialize_store(cast(str | Path, candidate))
 
     def test_parent_path_symlink_is_rejected(self) -> None:
         actual = self.root / "actual"
@@ -501,7 +581,7 @@ class PublicationStateStoreTests(unittest.TestCase):
             PublicationStateSecurityError,
             "real directories",
         ):
-            PublicationStateStore.initialize(link / LOCKED_EVALUATION_RUN_KEY)
+            initialize_store(link / LOCKED_EVALUATION_RUN_KEY)
 
     def test_public_parent_and_run_modes_are_rejected(self) -> None:
         public_parent = self.root / "public"
@@ -511,7 +591,7 @@ class PublicationStateStoreTests(unittest.TestCase):
             PublicationStateSecurityError,
             "mode must be 0700",
         ):
-            PublicationStateStore.initialize(public_parent / LOCKED_EVALUATION_RUN_KEY)
+            initialize_store(public_parent / LOCKED_EVALUATION_RUN_KEY)
 
         self.run_directory.mkdir(mode=0o700)
         self.run_directory.chmod(0o755)
@@ -554,7 +634,7 @@ class PublicationStateStoreTests(unittest.TestCase):
                     with self.assertRaises(PublicationStateSecurityError):
                         PublicationStateStore.open(run)
                 else:
-                    PublicationStateStore.initialize(run).close()
+                    initialize_store(run).close()
                     state_path = run / "states" / "000-prepared.json"
                     target = root / "state-target"
                     state_path.rename(target)
@@ -573,7 +653,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            PublicationStateStore.initialize(run).close()
+            initialize_store(run).close()
             os.link(
                 run / "states" / "000-prepared.json",
                 run / "record-copy",
@@ -600,7 +680,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            store = PublicationStateStore.initialize(run)
+            store = initialize_store(run)
             moved_states = run / "moved-states"
             (run / "states").rename(moved_states)
             (run / "states").mkdir(mode=0o700)
@@ -624,7 +704,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            PublicationStateStore.initialize(run).close()
+            initialize_store(run).close()
             (run / "states" / "notes.txt").write_text("not state")
             with self.assertRaisesRegex(
                 PublicationStateCorrupt,
@@ -650,7 +730,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            store = PublicationStateStore.initialize(run)
+            store = initialize_store(run)
             store.begin_evaluation()
             store.close()
             second_path = run / "states" / "001-evaluating.json"
@@ -682,7 +762,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            store = PublicationStateStore.initialize(run)
+            store = initialize_store(run)
             self.evaluate(store)
             self.materialize(store)
             store.close()
@@ -709,16 +789,16 @@ class PublicationStateStoreTests(unittest.TestCase):
         canonical = self.state_path(0).read_bytes()
         malformed = (
             canonical.replace(
-                b'"artifacts":[]',
-                b'"artifacts":[],"artifacts":[]',
+                b'"cardinalities":[]',
+                b'"cardinalities":[],"cardinalities":[]',
                 1,
             ),
             canonical.replace(
-                b'"artifacts":[]',
-                b'"artifacts":[],"unknown":0',
+                b'"cardinalities":[]',
+                b'"cardinalities":[],"unknown":0',
                 1,
             ),
-            canonical.replace(b'"artifacts":[],', b"", 1),
+            canonical.replace(b'"cardinalities":[],', b"", 1),
             b" " + canonical,
         )
         patterns = (
@@ -848,7 +928,7 @@ class PublicationStateStoreTests(unittest.TestCase):
             ({"previous_record_sha256": "0" * 64}, "previous digest"),
             (
                 {"artifacts": (artifact("result.bin"),)},
-                "cannot bind output",
+                "must bind source provenance",
             ),
         ):
             with (
@@ -870,21 +950,18 @@ class PublicationStateStoreTests(unittest.TestCase):
         materialized = records[3]
         sealed = records[4]
 
-        invalid_records = (
-            (
-                replace(
-                    evaluated.artifacts[0],
-                    name="report.json",
-                ),
-                "artifact",
-            ),
+        wrong_artifact = replace(
+            evaluated.artifacts[0],
+            name="report.json",
         )
-        for wrong_artifact, _label in invalid_records:
-            with self.assertRaisesRegex(
-                PublicationStateConflict,
-                "only result.bin",
-            ):
-                replace(evaluated, artifacts=(wrong_artifact,))
+        with self.assertRaisesRegex(
+            PublicationStateConflict,
+            "result.bin and source provenance",
+        ):
+            replace(
+                evaluated,
+                artifacts=(wrong_artifact, evaluated.artifacts[1]),
+            )
 
         with self.assertRaisesRegex(
             PublicationStateConflict,
@@ -1349,7 +1426,7 @@ class PublicationStateStoreTests(unittest.TestCase):
                 PublicationRunExists,
                 "states directory",
             ):
-                PublicationStateStore.initialize(run)
+                initialize_store(run)
 
     def test_mkdir_stat_lock_and_zero_write_failures_are_normalized(self) -> None:
         real_mkdir = os.mkdir
@@ -1390,7 +1467,7 @@ class PublicationStateStoreTests(unittest.TestCase):
                     "states directory",
                 ),
             ):
-                PublicationStateStore.initialize(run)
+                initialize_store(run)
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
@@ -1410,11 +1487,11 @@ class PublicationStateStoreTests(unittest.TestCase):
                 ),
                 self.assertRaisesRegex(PublicationStateIOError, "acquire"),
             ):
-                PublicationStateStore.initialize(run)
+                initialize_store(run)
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            store = PublicationStateStore.initialize(run)
+            store = initialize_store(run)
             with (
                 patch.object(os, "write", return_value=0),
                 self.assertRaisesRegex(
@@ -1541,7 +1618,7 @@ class PublicationStateStoreTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp) / LOCKED_EVALUATION_RUN_KEY
-            store = PublicationStateStore.initialize(run)
+            store = initialize_store(run)
             real_flock = state_module.fcntl.flock
 
             def fail_unlock(descriptor: int, operation: int) -> None:
@@ -1669,7 +1746,7 @@ class PublicationStateStoreTests(unittest.TestCase):
             PublicationStateConflict,
             "exact locked config",
         ):
-            PublicationStateStore.initialize(
+            initialize_store(
                 self.run_directory,
                 config=config,
             )
