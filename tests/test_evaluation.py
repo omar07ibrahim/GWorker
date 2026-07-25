@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import random
 import unittest
 from collections import Counter
@@ -790,6 +791,14 @@ class TrajectoryTests(unittest.TestCase):
 
 class ExperimentTests(unittest.TestCase):
     def test_locked_eval_requires_an_exact_single_use_runner_permit(self) -> None:
+        class ForgedPermit(evaluation._LockedEvaluationPermit):
+            def __init__(self) -> None:
+                pass
+
+        class ForgedAuthorization(evaluation._AuthorizedEvaluationRun):
+            def __init__(self) -> None:
+                pass
+
         with patch.object(evaluation, "generate_environment") as generate:
             with self.assertRaisesRegex(EvaluationInputError, "publication-runner"):
                 run_experiment(DEFAULT_EXPERIMENT_CONFIG)
@@ -800,6 +809,11 @@ class ExperimentTests(unittest.TestCase):
                         environment_seeds=(0,),
                     )
                 )
+            with self.assertRaisesRegex(EvaluationInputError, "single-use"):
+                run_experiment(
+                    DEFAULT_EXPERIMENT_CONFIG,
+                    _eval_permit=ForgedPermit(),
+                )
             generate.assert_not_called()
 
         with patch.object(evaluation, "_context_block") as context_block:
@@ -809,6 +823,11 @@ class ExperimentTests(unittest.TestCase):
                     availability_mode=DEFAULT_EXPERIMENT_CONFIG.availability_modes[0],
                     environment_seed=DEFAULT_EXPERIMENT_CONFIG.environment_seeds[0],
                     config=DEFAULT_EXPERIMENT_CONFIG,
+                )
+            with self.assertRaisesRegex(EvaluationInputError, "authorization"):
+                evaluation._authorize_eval_component(
+                    DEFAULT_EXPERIMENT_CONFIG,
+                    ForgedAuthorization(),
                 )
             context_block.assert_not_called()
 
@@ -861,6 +880,98 @@ class ExperimentTests(unittest.TestCase):
                 DEFAULT_EXPERIMENT_CONFIG,
                 permit,
             )
+
+    @unittest.skipUnless(hasattr(os, "fork"), "requires POSIX fork")
+    def test_locked_capabilities_cannot_cross_a_fork_boundary(self) -> None:
+        permit = evaluation._issue_locked_evaluation_permit(
+            run_key=evaluation.LOCKED_EVALUATION_RUN_KEY,
+            claim_sha256="0" * 64,
+        )
+        read_descriptor, write_descriptor = os.pipe()
+        child_pid = os.fork()
+        if child_pid == 0:
+            os.close(read_descriptor)
+            try:
+                permit.consume()
+            except EvaluationInputError:
+                outcome = b"permit-rejected"
+            except BaseException as error:
+                outcome = f"raw:{type(error).__name__}".encode()
+            else:
+                outcome = b"permit-consumed"
+            os.write(write_descriptor, outcome)
+            os.close(write_descriptor)
+            os._exit(0)
+
+        os.close(write_descriptor)
+        child_outcome = os.read(read_descriptor, 128)
+        os.close(read_descriptor)
+        waited_pid, wait_status = os.waitpid(child_pid, 0)
+        self.assertEqual(waited_pid, child_pid)
+        self.assertTrue(os.WIFEXITED(wait_status))
+        self.assertEqual(os.WEXITSTATUS(wait_status), 0)
+        self.assertEqual(child_outcome, b"permit-rejected")
+
+        authorization = permit.consume()
+        authorization.validate()
+        read_descriptor, write_descriptor = os.pipe()
+        child_pid = os.fork()
+        if child_pid == 0:
+            os.close(read_descriptor)
+            try:
+                authorization.validate()
+            except EvaluationInputError:
+                outcome = b"authorization-rejected"
+            except BaseException as error:
+                outcome = f"raw:{type(error).__name__}".encode()
+            else:
+                outcome = b"authorization-accepted"
+            os.write(write_descriptor, outcome)
+            os.close(write_descriptor)
+            os._exit(0)
+
+        os.close(write_descriptor)
+        child_outcome = os.read(read_descriptor, 128)
+        os.close(read_descriptor)
+        waited_pid, wait_status = os.waitpid(child_pid, 0)
+        self.assertEqual(waited_pid, child_pid)
+        self.assertTrue(os.WIFEXITED(wait_status))
+        self.assertEqual(os.WEXITSTATUS(wait_status), 0)
+        self.assertEqual(child_outcome, b"authorization-rejected")
+        authorization.validate()
+
+    def test_locked_capabilities_fail_closed_after_slot_tampering(self) -> None:
+        for slot_name in (
+            "_claim_sha256",
+            "_consumed",
+            "_owner_pid",
+            "_secret",
+        ):
+            permit = evaluation._issue_locked_evaluation_permit(
+                run_key=evaluation.LOCKED_EVALUATION_RUN_KEY,
+                claim_sha256="0" * 64,
+            )
+            object.__delattr__(permit, slot_name)
+            with (
+                self.subTest(capability="permit", field=slot_name),
+                self.assertRaisesRegex(
+                    EvaluationInputError,
+                    "invalid or used",
+                ),
+            ):
+                permit.consume()
+
+        for slot_name in ("_claim_sha256", "_owner_pid", "_secret"):
+            authorization = evaluation._issue_locked_evaluation_permit(
+                run_key=evaluation.LOCKED_EVALUATION_RUN_KEY,
+                claim_sha256="0" * 64,
+            ).consume()
+            object.__delattr__(authorization, slot_name)
+            with (
+                self.subTest(capability="authorization", field=slot_name),
+                self.assertRaisesRegex(EvaluationInputError, "invalid"),
+            ):
+                authorization.validate()
 
     def test_small_experiment_is_complete_at_seed_grain(self) -> None:
         config = small_config(

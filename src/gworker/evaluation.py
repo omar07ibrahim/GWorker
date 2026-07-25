@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import random
 from dataclasses import dataclass, fields
 from enum import StrEnum
@@ -403,39 +404,78 @@ _EVALUATION_PERMIT_SECRET = object()
 class _AuthorizedEvaluationRun:
     """Reusable capability scoped to one already-claimed locked run."""
 
-    __slots__ = ("_claim_sha256", "_secret")
+    __slots__ = ("_claim_sha256", "_owner_pid", "_secret")
 
-    def __init__(self, *, claim_sha256: str, secret: object) -> None:
+    def __init__(
+        self,
+        *,
+        claim_sha256: str,
+        owner_pid: int,
+        secret: object,
+    ) -> None:
         if secret is not _EVALUATION_PERMIT_SECRET:
             raise EvaluationInputError("locked run authorization is private")
         self._claim_sha256 = claim_sha256
+        self._owner_pid = owner_pid
         self._secret = secret
 
     def validate(self) -> None:
-        if self._secret is not _EVALUATION_PERMIT_SECRET:
+        owner_pid = getattr(self, "_owner_pid", None)
+        if (
+            getattr(self, "_secret", None) is not _EVALUATION_PERMIT_SECRET
+            or type(owner_pid) is not int
+            or owner_pid != os.getpid()
+            or not _valid_claim_sha256(getattr(self, "_claim_sha256", None))
+        ):
             raise EvaluationInputError("locked run authorization is invalid")
 
 
 class _LockedEvaluationPermit:
-    """Single-use in-process capability issued after the durable runner claim."""
+    """Single-use process-bound capability issued after a durable runner claim."""
 
-    __slots__ = ("_claim_sha256", "_consumed", "_secret")
+    __slots__ = ("_claim_sha256", "_consumed", "_owner_pid", "_secret")
 
-    def __init__(self, *, claim_sha256: str, secret: object) -> None:
+    def __init__(
+        self,
+        *,
+        claim_sha256: str,
+        owner_pid: int,
+        secret: object,
+    ) -> None:
         if secret is not _EVALUATION_PERMIT_SECRET:
             raise EvaluationInputError("locked evaluation permit is private")
         self._claim_sha256 = claim_sha256
         self._consumed = False
+        self._owner_pid = owner_pid
         self._secret = secret
 
     def consume(self) -> _AuthorizedEvaluationRun:
-        if self._secret is not _EVALUATION_PERMIT_SECRET or self._consumed:
+        claim_sha256 = getattr(self, "_claim_sha256", None)
+        owner_pid = getattr(self, "_owner_pid", None)
+        if (
+            getattr(self, "_secret", None) is not _EVALUATION_PERMIT_SECRET
+            or getattr(self, "_consumed", None) is not False
+            or type(owner_pid) is not int
+            or owner_pid != os.getpid()
+            or not _valid_claim_sha256(claim_sha256)
+        ):
             raise EvaluationInputError("locked evaluation permit is invalid or used")
+        assert type(claim_sha256) is str
+        assert type(owner_pid) is int
         self._consumed = True
         return _AuthorizedEvaluationRun(
-            claim_sha256=self._claim_sha256,
-            secret=self._secret,
+            claim_sha256=claim_sha256,
+            owner_pid=owner_pid,
+            secret=_EVALUATION_PERMIT_SECRET,
         )
+
+
+def _valid_claim_sha256(value: object) -> bool:
+    return (
+        type(value) is str
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
 
 
 def _issue_locked_evaluation_permit(
@@ -447,14 +487,11 @@ def _issue_locked_evaluation_permit(
 
     if run_key != LOCKED_EVALUATION_RUN_KEY:
         raise EvaluationInputError("locked evaluation run key is invalid")
-    if (
-        not isinstance(claim_sha256, str)
-        or len(claim_sha256) != 64
-        or any(character not in "0123456789abcdef" for character in claim_sha256)
-    ):
+    if not _valid_claim_sha256(claim_sha256):
         raise EvaluationInputError("locked evaluation claim digest is invalid")
     return _LockedEvaluationPermit(
         claim_sha256=claim_sha256,
+        owner_pid=os.getpid(),
         secret=_EVALUATION_PERMIT_SECRET,
     )
 
@@ -473,7 +510,7 @@ def _authorize_eval_component(
         raise EvaluationInputError(
             "eval requires the exact locked experiment configuration"
         )
-    if not isinstance(authorization, _AuthorizedEvaluationRun):
+    if type(authorization) is not _AuthorizedEvaluationRun:
         raise EvaluationInputError(
             "eval generation requires publication-runner authorization"
         )
@@ -2771,7 +2808,7 @@ def _authorize_experiment_run(
         raise EvaluationInputError(
             "eval requires the exact locked experiment configuration"
         )
-    if not isinstance(permit, _LockedEvaluationPermit):
+    if type(permit) is not _LockedEvaluationPermit:
         raise EvaluationInputError(
             "eval requires a single-use publication-runner permit"
         )
