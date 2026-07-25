@@ -150,6 +150,17 @@ namespaces. Default policy parameters may not be tuned after viewing locked
 `eval` results. An algorithm change requires a `POLICY_FAMILY` bump, updated
 golden replay vectors, and a new evaluator version.
 
+`run_experiment()` requires an explicit configuration. It rejects every
+`eval` call unless the configuration is exactly the locked population and the
+future publication runner supplies a private single-use in-process permit.
+`generate_environment()` and `simulate_trajectory()` also reject the `eval`
+namespace unless they receive the reusable authorization created when that
+permit is consumed. The permit is issued only after the runner has durably
+claimed the fixed `synthetic-eval-v3-eval` run key. Development and test runs
+cannot accept either capability. These guards prevent an accidental public
+library call from consuming the held-out namespace; they are not presented as
+a security boundary against a developer deliberately modifying source code.
+
 ## Mandatory comparators
 
 Every strategy follows the same complete focus-plus-break availability and

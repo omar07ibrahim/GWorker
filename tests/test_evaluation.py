@@ -720,6 +720,79 @@ class TrajectoryTests(unittest.TestCase):
 
 
 class ExperimentTests(unittest.TestCase):
+    def test_locked_eval_requires_an_exact_single_use_runner_permit(self) -> None:
+        with patch.object(evaluation, "generate_environment") as generate:
+            with self.assertRaisesRegex(EvaluationInputError, "publication-runner"):
+                run_experiment(DEFAULT_EXPERIMENT_CONFIG)
+            with self.assertRaisesRegex(EvaluationInputError, "exact locked"):
+                run_experiment(
+                    replace(
+                        DEFAULT_EXPERIMENT_CONFIG,
+                        environment_seeds=(0,),
+                    )
+                )
+            generate.assert_not_called()
+
+        with patch.object(evaluation, "_context_block") as context_block:
+            with self.assertRaisesRegex(EvaluationInputError, "authorization"):
+                generate_environment(
+                    persona=DEFAULT_EXPERIMENT_CONFIG.personas[0],
+                    availability_mode=DEFAULT_EXPERIMENT_CONFIG.availability_modes[0],
+                    environment_seed=DEFAULT_EXPERIMENT_CONFIG.environment_seeds[0],
+                    config=DEFAULT_EXPERIMENT_CONFIG,
+                )
+            context_block.assert_not_called()
+
+        dev_config = small_config()
+        dev_environment = generate_environment(
+            persona=dev_config.personas[0],
+            availability_mode=dev_config.availability_modes[0],
+            environment_seed=dev_config.environment_seeds[0],
+            config=dev_config,
+        )
+        with patch.object(evaluation, "HierarchicalSoftmaxUCB") as policy:
+            with self.assertRaisesRegex(EvaluationInputError, "authorization"):
+                simulate_trajectory(
+                    dev_environment,
+                    Strategy.ADAPTIVE,
+                    policy_replica=0,
+                    config=DEFAULT_EXPERIMENT_CONFIG,
+                )
+            policy.assert_not_called()
+
+        for run_key, claim_sha256 in (
+            ("wrong-run", "0" * 64),
+            (evaluation.LOCKED_EVALUATION_RUN_KEY, "invalid"),
+        ):
+            with (
+                self.subTest(run_key=run_key, claim_sha256=claim_sha256),
+                self.assertRaises(EvaluationInputError),
+            ):
+                evaluation._issue_locked_evaluation_permit(
+                    run_key=run_key,
+                    claim_sha256=claim_sha256,
+                )
+
+        permit = evaluation._issue_locked_evaluation_permit(
+            run_key=evaluation.LOCKED_EVALUATION_RUN_KEY,
+            claim_sha256="0" * 64,
+        )
+        with self.assertRaisesRegex(EvaluationInputError, "dev or test"):
+            run_experiment(small_config(), _eval_permit=permit)
+        authorization = evaluation._authorize_experiment_run(
+            DEFAULT_EXPERIMENT_CONFIG,
+            permit,
+        )
+        evaluation._authorize_eval_component(
+            DEFAULT_EXPERIMENT_CONFIG,
+            authorization,
+        )
+        with self.assertRaisesRegex(EvaluationInputError, "invalid or used"):
+            evaluation._authorize_experiment_run(
+                DEFAULT_EXPERIMENT_CONFIG,
+                permit,
+            )
+
     def test_small_experiment_is_complete_at_seed_grain(self) -> None:
         config = small_config(
             personas=(DEFAULT_PERSONAS[0], DEFAULT_PERSONAS[4]),

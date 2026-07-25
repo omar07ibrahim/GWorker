@@ -35,6 +35,7 @@ from .policy import (
 EVALUATOR_VERSION = "synthetic-eval-v3"
 RESULT_SCHEMA_VERSION = "synthetic-eval-result-v1"
 LOCKED_POLICY_ID = "hierarchical-softmax-ucb-v1.8c10875dd38a025d"
+LOCKED_EVALUATION_RUN_KEY = "synthetic-eval-v3-eval"
 ALLOWED_SPLITS = ("dev", "test", "eval")
 CONTEXT_BLOCK_SIZE = len(TaskKind) * len(EnergyLevel)
 DEFAULT_HORIZON = 288
@@ -303,6 +304,89 @@ class ExperimentConfig:
 
 
 DEFAULT_EXPERIMENT_CONFIG = ExperimentConfig()
+
+
+_EVALUATION_PERMIT_SECRET = object()
+
+
+class _AuthorizedEvaluationRun:
+    """Reusable capability scoped to one already-claimed locked run."""
+
+    __slots__ = ("_claim_sha256", "_secret")
+
+    def __init__(self, *, claim_sha256: str, secret: object) -> None:
+        if secret is not _EVALUATION_PERMIT_SECRET:
+            raise EvaluationInputError("locked run authorization is private")
+        self._claim_sha256 = claim_sha256
+        self._secret = secret
+
+    def validate(self) -> None:
+        if self._secret is not _EVALUATION_PERMIT_SECRET:
+            raise EvaluationInputError("locked run authorization is invalid")
+
+
+class _LockedEvaluationPermit:
+    """Single-use in-process capability issued after the durable runner claim."""
+
+    __slots__ = ("_claim_sha256", "_consumed", "_secret")
+
+    def __init__(self, *, claim_sha256: str, secret: object) -> None:
+        if secret is not _EVALUATION_PERMIT_SECRET:
+            raise EvaluationInputError("locked evaluation permit is private")
+        self._claim_sha256 = claim_sha256
+        self._consumed = False
+        self._secret = secret
+
+    def consume(self) -> _AuthorizedEvaluationRun:
+        if self._secret is not _EVALUATION_PERMIT_SECRET or self._consumed:
+            raise EvaluationInputError("locked evaluation permit is invalid or used")
+        self._consumed = True
+        return _AuthorizedEvaluationRun(
+            claim_sha256=self._claim_sha256,
+            secret=self._secret,
+        )
+
+
+def _issue_locked_evaluation_permit(
+    *,
+    run_key: str,
+    claim_sha256: str,
+) -> _LockedEvaluationPermit:
+    """Issue the private capability consumed by the publication runner."""
+
+    if run_key != LOCKED_EVALUATION_RUN_KEY:
+        raise EvaluationInputError("locked evaluation run key is invalid")
+    if (
+        not isinstance(claim_sha256, str)
+        or len(claim_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in claim_sha256)
+    ):
+        raise EvaluationInputError("locked evaluation claim digest is invalid")
+    return _LockedEvaluationPermit(
+        claim_sha256=claim_sha256,
+        secret=_EVALUATION_PERMIT_SECRET,
+    )
+
+
+def _authorize_eval_component(
+    config: ExperimentConfig,
+    authorization: _AuthorizedEvaluationRun | None,
+) -> None:
+    if config.split != "eval":
+        if authorization is not None:
+            raise EvaluationInputError(
+                "locked run authorization cannot enter dev or test namespaces"
+            )
+        return
+    if config != DEFAULT_EXPERIMENT_CONFIG:
+        raise EvaluationInputError(
+            "eval requires the exact locked experiment configuration"
+        )
+    if not isinstance(authorization, _AuthorizedEvaluationRun):
+        raise EvaluationInputError(
+            "eval generation requires publication-runner authorization"
+        )
+    authorization.validate()
 
 
 @dataclass(frozen=True, slots=True)
@@ -705,9 +789,13 @@ def generate_environment(
     availability_mode: AvailabilityMode,
     environment_seed: int,
     config: ExperimentConfig,
+    _eval_authorization: _AuthorizedEvaluationRun | None = None,
 ) -> SyntheticEnvironment:
     """Generate paired contexts and common-random-number outcomes."""
 
+    if not isinstance(config, ExperimentConfig):
+        raise EvaluationInputError("config must be an ExperimentConfig")
+    _authorize_eval_component(config, _eval_authorization)
     if not isinstance(persona, Persona):
         raise EvaluationInputError("persona must be a Persona")
     if not isinstance(availability_mode, AvailabilityMode):
@@ -961,6 +1049,7 @@ def simulate_trajectory(
     *,
     policy_replica: int,
     config: ExperimentConfig,
+    _eval_authorization: _AuthorizedEvaluationRun | None = None,
 ) -> TrajectoryMetrics:
     """Run one trajectory with no access to future or latent state."""
 
@@ -970,6 +1059,7 @@ def simulate_trajectory(
         raise EvaluationInputError("strategy must be a Strategy")
     if not isinstance(config, ExperimentConfig):
         raise EvaluationInputError("config must be an ExperimentConfig")
+    _authorize_eval_component(config, _eval_authorization)
     expected_evaluator_id = evaluator_fingerprint(config)
     expected_design_id = evaluator_design_fingerprint()
     if environment.evaluator_id != expected_evaluator_id:
@@ -2436,13 +2526,37 @@ def validate_experiment_result(result: ExperimentResult) -> None:
         )
 
 
+def _authorize_experiment_run(
+    config: ExperimentConfig,
+    permit: _LockedEvaluationPermit | None,
+) -> _AuthorizedEvaluationRun | None:
+    if config.split != "eval":
+        if permit is not None:
+            raise EvaluationInputError(
+                "locked evaluation permits cannot authorize dev or test runs"
+            )
+        return None
+    if config != DEFAULT_EXPERIMENT_CONFIG:
+        raise EvaluationInputError(
+            "eval requires the exact locked experiment configuration"
+        )
+    if not isinstance(permit, _LockedEvaluationPermit):
+        raise EvaluationInputError(
+            "eval requires a single-use publication-runner permit"
+        )
+    return permit.consume()
+
+
 def run_experiment(
-    config: ExperimentConfig = DEFAULT_EXPERIMENT_CONFIG,
+    config: ExperimentConfig,
+    *,
+    _eval_permit: _LockedEvaluationPermit | None = None,
 ) -> ExperimentResult:
     """Execute every declared seed without filtering failures or outliers."""
 
     if not isinstance(config, ExperimentConfig):
         raise EvaluationInputError("config must be an ExperimentConfig")
+    authorization = _authorize_experiment_run(config, _eval_permit)
     if POLICY_ID != LOCKED_POLICY_ID:
         raise EvaluationInvariantError("loaded policy differs from locked default")
     summaries: list[ClusterSummary] = []
@@ -2460,6 +2574,7 @@ def run_experiment(
                     availability_mode=mode,
                     environment_seed=environment_seed,
                     config=config,
+                    _eval_authorization=authorization,
                 )
                 for strategy in Strategy:
                     replica_count = (
@@ -2471,6 +2586,7 @@ def run_experiment(
                             strategy,
                             policy_replica=replica,
                             config=config,
+                            _eval_authorization=authorization,
                         )
                         for replica in range(replica_count)
                     )
