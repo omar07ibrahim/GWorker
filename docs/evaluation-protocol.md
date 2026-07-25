@@ -271,10 +271,11 @@ depends on pre-drift performance.
 
 ## Uncertainty and reporting
 
-The locked report uses 5,000 stratified paired cluster-bootstrap resamples.
-Adaptive replicas are averaged before resampling and never become separate
-statistical units. For primary persona `p`, availability mode `m`, environment
-seed `s`, and comparator `c`, define:
+The locked report uses 5,000 stratified paired cluster-bootstrap resamples for
+scalar contrasts, including the registered primary endpoint and recovery
+contrasts. Adaptive replicas are averaged before resampling and never become
+separate statistical units. For primary persona `p`, availability mode `m`,
+environment seed `s`, and comparator `c`, define:
 
 ```text
 d[m,p,s,c] = adaptive common regret - comparator common regret
@@ -288,7 +289,7 @@ Stress personas do not enter the primary estimate.
 
 Each availability mode has its own independently generated `5000 × 128` index
 matrix. Within a mode, the exact same bootstrap row is reused for every
-persona, strategy, metric, and trace. Modes do not share rows. For bootstrap
+persona, strategy, and scalar contrast. Modes do not share rows. For bootstrap
 replicate `b`, each mode independently resamples 128 seed positions with
 replacement; the two resulting mode means are then averaged with equal weight.
 Personas and modes themselves are fixed benchmark strata and are not
@@ -362,6 +363,22 @@ Availability modes use separate randomization namespaces. Persona and strategy
 contrasts within a mode are paired by seed, but matching numeric seed IDs
 between modes are not treated as paired observations and a difference between
 availability modes must not be described as a strictly paired mode effect.
+
+The 28 descriptive abrupt-drift series use pointwise normal 95% intervals
+instead of repeating the scalar bootstrap at all 8,064 time points. At each
+decision, the interval is:
+
+```text
+clip(mean across 128 seed traces
+     ± 1.959963984540054 × seed-cluster SE, 0, 1)
+```
+
+Adaptive replicas are averaged within seed before this calculation. These
+bands are pointwise, not simultaneous, and cannot support a claim about an
+entire trajectory. This method was fixed before the locked run after a
+pre-run complexity audit showed that a literal pointwise bootstrap would
+require 5,160,960,000 indexed trace-value visits. It does not change the
+registered scalar endpoint or any scalar bootstrap interval.
 
 The report must include:
 

@@ -31,6 +31,7 @@ REPORT_SCHEMA_VERSION = "gworker-statistical-report-v1"
 BOOTSTRAP_VERSION = "paired-seed-bootstrap-v1"
 DEFAULT_BOOTSTRAP_RESAMPLES = 5_000
 BOOTSTRAP_CONFIDENCE = 0.95
+NORMAL_95_CRITICAL_VALUE = 1.959963984540054
 MAX_BOOTSTRAP_DRAW_COUNT = 5_000_000
 LOCKED_AUTHOR_NAME = "Omar Ibrahim"
 LOCKED_AUTHOR_EMAIL = "31526072+omar07ibrahim@users.noreply.github.com"
@@ -117,6 +118,42 @@ def seed_cluster_standard_error(values: Sequence[float]) -> float | None:
         len(validated) - 1
     )
     return math.sqrt(variance / len(validated))
+
+
+def bounded_seed_normal_interval(
+    values: Sequence[float],
+    *,
+    lower_bound: float,
+    upper_bound: float,
+) -> IntervalEstimate:
+    """Return a clipped pointwise normal interval for one seed-level series."""
+
+    validated = tuple(_finite(value, "seed-level value") for value in values)
+    if not validated:
+        raise ReportingInputError("seed-level values must not be empty")
+    lower = _finite(lower_bound, "lower_bound")
+    upper = _finite(upper_bound, "upper_bound")
+    if lower >= upper:
+        raise ReportingInputError("normal interval bounds must be increasing")
+    if any(not lower <= value <= upper for value in validated):
+        raise ReportingInputError("seed-level value is outside interval bounds")
+    point = _mean(validated)
+    standard_error = seed_cluster_standard_error(validated)
+    if standard_error is None:
+        interval_lower = point
+        interval_upper = point
+    else:
+        margin = NORMAL_95_CRITICAL_VALUE * standard_error
+        interval_lower = max(lower, point - margin)
+        interval_upper = min(upper, point + margin)
+    return IntervalEstimate(
+        point_estimate=point,
+        lower_95=interval_lower,
+        upper_95=interval_upper,
+        seed_cluster_standard_error=standard_error,
+        seed_count_per_stratum=len(validated),
+        stratum_count=1,
+    )
 
 
 def _mode_indices_digest(

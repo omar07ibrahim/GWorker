@@ -27,6 +27,7 @@ from gworker.reporting import (
     DEFAULT_BOOTSTRAP_RESAMPLES,
     LOCKED_AUTHOR_EMAIL,
     LOCKED_AUTHOR_NAME,
+    NORMAL_95_CRITICAL_VALUE,
     BootstrapMetadata,
     BootstrapPlan,
     ContrastEstimate,
@@ -36,6 +37,7 @@ from gworker.reporting import (
     ReportingInvariantError,
     SourceFileIdentity,
     StatisticalReport,
+    bounded_seed_normal_interval,
     build_bootstrap_plan,
     build_statistical_report,
     capture_source_provenance,
@@ -109,6 +111,59 @@ class QuantileAndBootstrapTests(unittest.TestCase):
             math.sqrt(1 / 60),
         )
         self.assertIsNone(seed_cluster_standard_error((0.2,)))
+
+    def test_bounded_pointwise_normal_interval_has_locked_math(self) -> None:
+        values = (0.1, 0.2, 0.3, 0.4)
+        interval = bounded_seed_normal_interval(
+            values,
+            lower_bound=0.0,
+            upper_bound=1.0,
+        )
+        standard_error = seed_cluster_standard_error(values)
+        assert standard_error is not None
+
+        self.assertEqual(interval.point_estimate, 0.25)
+        self.assertAlmostEqual(
+            interval.lower_95,
+            0.25 - NORMAL_95_CRITICAL_VALUE * standard_error,
+        )
+        self.assertAlmostEqual(
+            interval.upper_95,
+            0.25 + NORMAL_95_CRITICAL_VALUE * standard_error,
+        )
+        self.assertEqual(interval.seed_count_per_stratum, 4)
+        self.assertEqual(interval.stratum_count, 1)
+        self.assertEqual(
+            bounded_seed_normal_interval(
+                (0.0, 0.0, 0.01),
+                lower_bound=0.0,
+                upper_bound=1.0,
+            ).lower_95,
+            0.0,
+        )
+        singleton = bounded_seed_normal_interval(
+            (0.2,),
+            lower_bound=0.0,
+            upper_bound=1.0,
+        )
+        self.assertEqual(singleton.lower_95, 0.2)
+        self.assertEqual(singleton.upper_95, 0.2)
+
+        for invalid_values, bounds in (
+            ((), (0.0, 1.0)),
+            ((0.2,), (1.0, 0.0)),
+            ((1.1,), (0.0, 1.0)),
+            ((math.nan,), (0.0, 1.0)),
+        ):
+            with (
+                self.subTest(values=invalid_values, bounds=bounds),
+                self.assertRaises(ReportingInputError),
+            ):
+                bounded_seed_normal_interval(
+                    invalid_values,
+                    lower_bound=bounds[0],
+                    upper_bound=bounds[1],
+                )
 
     def test_bootstrap_plan_is_golden_and_independent_by_mode(self) -> None:
         plan = build_bootstrap_plan(
