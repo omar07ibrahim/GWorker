@@ -1,22 +1,51 @@
 # GWorker
 
-GWorker is becoming a local-first engine for adaptive focus experiments. Instead
-of treating a timer as the product, it models each work block as an auditable
-sequence of domain events that can later be replayed, evaluated, and used by a
-privacy-conscious recommendation policy.
+GWorker is a local-first, event-sourced engine for adaptive focus experiments.
+Instead of treating a timer as the product, it models each work block as an
+auditable event stream, replays that stream into state, and recommends a
+bounded duration from explicit context and reviews.
 
-> **Development status:** the event-sourced domain foundation and transactional
-> local journal are implemented, together with an explainable adaptive-duration
-> policy. A locked synthetic evaluation engine and its pre-registered protocol
-> are also implemented. Seed-level stratified bootstrap statistics and a clean
-> source-provenance gate are in place. A fail-closed
-> [publication evidence contract](docs/publication-evidence.md) now preserves
-> all result denominators and required visual rows. The single-use publication
-> runner now binds the clean source, checks conservative host capacity before
-> claiming the held-out namespace, and can resume deterministic materialization
-> without retrying evaluation. The full locked run and its outcome visuals have
-> not been produced. Journal integration and the end-user CLI remain later
-> milestones.
+> **Development status:** the domain reducer, canonical event codec, private
+> SQLite journal, explainable duration policy, locked synthetic evaluator,
+> reporting/evidence builders, canonical result codecs, and the fail-closed
+> publication runner are implemented.
+> Three deterministic synthetic demos, six source-derived non-result diagrams,
+> and five genuine terminal captures are reproducible from the repository. The
+> locked evaluation has **not** run: there are zero locked outcome artifacts and
+> no benchmark result plots. Journal-to-policy provenance linkage, an end-user
+> CLI, publication rendering, and final sealing remain future work.
+
+![GWorker architecture and trust boundaries](docs/visuals/generated/architecture-trust-boundaries.svg)
+
+*The solid boxes are implemented; dashed boxes are explicit next steps. See the
+[component contracts and trust boundaries](docs/architecture.md).*
+
+## See it run
+
+The journal demo writes synthetic events through the production
+`SQLiteEventStore`, closes and reopens the database, replays the session, and
+detects a logical mutation in a separate copy.
+
+[![Real terminal capture of SQLite journal recovery and tamper detection](docs/visuals/terminal/journal-recovery.svg)](docs/visuals/terminal/journal-recovery.txt)
+
+*Genuine terminal output; click the image for the sanitized transcript. This
+demo contains six events and ends at revision 6. The seven-event/revision-7
+fixture below is a separate domain-reducer example.*
+
+Run all three safe demos:
+
+```bash
+PYTHONPATH=src python3 scripts/demo_policy.py
+PYTHONPATH=src python3 scripts/demo_journal.py \
+  --repo-root "$PWD" \
+  --workspace .gworker/visual-demo/readme \
+  --reset
+PYTHONPATH=src python3 scripts/protocol_inventory.py
+```
+
+The demos use only synthetic fixtures. The inventory command validates locked
+configuration and expected cardinalities; it does not call the evaluator or
+publication runner.
 
 ## Why an event log?
 
@@ -24,23 +53,16 @@ A conventional timer remembers only the current countdown. That makes crash
 recovery, debugging, and honest policy evaluation difficult. GWorker instead
 reduces immutable events into state:
 
-```mermaid
-stateDiagram-v2
-    [*] --> Planned: SessionPlanned
-    Planned --> Focusing: FocusStarted
-    Focusing --> Focusing: InterruptionRecorded
-    Focusing --> FocusComplete: FocusCompleted
-    FocusComplete --> Breaking: BreakStarted
-    Breaking --> Completed: BreakCompleted
-    Planned --> Abandoned: SessionAbandoned
-    Focusing --> Abandoned: SessionAbandoned
-    FocusComplete --> Abandoned: SessionAbandoned
-    Breaking --> Abandoned: SessionAbandoned
-```
+![Seven-event replay through the domain reducer](docs/visuals/generated/event-replay.svg)
 
-The reducer rejects gaps, out-of-order timestamps, cross-session events, and
-invalid transitions. The policy can therefore learn from an explicit outcome
-history instead of silently inferring success from a countdown reaching zero.
+*This source-derived synthetic fixture applies seven events and reaches
+revision 7. It is intentionally distinct from the six-event persisted-journal
+demo above.*
+
+The pure reducer rejects gaps, out-of-order timestamps, cross-session events,
+and invalid transitions. The policy can therefore learn from an explicit
+review history instead of silently inferring success from a countdown reaching
+zero.
 
 ## How the duration policy works
 
@@ -49,18 +71,10 @@ and 50/10 minutes. It uses only a coarse task category, self-reported energy,
 available time, the previous template, and completed explicit reviews. It never
 reads objective text.
 
-```mermaid
-flowchart LR
-    C[Explicit context] --> G[Availability and one-step guardrails]
-    H[Explicit reviewed decisions] --> W[Bounded sliding window]
-    W --> B[Exact context, task, or global backoff]
-    B --> S[Posterior mean + ordinal hint + UCB bonus]
-    G --> S
-    S --> P[Softmax with probability floor]
-    P --> R[Recommendation + propensity + reasons]
-    R --> F[Explicit fit and completion review]
-    F --> H
-```
+![Availability and one-step movement guardrail matrix](docs/visuals/generated/guardrail-matrix.svg)
+
+*Six real `feasible_templates()` calls show that the complete focus-plus-break
+budget and one-step movement rule are applied before an arm is scored.*
 
 For each feasible template, the scorer combines:
 
@@ -77,6 +91,18 @@ selection bias. Availability is checked against the complete focus-plus-break
 budget. If a previous duration exists, the recommendation normally moves at
 most one adjacent template.
 
+[![Real terminal capture of the deterministic adaptive-policy demo](docs/visuals/terminal/policy-demo.svg)](docs/visuals/terminal/policy-demo.txt)
+
+*Genuine terminal output; click for the transcript. The synthetic fixture's
+thirteenth recommendation is `focus-40`; this is an API demonstration, not a
+claim that 40 minutes is optimal for people or a locked-evaluation result.*
+
+![Policy score and probability decomposition](docs/visuals/generated/policy-score-decomposition.svg)
+
+*The same deterministic fixture exposes each feasible arm's review count,
+posterior, ordinal adjustment, exploration bonus, total score, and exact
+softmax probability.*
+
 Each recommendation carries its caller-supplied UUID and monotonic sequence,
 exact propensity, evidence bucket, per-arm score decomposition, and reason
 codes. Its policy ID contains a deterministic SHA-256 fingerprint of the full
@@ -87,8 +113,8 @@ The kernel inspects at most the final configured number of reviews and requires
 that tail to be ordered oldest-to-newest by a strictly increasing decision
 sequence. Within that bounded tail it fails closed on a duplicate decision,
 foreign policy configuration, unknown template, or guardrail-violating action.
-The future journal integration will own global uniqueness across reviews that
-have already fallen out of the learning window.
+Future journal-to-policy linkage will own global uniqueness across reviews
+that have already fallen out of the learning window.
 
 `Recommendation.review()` preserves the chosen action and its propensity.
 Directly constructing a `ReviewedDecision` validates its structure but cannot
@@ -104,6 +130,27 @@ baselines, common availability-only primary contrast, diagnostics, and
 interpretation boundary before the full evaluation seeds are run. A separate
 path-opportunity term prevents a strategy from looking good merely because its
 previous choices trapped it behind the one-step guardrail.
+
+## Locked evaluation: protocol, not benchmark results
+
+The [synthetic evaluation protocol](docs/evaluation-protocol.md) freezes the
+population, randomization namespaces, comparators, primary contrast,
+uncertainty calculation, and interpretation boundary before the held-out run.
+The [publication evidence contract](docs/publication-evidence.md) separately
+fixes every required denominator and output row.
+
+![Expected locked protocol inventory with zero outcome artifacts](docs/visuals/generated/locked-protocol-inventory.svg)
+
+*These are cardinality invariants calculated from the locked configuration,
+not processed observations. In particular, the 6,635,520 decisions shown here
+are expected workload for a future complete run; none has been evaluated as a
+locked result.*
+
+[![Real terminal capture of the read-only protocol inventory](docs/visuals/terminal/protocol-inventory.svg)](docs/visuals/terminal/protocol-inventory.txt)
+
+*Genuine terminal output; click for the transcript. The command calls only the
+configuration validator and expected-cardinality calculator. It reports zero
+result data and never invokes the evaluator.*
 
 ## Current scope
 
@@ -122,27 +169,41 @@ previous choices trapped it behind the one-step guardrail.
   baseline, an analytic myopic oracle that never sees realized outcomes,
   common/path regret decomposition, pooled sufficient statistics, runtime
   completeness checks, and seed-level adaptive-replica aggregation.
-- A canonical binary result codec, canonical report/evidence documents, and an
-  append-only publication state chain bound to the exact clean source.
+- Canonical result/report/evidence builders and codecs, plus an append-only
+  publication state chain bound to the exact clean source.
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
+- Three deterministic synthetic demos plus reproducible source-derived and
+  terminal visual-evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
-Run the foundation checks:
+## Publication gate: unclaimed and fail-closed
 
-```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-PYTHONPATH=src python3 -m compileall -q src tests
-```
+![Single-use publication lifecycle](docs/visuals/generated/publication-lifecycle.svg)
 
-Inspect the held-out publication run without claiming it:
+*Implemented control flow reaches canonical materialization. Result rendering
+and final sealing are explicitly marked `NEXT`; the diagram describes code
+paths, not an executed run.*
+
+Inspecting the held-out namespace is safe and read-only:
 
 ```bash
 PYTHONPATH=src python3 -m gworker.publication_runner --repo-root "$PWD" status
 PYTHONPATH=src python3 -m gworker.publication_runner --repo-root "$PWD" preflight
 ```
+
+[![Real terminal capture showing the publication namespace is unclaimed](docs/visuals/terminal/publication-status.svg)](docs/visuals/terminal/publication-status.txt)
+
+*The recorded status is `unclaimed`, `not-started`, with no artifacts. Click
+for the path-free transcript.*
+
+[![Real terminal capture of a fail-closed publication preflight](docs/visuals/terminal/publication-preflight.svg)](docs/visuals/terminal/publication-preflight.txt)
+
+*This host-dependent capture failed the frozen memory and swap headroom checks
+and exited 2 without claiming the run. Capacity can differ on another host;
+this is not a portable readiness result.*
 
 `preflight` is read-only. It first requires an exact clean committed checkout,
 then checks effective cgroup-aware memory, swap, filesystem bytes, inodes, and
@@ -155,6 +216,30 @@ restart treats that run as burned rather than silently consuming the held-out
 namespace again. Run it only on the clean source commit that will be published,
 and only after `preflight` reports `"ready":true`.
 
+## Verification and provenance
+
+Run the code and evidence checks without consuming the locked namespace:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+PYTHONPATH=src python3 -m compileall -q src tests
+PYTHONPATH=src python3 scripts/visuals/generate.py --check
+PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
+```
+
+The [source-derived visual manifest](docs/visuals/manifest.json) binds the
+generator, documentation and implementation inputs, every SVG checksum, and
+the observation that locked outcome artifact count is zero. The
+[terminal-capture manifest](docs/visuals/terminal/manifest.json) binds five
+literal command vectors, exact source bytes, normalized capture environment,
+exit codes, transcripts, and rendered SVGs. Its `check` mode is read-only and
+does not rerun the commands or host-dependent preflight.
+
+Both pipelines are standard-library-only, reject external image/script
+references, and use synthetic demo records. Publication outcome visuals will
+be generated only from validated, provenance-bound locked evidence and bound
+into the final manifest before sealing; they do not exist today.
+
 ## Design boundaries
 
 GWorker is intended for personal self-experimentation, not employee monitoring.
@@ -166,8 +251,8 @@ self-reported energy, availability, prior duration, chosen template, fit,
 completion, and propensity. Journals therefore stay on the user's machine by
 default and are ignored by Git. An objective can itself contain a name or
 account identifier; GWorker cannot infer and redact that safely. Synthetic
-fixtures—not a developer's real work history—will power committed demos and
-screenshots.
+fixtures—not a developer's real work history—power the committed demos and
+visuals.
 
 The journal is permission-hardened, not encrypted by GWorker. Device or
 full-disk encryption remains the protection against an attacker who can read the
@@ -199,16 +284,16 @@ No license has been added. Repository control does not by itself establish the
 rights needed to license the historical upload, so licensing remains an explicit
 release decision for Omar.
 
-## Roadmap
+## Next milestones
 
-1. Generate reproducible synthetic journal/policy demos and non-result
-   architecture visuals from the implemented code.
-2. On a host that passes the frozen resource gate, run the pre-registered
-   synthetic evaluation once, calculate paired seed-level uncertainty, and
-   generate the complete result tables and plots without changing the locked
-   policy or evaluator.
-3. Journal integration plus an end-user CLI workflow.
-4. Offline replay evaluation with propensity diagnostics and baseline
-   comparisons.
-5. Reproducible CLI captures and a short terminal demo generated from synthetic
-   data.
+1. Implement deterministic result rendering and connect the runner's
+   materialized evidence to an immutable manifest and final sealed state.
+2. On a clean host that passes the frozen resource gate, execute the
+   pre-registered locked evaluation exactly once and publish every required
+   result, denominator, diagnostic, and negative finding.
+3. Add journal-backed recommendation/review linkage and an end-user CLI
+   workflow.
+4. Add offline replay evaluation with propensity provenance diagnostics and
+   declared baseline comparisons.
+5. Produce a short pinned terminal demo from the synthetic workflow once the
+   CLI exists; keep its transcript and source hashes reproducible.

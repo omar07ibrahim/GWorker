@@ -3,15 +3,19 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "b151ab244d3560a6d5e7c8ac51e3aadc7f97ce4f0cb4798a557c26ab8aeabae8"
+      "sha256": "b9b4b24e1da93d0b95f5689358b02fc21a3f90035f325ff0e904184bc928744f"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "8c390eec04e7d489f40c71a2389bd7994fc40034971b20b6382d34efc66012e6"
     },
     {
       "path": "docs/evaluation-protocol.md",
-      "sha256": "233ba9dc3f2599a6b0c65cca2519bbb1bf40b9452ce166149a2093f988e8dfa2"
+      "sha256": "fd73ed6d83aa1060f24932691e5ff0155c193e94ade556fb4951df01a7d4ace3"
     },
     {
       "path": "docs/publication-evidence.md",
-      "sha256": "dce22733b08cac6108715464e1ee8b4328424346f4aff9c4691d6cfa4ec24943"
+      "sha256": "0228ff3b5a169453deeb7a4dc1dc4fa868913fe2663d29c6f8df8bd756243fd8"
     },
     {
       "path": "pyproject.toml",
@@ -19,7 +23,7 @@
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "a8b78c6a77552ef26261bd4d88893df2d1705f5656e25b8190179b7b7a936074"
+      "sha256": "9c759c36c609c309987bbad0f1aa002cc1dcf577c14cae0911c369e31528431c"
     },
     {
       "path": "src/gworker/codec.py",

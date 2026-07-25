@@ -82,6 +82,7 @@ PURPLE: Final = "#CC79A7"
 
 INPUT_FILES: Final = (
     "README.md",
+    "docs/architecture.md",
     "docs/evaluation-protocol.md",
     "docs/publication-evidence.md",
     "pyproject.toml",

@@ -16,6 +16,35 @@ Presentation code may round labels, arrange panels, and choose accessible
 marks. It may not filter scenarios, recompute a claim from rounded values, or
 invent a denominator.
 
+## Pre-run evidence map
+
+![Expected locked inventory with zero outcome artifacts](visuals/generated/locked-protocol-inventory.svg)
+
+*The values above are expected cardinalities calculated from the frozen
+configuration. They are not processed decisions, measurements, or benchmark
+results; the observed locked outcome artifact count is zero.*
+
+![Publication lifecycle through materialization](visuals/generated/publication-lifecycle.svg)
+
+*The implemented runner can advance an eligible clean run through
+`MATERIALIZED`. Result rendering, the final output manifest, and runner-driven
+sealing are explicitly `NEXT`; this diagram does not represent an executed
+run.*
+
+These repository-local commands inspect the contract without running the
+evaluator, claiming the held-out namespace, or sampling host capacity:
+
+```bash
+PYTHONPATH=src python3 scripts/protocol_inventory.py
+PYTHONPATH=src python3 scripts/visuals/generate.py --check
+```
+
+The inventory command calls only `validate_experiment_config()` and
+`expected_publication_cardinalities()`. The visual check regenerates the
+non-result bundle in a temporary directory and compares exact bytes. See the
+[architecture contract](architecture.md#locked-evaluation-and-publication) for
+the separate claim and trust boundaries.
+
 ## Locked inventory
 
 The exact v3 population implies:

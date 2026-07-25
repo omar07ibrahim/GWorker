@@ -15,7 +15,15 @@ Version 3 reserves a fresh locked RNG namespace after a pre-run unit test was
 found to generate a small v2 `eval` environment while checking split
 separation. That test never ran the benchmark or reported a result, but it now
 uses the dedicated `test` split. The v3 `eval` namespace remains untouched
-until the committed report runner passes its source-provenance gate.
+until the single-use publication runner passes its source-provenance gate.
+
+> **Result status:** the locked run has not executed. The
+> [expected-inventory diagram](visuals/generated/locked-protocol-inventory.svg)
+> and [read-only inventory transcript](visuals/terminal/protocol-inventory.txt)
+> enumerate configuration-derived cardinalities and explicitly report zero
+> result data; the inventory command does not call the evaluator. Exact
+> publication rows and denominators are defined separately in the
+> [publication evidence contract](publication-evidence.md).
 
 ## Primary question
 
