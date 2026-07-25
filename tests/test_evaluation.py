@@ -7,6 +7,7 @@ import random
 import unittest
 from collections import Counter
 from dataclasses import replace
+from typing import cast
 from unittest.mock import patch
 from uuid import UUID
 
@@ -17,6 +18,7 @@ from gworker.evaluation import (
     DEFAULT_EXPERIMENT_CONFIG,
     DEFAULT_PERSONAS,
     LOCKED_POLICY_ID,
+    LOCKED_POPULATION_ID,
     AvailabilityMode,
     EvaluationInputError,
     EvaluationInvariantError,
@@ -28,6 +30,8 @@ from gworker.evaluation import (
     evaluator_fingerprint,
     generate_environment,
     latent_preference_minutes,
+    population_fingerprint,
+    population_manifest,
     run_experiment,
     simulate_trajectory,
     validate_experiment_result,
@@ -62,6 +66,22 @@ def small_config(
 
 
 class EvaluationDefinitionTests(unittest.TestCase):
+    def test_locked_population_has_an_independent_golden_identity(self) -> None:
+        self.assertEqual(
+            population_fingerprint(DEFAULT_EXPERIMENT_CONFIG),
+            LOCKED_POPULATION_ID,
+        )
+        self.assertEqual(
+            population_manifest(DEFAULT_EXPERIMENT_CONFIG)["split"],
+            "eval",
+        )
+        self.assertNotIn(
+            "design_id",
+            population_manifest(DEFAULT_EXPERIMENT_CONFIG),
+        )
+        with self.assertRaisesRegex(EvaluationInputError, "ExperimentConfig"):
+            population_fingerprint(cast("ExperimentConfig", object()))
+
     def test_persona_rejects_unsafe_or_ambiguous_fields(self) -> None:
         invalid = (
             {"persona_id": ""},

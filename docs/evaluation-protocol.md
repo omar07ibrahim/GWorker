@@ -47,6 +47,8 @@ action is reported beside regret as a direction check.
   `synthetic-eval-v3.caf02b5aced57470dfa96c2952df7402dbd5944b7d394a5a95729ef3e6d09045`
 - Locked design ID:
   `synthetic-eval-v3-design.503fe85fb1ff862383812f74eb9b6ce89fdc2a7811f44a83d53ca42c1634ebfd`
+- Locked population ID:
+  `synthetic-eval-v3-population.dc3f496427d8b78e742eed763ad494902660e50aa4ad45000008854edcaaab83`
 - Locked policy ID:
   `hierarchical-softmax-ucb-v1.8c10875dd38a025d`
 - Horizon: 288 decisions

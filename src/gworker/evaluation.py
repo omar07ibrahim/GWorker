@@ -35,6 +35,10 @@ from .policy import (
 EVALUATOR_VERSION = "synthetic-eval-v3"
 RESULT_SCHEMA_VERSION = "synthetic-eval-result-v1"
 LOCKED_POLICY_ID = "hierarchical-softmax-ucb-v1.8c10875dd38a025d"
+LOCKED_POPULATION_ID = (
+    "synthetic-eval-v3-population."
+    "dc3f496427d8b78e742eed763ad494902660e50aa4ad45000008854edcaaab83"
+)
 LOCKED_EVALUATION_RUN_KEY = "synthetic-eval-v3-eval"
 ALLOWED_SPLITS = ("dev", "test", "eval")
 CONTEXT_BLOCK_SIZE = len(TaskKind) * len(EnergyLevel)
@@ -1856,6 +1860,14 @@ def _config_manifest(config: ExperimentConfig) -> dict[str, object]:
     }
 
 
+def population_manifest(config: ExperimentConfig) -> dict[str, object]:
+    """Return the declared population independently of evaluator equations."""
+
+    if not isinstance(config, ExperimentConfig):
+        raise EvaluationInputError("config must be an ExperimentConfig")
+    return _config_manifest(config)
+
+
 def _canonical_digest(payload: object) -> str:
     encoded = json.dumps(
         payload,
@@ -1865,6 +1877,13 @@ def _canonical_digest(payload: object) -> str:
         sort_keys=True,
     ).encode("ascii")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def population_fingerprint(config: ExperimentConfig) -> str:
+    """Return a canonical identity for one declared benchmark population."""
+
+    digest = _canonical_digest(population_manifest(config))
+    return f"{EVALUATOR_VERSION}-population.{digest}"
 
 
 def evaluator_design_fingerprint() -> str:
