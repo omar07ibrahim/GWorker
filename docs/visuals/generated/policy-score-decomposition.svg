@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 740" role="img" aria-labelledby="policy-score-title policy-score-description">
+  <title id="policy-score-title">Twelve explicit reviews produce an explainable focus-40 choice</title>
+  <desc id="policy-score-description">A fixed sequence of twelve recommendations is reviewed through the public API. The thirteenth recommendation selects focus-40. Each feasible arm directly labels its posterior, ordinal adjustment, UCB bonus, total score, review count, and exact logged propensity.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="740" fill="#FFFFFF"/>
+  <text x="56" y="52" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">POLICY SCORE DECOMPOSITION · REAL PUBLIC API</text>
+  <text x="56" y="88" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">Twelve explicit reviews produce an explainable focus-40 choice</text>
+  <text x="56" y="118" font-size="16" font-weight="600" fill="#667085" text-anchor="start">bucket=exact · evidence=12 reviews · selected=focus-40 · propensity=0.732264546148</text>
+  <rect x="56" y="146" width="1168" height="54" rx="12" fill="#F8FAFC" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="76" y="178" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">Score =</text>
+  <rect x="150" y="162" width="20" height="14" rx="2" fill="#0072B2" stroke="#0072B2" stroke-width="1"/>
+  <text x="178" y="176" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start">posterior</text>
+  <rect x="278" y="162" width="20" height="14" rx="2" fill="#E69F00" stroke="#E69F00" stroke-width="1"/>
+  <text x="306" y="176" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start">ordinal</text>
+  <rect x="398" y="162" width="20" height="14" rx="2" fill="#009E73" stroke="#009E73" stroke-width="1"/>
+  <text x="426" y="176" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start">UCB bonus</text>
+  <text x="610" y="178" font-size="13" font-weight="400" fill="#667085" text-anchor="start">Probability bars use exact softmax + 2% floor values.</text>
+  <rect x="56" y="210" width="1168" height="102" rx="12" fill="#FFFFFF" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="78" y="240" font-size="18" font-weight="700" fill="#1B1F23" text-anchor="start">focus-25</text>
+  <text x="78" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="start">1 reviewed decision</text>
+  <rect x="350" y="230" width="158.174" height="22" rx="2" fill="#0072B2" stroke="#0072B2" stroke-width="1"/>
+  <rect x="508.174" y="230" width="4.62198" height="22" rx="2" fill="#E69F00" stroke="#E69F00" stroke-width="1"/>
+  <rect x="512.796" y="230" width="143.45" height="22" rx="2" fill="#009E73" stroke="#009E73" stroke-width="1"/>
+  <text x="350" y="277" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start" font-family="ui-monospace, SFMono-Regular, monospace">0.366667 + 0.010714 + 0.332534 = 0.709915</text>
+  <rect x="884" y="230" width="280" height="22" rx="4" fill="#EEF2F6" stroke="#EEF2F6" stroke-width="1"/>
+  <rect x="884" y="230" width="32.2178" height="22" rx="4" fill="#CC79A7" stroke="#CC79A7" stroke-width="1"/>
+  <text x="884" y="277" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">p = 0.115063563482</text>
+  <rect x="56" y="334" width="1168" height="102" rx="12" fill="#EEF8F5" stroke="#009E73" stroke-width="3"/>
+  <text x="78" y="364" font-size="18" font-weight="700" fill="#009E73" text-anchor="start">focus-40</text>
+  <text x="78" y="390" font-size="13" font-weight="400" fill="#667085" text-anchor="start">10 reviewed decisions</text>
+  <text x="250" y="364" font-size="12" font-weight="800" fill="#009E73" text-anchor="start">SELECTED</text>
+  <rect x="350" y="354" width="399.031" height="22" rx="2" fill="#0072B2" stroke="#0072B2" stroke-width="1"/>
+  <rect x="749.031" y="354" width="9.24396" height="22" rx="2" fill="#E69F00" stroke="#E69F00" stroke-width="1"/>
+  <rect x="758.275" y="354" width="71.725" height="22" rx="2" fill="#009E73" stroke="#009E73" stroke-width="1"/>
+  <text x="350" y="401" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start" font-family="ui-monospace, SFMono-Regular, monospace">0.925000 + 0.021429 + 0.166267 = 1.112695</text>
+  <rect x="884" y="354" width="280" height="22" rx="4" fill="#EEF2F6" stroke="#EEF2F6" stroke-width="1"/>
+  <rect x="884" y="354" width="205.034" height="22" rx="4" fill="#CC79A7" stroke="#CC79A7" stroke-width="1"/>
+  <text x="884" y="401" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">p = 0.732264546148</text>
+  <rect x="56" y="458" width="1168" height="102" rx="12" fill="#FFFFFF" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="78" y="488" font-size="18" font-weight="700" fill="#1B1F23" text-anchor="start">focus-50</text>
+  <text x="78" y="514" font-size="13" font-weight="400" fill="#667085" text-anchor="start">1 reviewed decision</text>
+  <rect x="350" y="478" width="186.933" height="22" rx="2" fill="#0072B2" stroke="#0072B2" stroke-width="1"/>
+  <rect x="536.933" y="478" width="4.62198" height="22" rx="2" fill="#E69F00" stroke="#E69F00" stroke-width="1"/>
+  <rect x="541.555" y="478" width="143.45" height="22" rx="2" fill="#009E73" stroke="#009E73" stroke-width="1"/>
+  <text x="350" y="525" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="start" font-family="ui-monospace, SFMono-Regular, monospace">0.433333 + 0.010714 + 0.332534 = 0.776581</text>
+  <rect x="884" y="478" width="280" height="22" rx="4" fill="#EEF2F6" stroke="#EEF2F6" stroke-width="1"/>
+  <rect x="884" y="478" width="42.7481" height="22" rx="4" fill="#CC79A7" stroke="#CC79A7" stroke-width="1"/>
+  <text x="884" y="525" font-size="14" font-weight="700" fill="#1B1F23" text-anchor="start">p = 0.152671890369</text>
+  <rect x="56" y="598" width="1168" height="96" rx="12" fill="#F8FAFC" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="76" y="628" font-size="13" font-weight="700" fill="#0072B2" text-anchor="start">THE TWELVE REVIEWED CHOICES (minutes)</text>
+  <text x="76" y="660" font-size="17" font-weight="650" fill="#1B1F23" text-anchor="start">25 → 40 → 40 → 40 → 50 → 40 → 40 → 40 → 40 → 40 → 40 → 40</text>
+  <text x="76" y="683" font-size="13" font-weight="400" fill="#667085" text-anchor="start">Feedback rule: below 40 = too short; 40 = just right; above 40 = too long. Completion is explicit at ≥40.</text>
+</svg>

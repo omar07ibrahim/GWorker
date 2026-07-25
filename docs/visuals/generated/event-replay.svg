@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 580" role="img" aria-labelledby="event-replay-title event-replay-description">
+  <title id="event-replay-title">A real seven-event replay reaches a completed projection</title>
+  <desc id="event-replay-description">Seven synthetic, privacy-safe domain events are applied through gworker.domain.apply_event. Direct labels show sequence, UTC time, event kind, resulting phase, and the final measured projection.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="580" fill="#FFFFFF"/>
+  <text x="60" y="58" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">EVENT-SOURCED SESSION · SYNTHETIC API FIXTURE</text>
+  <text x="60" y="96" font-size="28" font-weight="700" fill="#1B1F23" text-anchor="start">A real seven-event replay reaches a completed projection</text>
+  <text x="60" y="126" font-size="16" font-weight="400" fill="#667085" text-anchor="start">Every node is the projection returned by apply_event; no UI mockup.</text>
+  <line x1="120" y1="214" x2="1320" y2="214" stroke="#E4E7EC" stroke-width="6"/>
+  <line x1="140" y1="214" x2="296" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="120" cy="214" r="18" fill="#0072B2" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="120" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="120" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:00 UTC</text>
+  <rect x="42" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#0072B2" stroke-width="2"/>
+  <text x="120" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">session_planned</text>
+  <text x="120" y="310" font-size="14" font-weight="700" fill="#0072B2" text-anchor="middle">→ planned</text>
+  <text x="120" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="120" dy="0">target 25 min + 5 min</tspan></text>
+  <line x1="340" y1="214" x2="496" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="320" cy="214" r="18" fill="#56B4E9" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="320" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="320" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:01 UTC</text>
+  <rect x="242" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#56B4E9" stroke-width="2"/>
+  <text x="320" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">focus_started</text>
+  <text x="320" y="310" font-size="14" font-weight="700" fill="#56B4E9" text-anchor="middle">→ focusing</text>
+  <text x="320" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="320" dy="0">focus clock entered</tspan></text>
+  <line x1="540" y1="214" x2="696" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="520" cy="214" r="18" fill="#E69F00" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="520" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <text x="520" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:08 UTC</text>
+  <rect x="442" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#E69F00" stroke-width="2"/>
+  <text x="520" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">interruption_recorded</text>
+  <text x="520" y="310" font-size="14" font-weight="700" fill="#E69F00" text-anchor="middle">→ focusing</text>
+  <text x="520" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="520" dy="0">context switch</tspan><tspan x="520" dy="20">45 s</tspan></text>
+  <line x1="740" y1="214" x2="896" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="720" cy="214" r="18" fill="#E69F00" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="720" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+  <text x="720" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:17 UTC</text>
+  <rect x="642" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#E69F00" stroke-width="2"/>
+  <text x="720" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">interruption_recorded</text>
+  <text x="720" y="310" font-size="14" font-weight="700" fill="#E69F00" text-anchor="middle">→ focusing</text>
+  <text x="720" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="720" dy="0">environment</tspan><tspan x="720" dy="20">15 s</tspan></text>
+  <line x1="940" y1="214" x2="1096" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="920" cy="214" r="18" fill="#009E73" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="920" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+  <text x="920" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:25 UTC</text>
+  <rect x="842" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#009E73" stroke-width="2"/>
+  <text x="920" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">focus_completed</text>
+  <text x="920" y="310" font-size="14" font-weight="700" fill="#009E73" text-anchor="middle">→ focus_complete</text>
+  <text x="920" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="920" dy="0">1,470 / 1,500 s</tspan><tspan x="920" dy="20">98%</tspan></text>
+  <line x1="1140" y1="214" x2="1296" y2="214" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <circle cx="1120" cy="214" r="18" fill="#CC79A7" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="1120" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">6</text>
+  <text x="1120" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:26 UTC</text>
+  <rect x="1042" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#CC79A7" stroke-width="2"/>
+  <text x="1120" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">break_started</text>
+  <text x="1120" y="310" font-size="14" font-weight="700" fill="#CC79A7" text-anchor="middle">→ breaking</text>
+  <text x="1120" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="1120" dy="0">break clock entered</tspan></text>
+  <circle cx="1320" cy="214" r="18" fill="#0072B2" stroke="#FFFFFF" stroke-width="3"/>
+  <text x="1320" y="220" font-size="15" font-weight="700" fill="#FFFFFF" text-anchor="middle">7</text>
+  <text x="1320" y="172" font-size="13" font-weight="600" fill="#667085" text-anchor="middle">09:31 UTC</text>
+  <rect x="1242" y="252" width="156" height="148" rx="12" fill="#F8FAFC" stroke="#0072B2" stroke-width="2"/>
+  <text x="1320" y="280" font-size="13" font-weight="700" fill="#1B1F23" text-anchor="middle">break_completed</text>
+  <text x="1320" y="310" font-size="14" font-weight="700" fill="#0072B2" text-anchor="middle">→ completed</text>
+  <text x="1320" y="342" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="1320" dy="0">280 / 300 s</tspan><tspan x="1320" dy="20">complete</tspan></text>
+  <rect x="60" y="438" width="1320" height="100" rx="12" fill="#F0F8FF" stroke="#0072B2" stroke-width="2"/>
+  <text x="84" y="470" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">FINAL PROJECTION</text>
+  <text x="84" y="504" font-size="18" font-weight="650" fill="#1B1F23" text-anchor="start">phase=completed · revision=7 · interruptions=2 / 60s</text>
+  <text x="760" y="504" font-size="18" font-weight="650" fill="#1B1F23" text-anchor="start">focus=1470s (98%) · break=280s</text>
+</svg>

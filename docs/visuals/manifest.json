@@ -1,0 +1,128 @@
+{
+  "command": "PYTHONPATH=src python3 scripts/visuals/generate.py",
+  "inputs": [
+    {
+      "path": "README.md",
+      "sha256": "b151ab244d3560a6d5e7c8ac51e3aadc7f97ce4f0cb4798a557c26ab8aeabae8"
+    },
+    {
+      "path": "docs/evaluation-protocol.md",
+      "sha256": "233ba9dc3f2599a6b0c65cca2519bbb1bf40b9452ce166149a2093f988e8dfa2"
+    },
+    {
+      "path": "docs/publication-evidence.md",
+      "sha256": "dce22733b08cac6108715464e1ee8b4328424346f4aff9c4691d6cfa4ec24943"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "69495654c6a67035aedc696400a29d5fcdb5b5a0ea3d8c1a47852f5334938bd4"
+    },
+    {
+      "path": "scripts/visuals/generate.py",
+      "sha256": "a8b78c6a77552ef26261bd4d88893df2d1705f5656e25b8190179b7b7a936074"
+    },
+    {
+      "path": "src/gworker/codec.py",
+      "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+    },
+    {
+      "path": "src/gworker/domain.py",
+      "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+    },
+    {
+      "path": "src/gworker/evaluation.py",
+      "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+    },
+    {
+      "path": "src/gworker/evidence.py",
+      "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+    },
+    {
+      "path": "src/gworker/policy.py",
+      "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+    },
+    {
+      "path": "src/gworker/publication_codec.py",
+      "sha256": "3514265191e225ab9a7b0588f254e9587940b1c64b4eda607989834748dad20a"
+    },
+    {
+      "path": "src/gworker/publication_runner.py",
+      "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
+    },
+    {
+      "path": "src/gworker/publication_state.py",
+      "sha256": "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+    },
+    {
+      "path": "src/gworker/reporting.py",
+      "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+    },
+    {
+      "path": "src/gworker/resource_preflight.py",
+      "sha256": "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+    },
+    {
+      "path": "src/gworker/result_codec.py",
+      "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
+    },
+    {
+      "path": "src/gworker/storage.py",
+      "sha256": "f43d0c735fac30862bb8c33aa555dfd8e113038f3d00ad2f6d8f4320bf4249e3"
+    }
+  ],
+  "observations": {
+    "locked_outcome_artifact_count": 0,
+    "locked_result_visuals_generated": false
+  },
+  "outputs": [
+    {
+      "byte_count": 9499,
+      "path": "generated/architecture-trust-boundaries.svg",
+      "sha256": "0f524f08919028213576037b03e30c3297f8616726eca1f2b811b843ee09ec33",
+      "title": "Current architecture separates private journals from publication"
+    },
+    {
+      "byte_count": 8102,
+      "path": "generated/event-replay.svg",
+      "sha256": "69e412bc5277adaee2cc2624e84d45e05b81179d7a3d8cba170acb03eaccbbad",
+      "title": "A real seven-event replay reaches a completed projection"
+    },
+    {
+      "byte_count": 12153,
+      "path": "generated/guardrail-matrix.svg",
+      "sha256": "edae712494e97ec8f5fcbd467ca2272a9c17f9e7f87a7d70520cff05f706ed30",
+      "title": "Availability and one-step movement are applied before scoring"
+    },
+    {
+      "byte_count": 7947,
+      "path": "generated/locked-protocol-inventory.svg",
+      "sha256": "9476097deceb2c329e9dcf9175d2075f1b47487b2d7126fdebaff7405b815767",
+      "title": "The locked protocol declares scale, but has produced zero outcomes"
+    },
+    {
+      "byte_count": 6673,
+      "path": "generated/policy-score-decomposition.svg",
+      "sha256": "17a2300379e9cfe0c8838f8c050e62580cfa90878a51e5305a708a708eb65a99",
+      "title": "Twelve explicit reviews produce an explainable focus-40 choice"
+    },
+    {
+      "byte_count": 6649,
+      "path": "generated/publication-lifecycle.svg",
+      "sha256": "27aa1f73c35f0b30e6c1de8a20a746521bc2a46e06c25ec314185037d387770a",
+      "title": "The runner stops at materialized; rendering and sealing are next"
+    }
+  ],
+  "python": {
+    "requires": ">=3.11",
+    "stdlib_only": true,
+    "validated_minor_versions": [
+      "3.11",
+      "3.12"
+    ]
+  },
+  "schema_version": "gworker-visual-manifest-v1",
+  "tool": {
+    "name": "gworker-visual-evidence",
+    "version": "1"
+  }
+}

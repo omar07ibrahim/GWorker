@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1372 810" role="img" aria-labelledby="protocol-inventory-title protocol-inventory-description">
+  <title id="protocol-inventory-title">The locked protocol declares scale, but has produced zero outcomes</title>
+  <desc id="protocol-inventory-description">Counts are calculated by expected_publication_cardinalities from the locked configuration. The visual directly distinguishes declared population, implied computation, evidence rows, and the current zero outcome status. It contains no result metric.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1372" height="810" fill="#FFFFFF"/>
+  <text x="52" y="50" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">LOCKED PROTOCOL INVENTORY · EXPECTATIONS, NOT RESULTS</text>
+  <text x="52" y="86" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">The locked protocol declares scale, but has produced zero outcomes</text>
+  <text x="52" y="116" font-size="15" font-weight="400" fill="#667085" text-anchor="start">Computed from DEFAULT_EXPERIMENT_CONFIG without running evaluation.</text>
+  <rect x="52" y="150" width="1268" height="104" rx="12" fill="#FFF1ED" stroke="#D55E00" stroke-width="2"/>
+  <text x="78" y="187" font-size="13" font-weight="800" fill="#D55E00" text-anchor="start">OBSERVED LOCKED OUTCOME ARTIFACTS</text>
+  <text x="78" y="230" font-size="42" font-weight="800" fill="#D55E00" text-anchor="start">0</text>
+  <text x="140" y="226" font-size="18" font-weight="650" fill="#1B1F23" text-anchor="start">No result.bin, report, evidence, manifest, or result plot.</text>
+  <rect x="52" y="286" width="296" height="350" rx="12" fill="#F8FAFC" stroke="#0072B2" stroke-width="2"/>
+  <text x="70" y="320" font-size="13" font-weight="800" fill="#0072B2" text-anchor="start">DECLARED POPULATION</text>
+  <text x="70" y="362" font-size="13" font-weight="400" fill="#667085" text-anchor="start">personas</text>
+  <text x="330" y="362" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">9</text>
+  <text x="70" y="402" font-size="13" font-weight="400" fill="#667085" text-anchor="start">availability modes</text>
+  <text x="330" y="402" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">2</text>
+  <text x="70" y="442" font-size="13" font-weight="400" fill="#667085" text-anchor="start">environment seeds</text>
+  <text x="330" y="442" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">128</text>
+  <text x="70" y="482" font-size="13" font-weight="400" fill="#667085" text-anchor="start">strategies</text>
+  <text x="330" y="482" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">7</text>
+  <text x="70" y="522" font-size="13" font-weight="400" fill="#667085" text-anchor="start">adaptive replicas</text>
+  <text x="330" y="522" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">4</text>
+  <text x="70" y="562" font-size="13" font-weight="400" fill="#667085" text-anchor="start">decisions / trajectory</text>
+  <text x="330" y="562" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">288</text>
+  <rect x="372" y="286" width="296" height="350" rx="12" fill="#F8FAFC" stroke="#009E73" stroke-width="2"/>
+  <text x="390" y="320" font-size="13" font-weight="800" fill="#009E73" text-anchor="start">IMPLIED COMPUTATION</text>
+  <text x="390" y="362" font-size="13" font-weight="400" fill="#667085" text-anchor="start">cluster summaries</text>
+  <text x="650" y="362" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">16,128</text>
+  <text x="390" y="402" font-size="13" font-weight="400" fill="#667085" text-anchor="start">abrupt traces</text>
+  <text x="650" y="402" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">3,584</text>
+  <text x="390" y="442" font-size="13" font-weight="400" fill="#667085" text-anchor="start">raw trace points</text>
+  <text x="650" y="442" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">1,032,192</text>
+  <text x="390" y="482" font-size="13" font-weight="400" fill="#667085" text-anchor="start">trajectories</text>
+  <text x="650" y="482" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">23,040</text>
+  <text x="390" y="522" font-size="13" font-weight="400" fill="#667085" text-anchor="start">decisions</text>
+  <text x="650" y="522" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">6,635,520</text>
+  <rect x="692" y="286" width="296" height="350" rx="12" fill="#F8FAFC" stroke="#E69F00" stroke-width="2"/>
+  <text x="710" y="320" font-size="13" font-weight="800" fill="#E69F00" text-anchor="start">EVIDENCE TABLE ROWS</text>
+  <text x="710" y="362" font-size="13" font-weight="400" fill="#667085" text-anchor="start">scenario by strategy</text>
+  <text x="970" y="362" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">126</text>
+  <text x="710" y="402" font-size="13" font-weight="400" fill="#667085" text-anchor="start">macro strategies</text>
+  <text x="970" y="402" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">7</text>
+  <text x="710" y="442" font-size="13" font-weight="400" fill="#667085" text-anchor="start">macro contrasts</text>
+  <text x="970" y="442" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">6</text>
+  <text x="710" y="482" font-size="13" font-weight="400" fill="#667085" text-anchor="start">scenario contrasts</text>
+  <text x="970" y="482" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">108</text>
+  <text x="710" y="522" font-size="13" font-weight="400" fill="#667085" text-anchor="start">diagnostic scopes</text>
+  <text x="970" y="522" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">19</text>
+  <text x="710" y="562" font-size="13" font-weight="400" fill="#667085" text-anchor="start">calibration rows</text>
+  <text x="970" y="562" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">152</text>
+  <text x="710" y="602" font-size="13" font-weight="400" fill="#667085" text-anchor="start">template exposures</text>
+  <text x="970" y="602" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">532</text>
+  <rect x="1012" y="286" width="296" height="350" rx="12" fill="#F8FAFC" stroke="#CC79A7" stroke-width="2"/>
+  <text x="1030" y="320" font-size="13" font-weight="800" fill="#CC79A7" text-anchor="start">RECOVERY + RENDER INPUT</text>
+  <text x="1030" y="362" font-size="13" font-weight="400" fill="#667085" text-anchor="start">recovery rows</text>
+  <text x="1290" y="362" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">28</text>
+  <text x="1030" y="402" font-size="13" font-weight="400" fill="#667085" text-anchor="start">recovery contrasts</text>
+  <text x="1290" y="402" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">24</text>
+  <text x="1030" y="442" font-size="13" font-weight="400" fill="#667085" text-anchor="start">trace series</text>
+  <text x="1290" y="442" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">28</text>
+  <text x="1030" y="482" font-size="13" font-weight="400" fill="#667085" text-anchor="start">render trace points</text>
+  <text x="1290" y="482" font-size="15" font-weight="750" fill="#1B1F23" text-anchor="end">8,064</text>
+  <rect x="52" y="674" width="1268" height="90" rx="12" fill="#F0F8FF" stroke="#0072B2" stroke-width="2"/>
+  <text x="76" y="706" font-size="13" font-weight="800" fill="#0072B2" text-anchor="start">INTERPRETATION</text>
+  <text x="76" y="738" font-size="16" font-weight="600" fill="#1B1F23" text-anchor="start">These values are cardinality invariants for a future complete run—not measurements, effects, or claims.</text>
+</svg>
