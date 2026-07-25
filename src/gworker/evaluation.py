@@ -315,6 +315,85 @@ class ExperimentConfig:
         return self.drift_decision - 1
 
 
+def validate_experiment_config(config: ExperimentConfig) -> None:
+    """Revalidate one exact, closed experiment configuration.
+
+    Frozen dataclasses prevent ordinary mutation, but publication boundaries
+    must also reject instances altered through low-level mechanisms. Rebuilding
+    the complete value through its constructors keeps this check aligned with
+    the authoritative configuration and persona invariants.
+    """
+
+    if type(config) is not ExperimentConfig:
+        raise EvaluationInputError("config must be an exact ExperimentConfig")
+    if type(config.split) is not str:
+        raise EvaluationInputError("config split must be exact text")
+    if type(config.environment_seeds) is not tuple or any(
+        type(seed) is not int for seed in config.environment_seeds
+    ):
+        raise EvaluationInputError("environment_seeds must be an exact integer tuple")
+    if type(config.policy_replicas) is not int:
+        raise EvaluationInputError("policy_replicas must be an exact integer")
+    if type(config.personas) is not tuple:
+        raise EvaluationInputError("personas must be an exact tuple")
+    if type(config.availability_modes) is not tuple or any(
+        type(mode) is not AvailabilityMode for mode in config.availability_modes
+    ):
+        raise EvaluationInputError(
+            "availability_modes must be an exact AvailabilityMode tuple"
+        )
+    for field in (
+        "horizon",
+        "drift_decision",
+        "recovery_block_size",
+        "recovery_blocks",
+    ):
+        if type(getattr(config, field)) is not int:
+            raise EvaluationInputError(f"{field} must be an exact integer")
+
+    rebuilt_personas: list[Persona] = []
+    for persona in config.personas:
+        if type(persona) is not Persona:
+            raise EvaluationInputError("personas must contain exact Persona values")
+        if (
+            type(persona.persona_id) is not str
+            or type(persona.label) is not str
+            or type(persona.primary) is not bool
+            or type(persona.sigma_minutes) is not float
+            or type(persona.selective_reviews) is not bool
+        ):
+            raise EvaluationInputError("persona fields have non-exact types")
+        try:
+            rebuilt_personas.append(
+                Persona(
+                    persona_id=persona.persona_id,
+                    label=persona.label,
+                    primary=persona.primary,
+                    sigma_minutes=persona.sigma_minutes,
+                    selective_reviews=persona.selective_reviews,
+                )
+            )
+        except EvaluationInputError as error:
+            raise EvaluationInputError("persona failed closed validation") from error
+
+    try:
+        rebuilt = ExperimentConfig(
+            split=config.split,
+            environment_seeds=config.environment_seeds,
+            policy_replicas=config.policy_replicas,
+            personas=tuple(rebuilt_personas),
+            availability_modes=config.availability_modes,
+            horizon=config.horizon,
+            drift_decision=config.drift_decision,
+            recovery_block_size=config.recovery_block_size,
+            recovery_blocks=config.recovery_blocks,
+        )
+    except EvaluationInputError as error:
+        raise EvaluationInputError("config failed closed validation") from error
+    if rebuilt != config:
+        raise EvaluationInputError("config is not in canonical closed form")
+
+
 DEFAULT_EXPERIMENT_CONFIG = ExperimentConfig()
 
 
@@ -2529,6 +2608,12 @@ def validate_experiment_result(result: ExperimentResult) -> None:
         raise EvaluationInvariantError("result config has an invalid type")
     if any(type(persona) is not Persona for persona in config.personas):
         raise EvaluationInvariantError("config persona set contains an invalid type")
+    try:
+        validate_experiment_config(config)
+    except EvaluationInputError as error:
+        raise EvaluationInvariantError(
+            "result config failed closed validation"
+        ) from error
     if result.evaluator_id != evaluator_fingerprint(config):
         raise EvaluationInvariantError("result evaluator_id is invalid")
     if result.design_id != evaluator_design_fingerprint():
@@ -2702,6 +2787,7 @@ def run_experiment(
 
     if not isinstance(config, ExperimentConfig):
         raise EvaluationInputError("config must be an ExperimentConfig")
+    validate_experiment_config(config)
     authorization = _authorize_experiment_run(config, _eval_permit)
     if POLICY_ID != LOCKED_POLICY_ID:
         raise EvaluationInvariantError("loaded policy differs from locked default")

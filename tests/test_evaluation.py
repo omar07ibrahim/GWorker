@@ -40,6 +40,7 @@ from gworker.evaluation import (
     population_manifest,
     run_experiment,
     simulate_trajectory,
+    validate_experiment_config,
     validate_experiment_result,
 )
 from gworker.policy import (
@@ -904,6 +905,33 @@ class ExperimentTests(unittest.TestCase):
                 sum(summary.metrics.template_exposures),
                 summary.metrics.action_count,
             )
+
+    def test_public_boundaries_revalidate_low_level_config_mutation(self) -> None:
+        config = small_config(
+            personas=(DEFAULT_PERSONAS[0],),
+            availability_modes=(AvailabilityMode.UNCONSTRAINED,),
+        )
+        result = run_experiment(config)
+        mutated = replace(config)
+        object.__setattr__(mutated, "personas", ())
+        tampered_result = replace(
+            result,
+            config=mutated,
+            evaluator_id=evaluator_fingerprint(mutated),
+            cluster_summaries=(),
+            abrupt_traces=(),
+        )
+
+        with self.assertRaisesRegex(EvaluationInputError, "closed validation"):
+            validate_experiment_config(mutated)
+        with self.assertRaisesRegex(EvaluationInvariantError, "closed validation"):
+            validate_experiment_result(tampered_result)
+        with (
+            patch.object(evaluation, "generate_environment") as generate,
+            self.assertRaisesRegex(EvaluationInputError, "closed validation"),
+        ):
+            run_experiment(mutated)
+        generate.assert_not_called()
 
     def test_result_validator_rejects_duplicate_clusters(self) -> None:
         config = small_config(
