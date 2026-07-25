@@ -8,9 +8,10 @@ privacy-conscious recommendation policy.
 > **Development status:** the event-sourced domain foundation and transactional
 > local journal are implemented, together with an explainable adaptive-duration
 > policy. A locked synthetic evaluation engine and its pre-registered protocol
-> are also implemented; the full locked run and generated result visuals have
-> not been produced yet. Journal integration and the end-user CLI remain later
-> milestones.
+> are also implemented. Seed-level stratified bootstrap statistics and a clean
+> source-provenance gate are in place; the publication runner, full locked run,
+> and generated result visuals have not been produced yet. Journal integration
+> and the end-user CLI remain later milestones.
 
 ## Why an event log?
 

@@ -42,7 +42,13 @@ action is reported beside regret as a direction check.
 
 ## Locked population
 
-- Evaluator: `synthetic-eval-v3`
+- Evaluator version: `synthetic-eval-v3`
+- Locked evaluator ID:
+  `synthetic-eval-v3.caf02b5aced57470dfa96c2952df7402dbd5944b7d394a5a95729ef3e6d09045`
+- Locked design ID:
+  `synthetic-eval-v3-design.503fe85fb1ff862383812f74eb9b6ce89fdc2a7811f44a83d53ca42c1634ebfd`
+- Locked policy ID:
+  `hierarchical-softmax-ucb-v1.8c10875dd38a025d`
 - Horizon: 288 decisions
 - Drift decision for abrupt personas: 137
 - Environment seeds: integers 0 through 127
@@ -252,14 +258,96 @@ depends on pre-drift performance.
 
 ## Uncertainty and reporting
 
-The locked report uses 5,000 paired cluster-bootstrap resamples of environment
-seed IDs. Adaptive replicas are averaged before resampling. The same resampled
-seed indices are used across strategies and personas. Percentile 95% intervals
-use a documented Type-7 quantile; Monte Carlo standard errors use seed-level
-paired effects.
+The locked report uses 5,000 stratified paired cluster-bootstrap resamples.
+Adaptive replicas are averaged before resampling and never become separate
+statistical units. For primary persona `p`, availability mode `m`, environment
+seed `s`, and comparator `c`, define:
+
+```text
+d[m,p,s,c] = adaptive common regret - comparator common regret
+D[m,s,c]   = mean over the seven primary personas of d[m,p,s,c]
+delta[c]   = equal-weight mean over modes of mean over seeds of D[m,s,c]
+```
+
+The registered primary estimate is `delta[fixed-25]`. The calculation is
+cell-first: the paired difference is formed before personas are averaged.
+Stress personas do not enter the primary estimate.
+
+Each availability mode has its own independently generated `5000 × 128` index
+matrix. Within a mode, the exact same bootstrap row is reused for every
+persona, strategy, metric, and trace. Modes do not share rows. For bootstrap
+replicate `b`, each mode independently resamples 128 seed positions with
+replacement; the two resulting mode means are then averaged with equal weight.
+Personas and modes themselves are fixed benchmark strata and are not
+resampled.
+
+Every resampled index is generated without a mutable RNG. UTF-8 bytes are
+hashed for this unit-separator-delimited document:
+
+```text
+paired-seed-bootstrap-v1
+evaluator_id
+availability_mode
+bootstrap_index in base 10
+draw_position in base 10
+rejection_attempt in base 10
+```
+
+The first eight digest bytes are interpreted as an unsigned big-endian
+integer. The integer is accepted only below
+`2^64 - (2^64 mod seed_count)` and is then reduced modulo `seed_count`;
+otherwise `rejection_attempt` is incremented. The seed positions refer to the
+declared configuration order.
+
+The bootstrap definition digest is SHA-256 over a unit-separator-delimited
+UTF-8 document containing, in order, the bootstrap version, evaluator ID,
+comma-separated seed IDs, comma-separated mode IDs, and resample count. A mode
+index digest is SHA-256 over:
+
+```text
+version ASCII
+|| NUL || "mode-indices" || NUL
+|| uint16be(mode byte length) || mode ASCII
+|| uint64be(resample count) || uint32be(seed count)
+|| every row-major index as uint32be
+```
+
+The combined digest replaces the mode rows with each raw 32-byte mode digest:
+
+```text
+version ASCII
+|| NUL || "all-indices" || NUL
+|| uint32be(seed count) || uint64be(resample count)
+|| uint16be(mode count)
+|| for each declared mode:
+   uint16be(mode byte length) || mode ASCII || raw mode digest
+```
+
+The locked pre-run digests are:
+
+```text
+definition  0ec40605618d9532544b868463cf2c6ec75f8a5818a660054eb6d15f25c62e71
+combined    a89de114bb2299c37192beafc724e4c993ee8484ad7d2cc7c76e6d1da8979318
+unconstrained c7d76cd354ee4aae29fc752b40e853def5aa1fb51893aeefa5b8a3d624c8d8b8
+guardrailed   bee073df927c228c651cdfb42e27968be95d59294ac04054679b8d9a2dd3069e
+```
+
+Percentile 95% endpoints use Hyndman-Fan Type 7: after sorting `B` bootstrap
+estimates, `h = (B - 1) × p`, `i = floor(h)`, and the quantile linearly
+interpolates between values `i` and `i + 1`. The observed estimate is not added
+as a 5,001st draw.
+
+For seed-cluster Monte Carlo standard error, first calculate the sample
+variance `s_m²` of `D[m,s,c]` across the 128 seeds within each mode. With
+`M = 2` and `n = 128`, the exact registered formula is:
+
+```text
+SE(delta[c]) = sqrt((1 / M²) × sum over m of (s_m² / n))
+```
 
 Availability modes use separate randomization namespaces. Persona and strategy
-contrasts within a mode are paired by seed, but a difference between
+contrasts within a mode are paired by seed, but matching numeric seed IDs
+between modes are not treated as paired observations and a difference between
 availability modes must not be described as a strictly paired mode effect.
 
 The report must include:
