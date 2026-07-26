@@ -329,6 +329,40 @@ class SQLiteEventStoreTests(unittest.TestCase):
             home / ".local" / "share" / "gworker" / "events.sqlite3",
         )
 
+    def test_unexpandable_paths_fail_as_journal_security_errors(self) -> None:
+        with (
+            patch(
+                "gworker.storage.Path.expanduser",
+                side_effect=RuntimeError("injected home failure"),
+            ),
+            self.assertRaisesRegex(JournalSecurityError, "expand journal path"),
+        ):
+            SQLiteEventStore(Path("~/events.sqlite3"))
+
+        with (
+            patch.dict(
+                os.environ,
+                {"XDG_DATA_HOME": "~/private-data"},
+                clear=True,
+            ),
+            patch(
+                "gworker.storage.Path.expanduser",
+                side_effect=RuntimeError("injected home failure"),
+            ),
+            self.assertRaisesRegex(JournalSecurityError, "journal home"),
+        ):
+            default_journal_path()
+
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch(
+                "gworker.storage.Path.home",
+                side_effect=OSError("injected home failure"),
+            ),
+            self.assertRaisesRegex(JournalSecurityError, "journal home"),
+        ):
+            default_journal_path()
+
     def test_session_lookup_requires_a_non_nil_uuid(self) -> None:
         with self.assertRaisesRegex(TypeError, "session_id must be a UUID"):
             self.store.load("not-a-uuid")  # type: ignore[arg-type]

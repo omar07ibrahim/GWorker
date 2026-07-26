@@ -43,6 +43,7 @@ from .storage import (
     JournalError,
     JournalSecurityError,
     JournalVerification,
+    PolicyJournalVerification,
     SQLiteEventStore,
     default_journal_path,
 )
@@ -77,6 +78,7 @@ __all__ = [
     "NoFeasibleTemplate",
     "PolicyConfig",
     "PolicyInputError",
+    "PolicyJournalVerification",
     "Recommendation",
     "ReviewedDecision",
     "SQLiteEventStore",
