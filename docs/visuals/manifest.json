@@ -3,15 +3,15 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "02e96b1d11ca6f217f6adcb6f8b922cf4f6cc5c7bbb9674d7a2fdb6b19bc0875"
+      "sha256": "9e975011c1360d656040f5af370ccb2caf9a1d4a6b458b7f6d698ae3225ddb38"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "519410c4b4a250548e9afbbf9b2a761c8c562a6f3cfa279877f45cd85c1944e1"
+      "sha256": "ef44bc3e1c2a0e000b73e4342788c3e494b3ed2c4f1d3312ca65bb8a52007dec"
     },
     {
       "path": "docs/decision-lineage.md",
-      "sha256": "0d533405d9ebdf4919a964b0dcf7dea08a262c4b7b4377c28181e36cd7747d07"
+      "sha256": "db798650db299f924fe7e1d0127e612852b86105febfecb57f48fb6a52091fb8"
     },
     {
       "path": "docs/evaluation-protocol.md",
@@ -20,6 +20,10 @@
     {
       "path": "docs/publication-evidence.md",
       "sha256": "0228ff3b5a169453deeb7a4dc1dc4fa868913fe2663d29c6f8df8bd756243fd8"
+    },
+    {
+      "path": "docs/session-linkage.md",
+      "sha256": "56b9f7123070abef2f56fd1cd5146fd55859dc26649841718fba8fcb116fc0b7"
     },
     {
       "path": "pyproject.toml",
@@ -31,7 +35,7 @@
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "e7362ad571fbaee1449e0433bb0ccaac1674447ada0c4324cfc08c3b037ecbad"
+      "sha256": "1821d9005e8b184045d111acb9c639d5fe2d0f74ac5c98fe56934b1a6ca3b1eb"
     },
     {
       "path": "src/gworker/__init__.py",
@@ -98,7 +102,7 @@
     {
       "byte_count": 9671,
       "path": "generated/architecture-trust-boundaries.svg",
-      "sha256": "93cba055b0a4836bdd1a97e9a4d6faa32431b846e3e354695bbdfb05f6b343bc",
+      "sha256": "3576ceac5cb83c84b208995ccc2999e0bc1aa2d70c60e59657a1ee7e093f954c",
       "title": "Current architecture separates private journals from publication"
     },
     {
@@ -149,6 +153,6 @@
   "schema_version": "gworker-visual-manifest-v1",
   "tool": {
     "name": "gworker-visual-evidence",
-    "version": "2"
+    "version": "3"
   }
 }

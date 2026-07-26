@@ -32,7 +32,7 @@
   <text x="280" y="432" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="280" dy="0">guardrails</tspan><tspan x="280" dy="20">posterior + ordinal</tspan><tspan x="280" dy="20">UCB + propensity</tspan></text>
   <line x1="238" y1="445" x2="258" y2="445" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
   <rect x="158" y="554" width="244" height="104" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
-  <text x="176" y="584" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">Journal linkage + CLI</text>
+  <text x="176" y="584" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">Journal storage + CLI</text>
   <text x="176" y="612" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="176" dy="0">recommend + explicit review</tspan><tspan x="176" dy="20">seeded replay + verify</tspan></text>
   <line x1="350" y1="516" x2="350" y2="550" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
   <path d="M402 606 H470 V350 H798 V340" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
