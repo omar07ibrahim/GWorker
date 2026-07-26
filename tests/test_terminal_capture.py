@@ -209,6 +209,10 @@ class CommandAllowlistTests(unittest.TestCase):
                     "scripts/demo_policy_journal.py",
                 ),
                 "policy-demo": ("python", "scripts/demo_policy.py"),
+                "offline-replay": (
+                    "python",
+                    "scripts/demo_offline_replay.py",
+                ),
                 "journal-recovery": (
                     "python",
                     "scripts/demo_journal.py",
@@ -248,6 +252,29 @@ class CommandAllowlistTests(unittest.TestCase):
                 "src/gworker/cli.py",
                 "src/gworker/codec.py",
                 "src/gworker/domain.py",
+                "src/gworker/policy.py",
+                "src/gworker/storage.py",
+            },
+        )
+        self.assertEqual(
+            set(capture_terminal.COMMAND_BY_ID["offline-replay"].source_paths),
+            {
+                "scripts/demo_offline_replay.py",
+                "src/gworker/__init__.py",
+                "src/gworker/codec.py",
+                "src/gworker/domain.py",
+                "src/gworker/offline.py",
+                "src/gworker/policy.py",
+                "src/gworker/storage.py",
+            },
+        )
+        self.assertEqual(
+            set(capture_terminal.OFFLINE_REPLAY_IMPORT_SOURCES),
+            {
+                "src/gworker/__init__.py",
+                "src/gworker/codec.py",
+                "src/gworker/domain.py",
+                "src/gworker/offline.py",
                 "src/gworker/policy.py",
                 "src/gworker/storage.py",
             },
@@ -1287,6 +1314,35 @@ class CommittedTerminalBundleTests(unittest.TestCase):
         )
         self.assertNotIn("evaluation completed", content.lower())
 
+    def test_offline_replay_transcript_proves_support_and_preserves_nonclaims(
+        self,
+    ) -> None:
+        content = self.transcript("offline-replay")
+
+        self.assertIn(
+            "GWorker offline replay | fixture=authored-synthetic-replay-v1",
+            content,
+        )
+        self.assertIn(
+            "behavior-control | status=reportable | exact=true",
+            content,
+        )
+        self.assertIn(
+            "raw-ess=12.111890 | raw-ess-ratio=0.756993 | max-weight=5.191650",
+            content,
+        )
+        self.assertIn(
+            "clipped-rows=4 | clip=3.000000 | removed-weight-mass=5.445540",
+            content,
+        )
+        self.assertIn(
+            "focus-15=4/16 | focus-25=4/16 | focus-40=4/16 | focus-50=4/16",
+            content,
+        )
+        self.assertIn("locked-evaluation-used=false", content)
+        self.assertTrue(content.endswith("  no locked evaluation\n"))
+        self.assertNotIn("causal-effect-estimated=true", content)
+
     def test_status_and_host_preflight_are_exact_fail_closed_observations(
         self,
     ) -> None:
@@ -1418,7 +1474,7 @@ class CommittedTerminalBundleTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(
             output.getvalue(),
-            "verified 6 terminal captures without command execution\n",
+            "verified 7 terminal captures without command execution\n",
         )
         run.assert_not_called()
 

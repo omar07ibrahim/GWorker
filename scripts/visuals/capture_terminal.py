@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Record and render genuine, reproducible GWorker terminal captures.
 
-``record`` is the only mode that starts subprocesses.  It executes six literal,
-reviewed command vectors: the durable policy-journal workflow, public policy
-demo, descriptor-safe SQLite event-journal demo, locked protocol inventory,
-publication status, and publication preflight.  It never exposes an arbitrary
-command surface and never calls the publication ``run`` command or evaluator.
+``record`` is the only mode that starts subprocesses.  It executes seven
+literal, reviewed command vectors: the durable policy-journal workflow, public
+policy demo, aggregate-only offline replay diagnostics, descriptor-safe SQLite
+event-journal demo, locked protocol inventory, publication status, and
+publication preflight.  It never exposes an arbitrary command surface and
+never calls the publication ``run`` command or evaluator.
 
 ``render`` rebuilds SVGs from committed transcripts.  ``check`` is entirely
 read-only and does not rerun even the host-dependent resource preflight.
@@ -38,7 +39,7 @@ TERMINAL_ROOT: Final = ROOT / "docs" / "visuals" / "terminal"
 MANIFEST_NAME: Final = "manifest.json"
 SCHEMA_VERSION: Final = "gworker-terminal-capture-manifest-v1"
 TOOL_NAME: Final = "gworker-terminal-capture"
-TOOL_VERSION: Final = "2"
+TOOL_VERSION: Final = "3"
 RECORD_COMMAND: Final = (
     "PYTHONPATH=src python scripts/visuals/capture_terminal.py record"
 )
@@ -212,6 +213,10 @@ CORE_IMPORT_SOURCES: Final = (
     "src/gworker/policy.py",
     "src/gworker/storage.py",
 )
+OFFLINE_REPLAY_IMPORT_SOURCES: Final = (
+    *CORE_IMPORT_SOURCES,
+    "src/gworker/offline.py",
+)
 PUBLICATION_IMPORT_SOURCES: Final = (
     *CORE_IMPORT_SOURCES,
     "src/gworker/evaluation.py",
@@ -260,6 +265,24 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         source_paths=(
             "scripts/demo_policy.py",
             *CORE_IMPORT_SOURCES,
+        ),
+    ),
+    CommandSpec(
+        capture_id="offline-replay",
+        title="Offline replay · support, clipping, nonclaims",
+        description=(
+            "Real output from the fixed authored synthetic replay. It runs "
+            "only the public offline diagnostics, reports support and clipping "
+            "sensitivity, and explicitly makes no locked-evaluation or causal "
+            "claim."
+        ),
+        argv=("python", "scripts/demo_offline_replay.py"),
+        expected_exit_codes=(0,),
+        transcript_name="offline-replay.txt",
+        visual_name="offline-replay.svg",
+        source_paths=(
+            "scripts/demo_offline_replay.py",
+            *OFFLINE_REPLAY_IMPORT_SOURCES,
         ),
     ),
     CommandSpec(
