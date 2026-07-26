@@ -330,6 +330,6 @@ generator, and exact SVG bytes. Run:
 PYTHONPATH=src python3 scripts/visuals/generate.py --check
 ```
 
-The check regenerates the complete eight-diagram bundle in a temporary
+The check regenerates the complete nine-diagram bundle in a temporary
 directory and compares it byte-for-byte without invoking the evaluator,
 publication runner, recorder, or terminal-capture workflow.

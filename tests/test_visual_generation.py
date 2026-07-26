@@ -7,6 +7,7 @@ import unittest
 import xml.etree.ElementTree as ElementTree
 from dataclasses import fields
 from pathlib import Path
+from unittest.mock import patch
 from uuid import NAMESPACE_URL, uuid5
 
 from gworker.domain import AbandonReason, SessionPhase
@@ -30,6 +31,9 @@ FROZEN_OUTPUT_SHA256 = {
     "guardrail-matrix.svg": (
         "edae712494e97ec8f5fcbd467ca2272a9c17f9e7f87a7d70520cff05f706ed30"
     ),
+    "journal-recovery-trust-boundaries.svg": (
+        "3c8248411dc0d8e7756237079f7086fc6abe4129d9306bfe83b7181ed8bd7be3"
+    ),
     "locked-protocol-inventory.svg": (
         "9476097deceb2c329e9dcf9175d2075f1b47487b2d7126fdebaff7405b815767"
     ),
@@ -41,7 +45,7 @@ FROZEN_OUTPUT_SHA256 = {
     ),
 }
 FROZEN_MANIFEST_SHA256 = (
-    "75fb4184ffd3e25714b6732d86586de4afe902712b61c8677748b5f92d69405c"
+    "8a86a4b69ad4e3a87264595cf657f7eaea621f00bed9f627f78f1bba7238262a"
 )
 
 
@@ -50,6 +54,150 @@ def sha256(path: Path) -> str:
 
 
 class VisualDataTests(unittest.TestCase):
+    def test_journal_recovery_comes_from_exact_source_bound_capture(self) -> None:
+        evidence = generate.build_journal_recovery_evidence()
+
+        self.assertEqual(evidence.command, generate.JOURNAL_RECOVERY_COMMAND)
+        self.assertEqual(
+            evidence.source_paths,
+            generate.JOURNAL_RECOVERY_SOURCE_PATHS,
+        )
+        self.assertEqual(
+            evidence.transcript_sha256,
+            "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91",
+        )
+        self.assertEqual(
+            evidence.event_types,
+            (
+                "session_planned",
+                "focus_started",
+                "interruption_recorded",
+                "focus_completed",
+                "break_started",
+                "break_completed",
+            ),
+        )
+        self.assertEqual(
+            (
+                evidence.file_mode,
+                evidence.directory_mode,
+                evidence.phase,
+                evidence.revision,
+                evidence.terminal,
+            ),
+            ("0600", "0700", "completed", 6, True),
+        )
+        self.assertEqual(
+            (
+                evidence.focus_seconds,
+                evidence.break_seconds,
+                evidence.interruption_count,
+                evidence.sqlite_check,
+                evidence.session_count,
+                evidence.event_count,
+            ),
+            (2_382, 480, 1, "ok", 1, 6),
+        )
+        self.assertEqual(
+            (
+                evidence.tamper_sqlite_check,
+                evidence.tamper_detected,
+                evidence.tamper_error_type,
+                evidence.tamper_sequence,
+                evidence.capture_reports_live_unchanged,
+            ),
+            ("ok", True, "CorruptJournal", 3, True),
+        )
+
+    def test_journal_recovery_svg_is_accessible_and_claim_bounded(self) -> None:
+        visual = generate._render_journal_recovery_trust_boundaries()
+        content = visual.content.decode("utf-8")
+        root = ElementTree.fromstring(content)
+        namespace = {"svg": "http://www.w3.org/2000/svg"}
+
+        self.assertEqual(
+            visual.filename,
+            "journal-recovery-trust-boundaries.svg",
+        )
+        self.assertEqual(
+            visual.content,
+            generate._render_journal_recovery_trust_boundaries().content,
+        )
+        self.assertEqual(root.attrib["role"], "img")
+        self.assertIsNotNone(root.find("svg:title", namespace))
+        self.assertIsNotNone(root.find("svg:desc", namespace))
+        for label in (
+            "ALLOWLISTED CLI",
+            "LIVE PRIVATE JOURNAL",
+            "REOPEN + PRODUCTION VERIFY",
+            "SEPARATE SYNTHETIC TAMPER COPY",
+            "CAPTURED LIVE-JOURNAL REPORT",
+            "STRUCTURAL CHECK ≠ DOMAIN INTEGRITY",
+            "one known logical mutation only",
+            "not arbitrary-corruption coverage or authenticity",
+            "Evaluator/publication not invoked",
+            "locked outcome artifacts = 0",
+            "live status is capture-reported",
+            "no human-effectiveness claim",
+        ):
+            self.assertIn(label, content)
+        self.assertNotIn("018f4f69-e7a2", content)
+        self.assertNotIn("/tmp/", content)
+        self.assertNotIn("/home/", content)
+        self.assertNotIn("<script", content)
+        self.assertNotIn("<image", content)
+        self.assertNotIn(" href=", content)
+
+    def test_journal_recovery_rejects_provenance_or_safety_drift(self) -> None:
+        manifest_path = generate.ROOT / generate.TERMINAL_MANIFEST_PATH
+
+        source_drift = json.loads(manifest_path.read_bytes())
+        recovery = next(
+            command
+            for command in source_drift["commands"]
+            if command["capture_id"] == generate.JOURNAL_RECOVERY_CAPTURE_ID
+        )
+        storage = next(
+            source
+            for source in recovery["sources"]
+            if source["path"] == "src/gworker/storage.py"
+        )
+        storage["sha256"] = "0" * 64
+        with (
+            patch.object(
+                generate,
+                "_closed_json_document",
+                return_value=source_drift,
+            ),
+            self.assertRaisesRegex(
+                RuntimeError,
+                "bytes differ from terminal provenance",
+            ),
+        ):
+            generate.build_journal_recovery_evidence()
+
+        safety_drift = json.loads(manifest_path.read_bytes())
+        safety_drift["safety"]["evaluator_executed"] = True
+        with (
+            patch.object(
+                generate,
+                "_closed_json_document",
+                return_value=safety_drift,
+            ),
+            self.assertRaisesRegex(RuntimeError, "safety boundary"),
+        ):
+            generate.build_journal_recovery_evidence()
+
+    def test_terminal_manifest_loader_rejects_duplicate_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = Path(temporary) / "manifest.json"
+            manifest.write_text(
+                '{"schema_version":"v1","schema_version":"v2"}',
+                encoding="ascii",
+            )
+            with self.assertRaisesRegex(RuntimeError, "duplicate keys"):
+                generate._closed_json_document(manifest)
+
     def test_event_timeline_is_a_real_completed_replay(self) -> None:
         steps, state = generate.build_event_replay()
 
@@ -370,6 +518,7 @@ class VisualDataTests(unittest.TestCase):
                 "event-replay.svg",
                 "focus-session-linkage.svg",
                 "guardrail-matrix.svg",
+                "journal-recovery-trust-boundaries.svg",
                 "locked-protocol-inventory.svg",
                 "policy-score-decomposition.svg",
                 "publication-lifecycle.svg",
@@ -390,12 +539,17 @@ class VisualDataTests(unittest.TestCase):
         self.assertEqual(architecture.count('stroke-dasharray="8 6"'), 1)
 
     def test_lineage_sources_are_bound_and_generator_version_is_bumped(self) -> None:
-        self.assertEqual(generate.TOOL_VERSION, "4")
+        self.assertEqual(generate.TOOL_VERSION, "5")
         self.assertTrue(
             {
                 "docs/decision-lineage.md",
                 "docs/session-linkage.md",
+                "docs/visuals/terminal/journal-recovery.svg",
+                "docs/visuals/terminal/journal-recovery.txt",
+                "docs/visuals/terminal/manifest.json",
+                "scripts/demo_journal.py",
                 "scripts/demo_policy_journal.py",
+                "scripts/visuals/capture_terminal.py",
                 "src/gworker/__init__.py",
                 "src/gworker/cli.py",
                 "src/gworker/codec.py",
@@ -561,6 +715,10 @@ class VisualArtifactTests(unittest.TestCase):
                 "locked outcome artifacts = 0",
             ),
             "guardrail-matrix.svg": ("ALLOW", "BLOCK · budget"),
+            "journal-recovery-trust-boundaries.svg": (
+                "STRUCTURAL CHECK ≠ DOMAIN INTEGRITY",
+                "locked outcome artifacts = 0",
+            ),
             "locked-protocol-inventory.svg": (
                 "OBSERVED LOCKED OUTCOME ARTIFACTS",
                 "EXPECTATIONS, NOT RESULTS",

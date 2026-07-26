@@ -3,11 +3,11 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "c56612c6f868809715359bcedd5f326b99e801ba5818ec9a484f5f62412baa16"
+      "sha256": "140c5d5a5b2b99ca9d2d4ca8c554b318fb0a453c6bc061d450eae3bbe3e78e91"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "5c7934c8ac077555e523bdd1ef36fecf600ae21f6c272b580228e2408c57d956"
+      "sha256": "8f90b0f2dfc495bd414ec5f43e4f645e94f879ad5fb56ddff44a4ea2f2908cdc"
     },
     {
       "path": "docs/decision-lineage.md",
@@ -23,19 +23,39 @@
     },
     {
       "path": "docs/session-linkage.md",
-      "sha256": "e5960b596a80edbb630e99cf4ad5ed30697220098dbd1c173d9e533c7d4d8a1f"
+      "sha256": "8bfa018720bc5d9bda1c38057d9b0d4ddff8efc688bc4bbaa87238c76f2a12cb"
+    },
+    {
+      "path": "docs/visuals/terminal/journal-recovery.svg",
+      "sha256": "08cc240fd28121cd9f09a9029fcc16631232f4b568383cd340e6fe8759c582d7"
+    },
+    {
+      "path": "docs/visuals/terminal/journal-recovery.txt",
+      "sha256": "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91"
+    },
+    {
+      "path": "docs/visuals/terminal/manifest.json",
+      "sha256": "1c3a2a7d7eeb2c885e915bac67f9c9976274a44f61981966f7c97e9b9f86645e"
     },
     {
       "path": "pyproject.toml",
       "sha256": "4782b684e575fe363586ff618312c611fd8cbd1082d0cc562fb71ab7b8868790"
     },
     {
+      "path": "scripts/demo_journal.py",
+      "sha256": "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
+    },
+    {
       "path": "scripts/demo_policy_journal.py",
       "sha256": "7e0c365f1ce2d6ae9536702375efcde23d8a8dfaa2d40145e036eef45ddcdbd7"
     },
     {
+      "path": "scripts/visuals/capture_terminal.py",
+      "sha256": "7dda32eac9fdc42c3f5734568a3bc9383442cf6598f91aa76fa2e54ffe9d2706"
+    },
+    {
       "path": "scripts/visuals/generate.py",
-      "sha256": "eab879dc945bccad292df84dcfa3ec363f5623354e4f823be160bcf3daa0bcc4"
+      "sha256": "c11b2c1245bc5decc2a42590ea394d73a4970999efee0f401754b0e80d805017"
     },
     {
       "path": "src/gworker/__init__.py",
@@ -130,6 +150,12 @@
       "title": "Availability and one-step movement are applied before scoring"
     },
     {
+      "byte_count": 7059,
+      "path": "generated/journal-recovery-trust-boundaries.svg",
+      "sha256": "3c8248411dc0d8e7756237079f7086fc6abe4129d9306bfe83b7181ed8bd7be3",
+      "title": "Canonical replay catches logical tamper after SQLite accepts the copy"
+    },
+    {
       "byte_count": 7947,
       "path": "generated/locked-protocol-inventory.svg",
       "sha256": "9476097deceb2c329e9dcf9175d2075f1b47487b2d7126fdebaff7405b815767",
@@ -159,6 +185,6 @@
   "schema_version": "gworker-visual-manifest-v1",
   "tool": {
     "name": "gworker-visual-evidence",
-    "version": "4"
+    "version": "5"
   }
 }

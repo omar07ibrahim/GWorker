@@ -9,7 +9,7 @@ bounded duration from explicit context and reviews.
 > SQLite event and policy-decision journal, explainable duration policy,
 > journal-backed CLI, locked synthetic evaluator, reporting/evidence builders,
 > canonical result codecs, and the fail-closed publication runner are
-> implemented. Four deterministic synthetic demos, eight source-derived
+> implemented. Four deterministic synthetic demos, nine source-derived
 > non-result diagrams, and six genuine terminal captures are reproducible from
 > the repository. The locked evaluation has **not** run: there are zero locked
 > outcome artifacts and no benchmark result plots. Publication rendering and
@@ -88,6 +88,16 @@ session, and detects a logical mutation in a separate copy.
 *Genuine terminal output; click the image for the sanitized transcript. This
 demo contains six events and ends at revision 6. The seven-event/revision-7
 fixture below is a separate domain-reducer example.*
+
+![Source-bound journal recovery and tamper trust boundaries](docs/visuals/generated/journal-recovery-trust-boundaries.svg)
+
+*Architecture derived from that exact committed transcript and its terminal
+manifest after verifying all six production-source SHA-256 records. SQLite
+accepts the structurally valid tamper copy, while canonical decode rejects its
+altered third event. The terminal text reports the live journal unchanged; this
+diagram does not independently recompute that boolean. This covers one fixed
+synthetic mutation, not arbitrary corruption, authenticity, human effectiveness,
+or locked-evaluation results.*
 
 Run all four safe demos:
 
@@ -252,7 +262,7 @@ result data and never invokes the evaluator.*
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
-- Four deterministic synthetic demos, eight source-derived diagrams, and six
+- Four deterministic synthetic demos, nine source-derived diagrams, and six
   real terminal captures with reproducible checksum-bound evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.

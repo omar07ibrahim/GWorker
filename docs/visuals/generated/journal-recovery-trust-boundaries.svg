@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 982" role="img" aria-labelledby="journal-recovery-trust-boundaries-title journal-recovery-trust-boundaries-description">
+  <title id="journal-recovery-trust-boundaries-title">Canonical replay catches logical tamper after SQLite accepts the copy</title>
+  <desc id="journal-recovery-trust-boundaries-description">A source-bound architecture view derives every value from the committed genuine journal-recovery terminal transcript and manifest. Six exact source records bind the production SQLiteEventStore demo. The fixed synthetic workflow writes six events, closes and reopens the live journal, replays revision six, and verifies SQLite. A separate copy still passes SQLite quick_check after one known event mutation, while canonical decode rejects sequence three. The terminal text reports the live journal unchanged; this generator does not independently recompute that boolean. This is not arbitrary-corruption coverage, cryptographic authenticity, a human outcome, or locked-evaluation evidence.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="982" fill="#FFFFFF"/>
+  <text x="42" y="48" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">SOURCE-BOUND JOURNAL RECOVERY · GENUINE CLI CAPTURE</text>
+  <text x="42" y="84" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">Canonical replay catches logical tamper after SQLite accepts the copy</text>
+  <text x="42" y="116" font-size="15" font-weight="400" fill="#667085" text-anchor="start">Recorded production-storage facts · architecture reconstructed without command execution</text>
+  <rect x="42" y="140" width="1356" height="72" rx="12" fill="#F7FBFF" stroke="#56B4E9" stroke-width="2"/>
+  <text x="66" y="170" font-size="12" font-weight="800" fill="#0072B2" text-anchor="start">BOUND CAPTURE</text>
+  <text x="66" y="195" font-size="15" font-weight="650" fill="#1B1F23" text-anchor="start">exit 0 · transcript SHA-256 bc077acc3dba2361… · 6 exact source records verified</text>
+  <rect x="42" y="248" width="300" height="198" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="60" y="278" font-size="16" font-weight="750" fill="#1B1F23" text-anchor="start">ALLOWLISTED CLI</text>
+  <text x="60" y="306" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="60" dy="0">python scripts/demo_journal.py</tspan><tspan x="60" dy="20">--repo-root . · --workspace</tspan><tspan x="60" dy="20">.gworker/visual-demo/</tspan><tspan x="60" dy="20">terminal-capture · --reset</tspan><tspan x="60" dy="20">shell = false · exit = 0</tspan></text>
+  <rect x="390" y="248" width="330" height="198" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="408" y="278" font-size="16" font-weight="750" fill="#1B1F23" text-anchor="start">LIVE PRIVATE JOURNAL</text>
+  <text x="408" y="306" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="408" dy="0">production SQLiteEventStore</tspan><tspan x="408" dy="20">6 canonical events appended</tspan><tspan x="408" dy="20">file 0600 · directory 0700</tspan><tspan x="408" dy="20">append → close</tspan><tspan x="408" dy="20">synthetic records only</tspan></text>
+  <rect x="768" y="248" width="630" height="198" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="786" y="278" font-size="16" font-weight="750" fill="#1B1F23" text-anchor="start">REOPEN + PRODUCTION VERIFY</text>
+  <text x="786" y="306" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="786" dy="0">load = exact 6-event stream</tspan><tspan x="786" dy="20">replay = completed · revision 6 · terminal true</tspan><tspan x="786" dy="20">focus 2382s · break 480s · interruptions 1</tspan><tspan x="786" dy="20">PRAGMA quick_check = ok · sessions / events = 1 / 6</tspan><tspan x="786" dy="20">canonical bytes + reducer transitions agree</tspan></text>
+  <line x1="342" y1="347" x2="386" y2="347" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="720" y1="347" x2="764" y2="347" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M1083 446 V478 H342 V506" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="42" y="510" width="600" height="190" rx="12" fill="#FFFFFF" stroke="#D55E00" stroke-width="2"/>
+  <text x="60" y="540" font-size="16" font-weight="750" fill="#1B1F23" text-anchor="start">SEPARATE SYNTHETIC TAMPER COPY</text>
+  <text x="60" y="568" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="60" dy="0">sequence 3 event_json altered</tspan><tspan x="60" dy="20">SQLite quick_check = ok</tspan><tspan x="60" dy="20">canonical replay = CorruptJournal</tspan><tspan x="60" dy="20">one known logical mutation is detected</tspan><tspan x="60" dy="20">the live database is never the mutation target</tspan></text>
+  <rect x="750" y="510" width="648" height="190" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="768" y="540" font-size="16" font-weight="750" fill="#1B1F23" text-anchor="start">CAPTURED LIVE-JOURNAL REPORT</text>
+  <text x="768" y="568" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="768" dy="0">session / events = 1 / 6</tspan><tspan x="768" dy="20">terminal text reports live unchanged</tspan><tspan x="768" dy="20">PRAGMA quick_check = ok</tspan><tspan x="768" dy="20">the boolean is not exposed in the transcript</tspan><tspan x="768" dy="20">not independently recomputed by this generator</tspan><tspan x="768" dy="20">source-bound report · not a fresh execution</tspan></text>
+  <line x1="642" y1="605" x2="746" y2="605" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="42" y="734" width="1356" height="82" rx="12" fill="#F8FAFC" stroke="#E69F00" stroke-width="1"/>
+  <text x="66" y="765" font-size="13" font-weight="800" fill="#1B1F23" text-anchor="start">STRUCTURAL CHECK ≠ DOMAIN INTEGRITY</text>
+  <text x="66" y="793" font-size="16" font-weight="650" fill="#1B1F23" text-anchor="start">SQLite accepts the copied container · canonical codec + event replay reject the altered domain record</text>
+  <rect x="42" y="848" width="1356" height="96" rx="12" fill="#FBF7FC" stroke="#CC79A7" stroke-width="1"/>
+  <text x="66" y="878" font-size="12" font-weight="800" fill="#1B1F23" text-anchor="start">EVIDENCE / CLAIM BOUNDARY</text>
+  <text x="66" y="902" font-size="14" font-weight="600" fill="#1B1F23" text-anchor="start"><tspan x="66" dy="0">Synthetic fixture · one known logical mutation only · not arbitrary-corruption coverage or authenticity</tspan><tspan x="66" dy="22">Evaluator/publication not invoked · locked outcome artifacts = 0 · live status is capture-reported · no human-effectiveness claim</tspan></text>
+</svg>

@@ -30,7 +30,7 @@ artifacts, never a user's local work history.
 | Synthetic evaluator | An explicit experiment configuration; locked `eval` additionally requires the private consumed permit | Balanced synthetic environments, paired potential outcomes, strategy summaries, traces, and exact cardinality validation | Any missing scenario, invariant breach, non-finite probability, invalid guardrail choice, or denominator mismatch invalidates the whole run | [`evaluation.py`](../src/gworker/evaluation.py#L2818) |
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
 | Publication state and runner | Clean committed source, a capacity assessment, and the fixed run key | Append-only state records, one evaluation permit, immutable artifacts, resumable materialization, and path-free status | Preflight failure does not claim; reopening `EVALUATING` burns the run; existing artifact mismatch fails; there is no force/reset/retry flag | [`publication_state.py`](../src/gworker/publication_state.py#L1240), [`publication_runner.py`](../src/gworker/publication_runner.py#L2051), [`resource_preflight.py`](../src/gworker/resource_preflight.py#L1672) |
-| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Seven source-derived diagrams plus six sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
+| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Nine source-derived diagrams plus six sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
 
 ## Event reduction and durable journal
 
@@ -51,6 +51,15 @@ replays.
 The [journal terminal capture](visuals/terminal/journal-recovery.txt) exercises
 the production store with six synthetic events, reopens it at revision 6, and
 detects a logical mutation in a separate copy. The
+[source-bound recovery architecture](visuals/generated/journal-recovery-trust-boundaries.svg)
+reads only that committed transcript and terminal manifest, verifies the exact
+recorder, transcript, terminal SVG, and six production-source SHA-256 records,
+then renders the observed CLI/storage/replay boundaries without executing a
+command. It documents one known logical mutation: SQLite `quick_check` accepts
+the copied container, while canonical event decode rejects its altered third
+record. The transcript reports the live journal unchanged, but this
+capture-derived diagram does not independently recompute that boolean. It is
+not arbitrary-corruption coverage or a cryptographic authenticity claim. The
 [seven-event replay diagram](visuals/generated/event-replay.svg) is a distinct
 in-memory reducer fixture ending at revision 7.
 
@@ -136,7 +145,9 @@ outcome artifacts.
 
 The non-result visual generator calls production APIs for the event replay,
 policy scenario, feasible-template matrix, and locked expected cardinalities.
-It emits accessible self-contained SVG and a
+It also verifies the exact source records and output hashes behind the genuine
+journal-recovery capture before deriving its recovery architecture. It emits
+accessible self-contained SVG and a
 [source-derived manifest](visuals/manifest.json) binding every declared input
 and output checksum. `--check` generates a clean temporary bundle and requires
 byte equality.
@@ -186,7 +197,7 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 | Current | `NEXT` |
 | --- | --- |
 | Typed events, pure replay, canonical codec, and a private schema-v3 SQLite journal | Offline replay evaluation with propensity-provenance diagnostics |
-| Journal-backed recommendation/review identity, exact propensities, and immutable decision-to-plan linkage | A source-derived linkage workflow visual rebound to the implementation |
+| Journal-backed recommendation/review identity, exact propensities, and immutable decision-to-plan linkage | CLI support for explicitly linking a durable decision to a planned session |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |
-| Four demos, seven source-derived diagrams, and six genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |
+| Four demos, nine source-derived diagrams, and six genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |

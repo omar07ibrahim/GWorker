@@ -1,9 +1,9 @@
-"""Generate deterministic SVG evidence from the implemented GWorker APIs.
+"""Generate deterministic SVG evidence from implemented and bound GWorker facts.
 
-The eight visuals in this bundle are deliberately non-result evidence.  They
+The nine visuals in this bundle are deliberately non-result evidence. They
 exercise the event reducer, durable policy lineage, policy guardrails,
-publication state, and locked protocol inventory without entering the held-out
-evaluation namespace.
+publication state, a source-bound genuine journal-recovery capture, and locked
+protocol inventory without entering the held-out evaluation namespace.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 import random
+import re
 import sqlite3
 import sys
 import tempfile
@@ -72,9 +73,34 @@ VISUAL_ROOT: Final = ROOT / "docs" / "visuals"
 GENERATED_DIRECTORY_NAME: Final = "generated"
 MANIFEST_NAME: Final = "manifest.json"
 TOOL_NAME: Final = "gworker-visual-evidence"
-TOOL_VERSION: Final = "4"
+TOOL_VERSION: Final = "5"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
 VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
+JOURNAL_RECOVERY_CAPTURE_ID: Final = "journal-recovery"
+JOURNAL_RECOVERY_TRANSCRIPT: Final = (
+    "docs/visuals/terminal/journal-recovery.txt"
+)
+JOURNAL_RECOVERY_TERMINAL_SVG: Final = (
+    "docs/visuals/terminal/journal-recovery.svg"
+)
+TERMINAL_MANIFEST_PATH: Final = "docs/visuals/terminal/manifest.json"
+JOURNAL_RECOVERY_COMMAND: Final = (
+    "python",
+    "scripts/demo_journal.py",
+    "--repo-root",
+    ".",
+    "--workspace",
+    ".gworker/visual-demo/terminal-capture",
+    "--reset",
+)
+JOURNAL_RECOVERY_SOURCE_PATHS: Final = (
+    "scripts/demo_journal.py",
+    "src/gworker/__init__.py",
+    "src/gworker/codec.py",
+    "src/gworker/domain.py",
+    "src/gworker/policy.py",
+    "src/gworker/storage.py",
+)
 DURABLE_FIRST_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9101")
 DURABLE_SECOND_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9102")
 DURABLE_FIRST_SEED: Final = 20_260_725
@@ -109,8 +135,13 @@ INPUT_FILES: Final = (
     "docs/evaluation-protocol.md",
     "docs/publication-evidence.md",
     "docs/session-linkage.md",
+    JOURNAL_RECOVERY_TERMINAL_SVG,
+    JOURNAL_RECOVERY_TRANSCRIPT,
+    TERMINAL_MANIFEST_PATH,
     "pyproject.toml",
+    "scripts/demo_journal.py",
     "scripts/demo_policy_journal.py",
+    "scripts/visuals/capture_terminal.py",
     "scripts/visuals/generate.py",
     "src/gworker/__init__.py",
     "src/gworker/cli.py",
@@ -195,6 +226,32 @@ class GuardrailRow:
     allowed_template_ids: tuple[str, ...]
     reason_codes: tuple[str, ...]
     cells: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class JournalRecoveryEvidence:
+    """Source-bound facts from the genuine journal-recovery capture."""
+
+    command: tuple[str, ...]
+    source_paths: tuple[str, ...]
+    transcript_sha256: str
+    event_types: tuple[str, ...]
+    file_mode: str
+    directory_mode: str
+    phase: str
+    revision: int
+    terminal: bool
+    focus_seconds: int
+    break_seconds: int
+    interruption_count: int
+    sqlite_check: str
+    session_count: int
+    event_count: int
+    tamper_sqlite_check: str
+    tamper_detected: bool
+    tamper_error_type: str
+    tamper_sequence: int
+    capture_reports_live_unchanged: bool
 
 
 def _sha256(content: bytes) -> str:
@@ -346,6 +403,353 @@ def _svg_document(
         "",
     ]
     return "\n".join(lines).encode("utf-8")
+
+
+def _closed_json_document(path: Path) -> dict[str, object]:
+    """Load one bounded JSON object while rejecting duplicate keys."""
+
+    try:
+        content = path.read_bytes()
+    except OSError as error:
+        raise RuntimeError("cannot read terminal evidence manifest") from error
+    if not content or len(content) > 256_000:
+        raise RuntimeError("terminal evidence manifest byte length is invalid")
+
+    def closed_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise RuntimeError("terminal evidence manifest has duplicate keys")
+            result[key] = value
+        return result
+
+    try:
+        decoded = json.loads(
+            content.decode("ascii"),
+            object_pairs_hook=closed_object,
+        )
+    except RuntimeError:
+        raise
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as error:
+        raise RuntimeError("terminal evidence manifest is invalid") from error
+    if type(decoded) is not dict:
+        raise RuntimeError("terminal evidence manifest root is invalid")
+    return decoded
+
+
+def _verified_file_record(
+    raw: object,
+    *,
+    expected_path: str,
+    label: str,
+) -> bytes:
+    """Require a canonical file record to match the current exact bytes."""
+
+    if (
+        type(raw) is not dict
+        or set(raw) != {"byte_count", "path", "sha256"}
+        or type(raw.get("byte_count")) is not int
+        or type(raw.get("path")) is not str
+        or type(raw.get("sha256")) is not str
+        or raw["path"] != expected_path
+    ):
+        raise RuntimeError(f"{label} record is invalid")
+    relative = Path(expected_path)
+    if (
+        relative.is_absolute()
+        or relative.as_posix() != expected_path
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
+        raise RuntimeError(f"{label} path is unsafe")
+    try:
+        content = (ROOT / relative).read_bytes()
+    except OSError as error:
+        raise RuntimeError(f"cannot read {label}") from error
+    if raw["byte_count"] != len(content) or raw["sha256"] != _sha256(content):
+        raise RuntimeError(f"{label} bytes differ from terminal provenance")
+    return content
+
+
+def _transcript_match(
+    pattern: str,
+    line: str,
+    *,
+    label: str,
+) -> re.Match[str]:
+    match = re.fullmatch(pattern, line)
+    if match is None:
+        raise RuntimeError(f"journal recovery transcript {label} is invalid")
+    return match
+
+
+def build_journal_recovery_evidence() -> JournalRecoveryEvidence:
+    """Verify and parse the committed genuine journal-recovery capture.
+
+    This function reads only the terminal manifest, its source-bound files,
+    and the recorded transcript. It never imports or invokes the demo,
+    evaluator, publication runner, or terminal recorder.
+    """
+
+    manifest = _closed_json_document(ROOT / TERMINAL_MANIFEST_PATH)
+    if (
+        set(manifest)
+        != {
+            "capture",
+            "commands",
+            "reproduction",
+            "safety",
+            "schema_version",
+            "tool",
+        }
+        or manifest["schema_version"] != "gworker-terminal-capture-manifest-v1"
+    ):
+        raise RuntimeError("terminal evidence manifest contract is invalid")
+
+    tool = manifest["tool"]
+    if (
+        type(tool) is not dict
+        or set(tool) != {"name", "source", "stdlib_only", "version"}
+        or tool.get("name") != "gworker-terminal-capture"
+        or tool.get("stdlib_only") is not True
+        or type(tool.get("version")) is not str
+    ):
+        raise RuntimeError("terminal recorder identity is invalid")
+    _verified_file_record(
+        tool["source"],
+        expected_path="scripts/visuals/capture_terminal.py",
+        label="terminal recorder source",
+    )
+
+    expected_safety = {
+        "arbitrary_commands_accepted": False,
+        "evaluator_executed": False,
+        "journal_workspace": ".gworker/visual-demo/terminal-capture",
+        "policy_journal_workspace": (
+            "private temporary directory; removed by the fixed harness"
+        ),
+        "publication_run_executed": False,
+        "shell_used": False,
+        "synthetic_demo_data_only": True,
+    }
+    if manifest["safety"] != expected_safety:
+        raise RuntimeError("terminal evidence safety boundary is invalid")
+
+    commands = manifest["commands"]
+    if type(commands) is not list:
+        raise RuntimeError("terminal evidence command inventory is invalid")
+    matches = [
+        command
+        for command in commands
+        if type(command) is dict
+        and command.get("capture_id") == JOURNAL_RECOVERY_CAPTURE_ID
+    ]
+    if len(matches) != 1:
+        raise RuntimeError("journal recovery capture inventory is invalid")
+    capture = matches[0]
+    if set(capture) != {
+        "argv",
+        "capture_id",
+        "description",
+        "exit_code",
+        "expected_exit_codes",
+        "host_dependent",
+        "host_note",
+        "sources",
+        "stderr",
+        "stdout",
+        "title",
+        "visual",
+    }:
+        raise RuntimeError("journal recovery capture fields are invalid")
+    argv = capture["argv"]
+    if (
+        type(argv) is not list
+        or any(type(value) is not str for value in argv)
+        or tuple(argv) != JOURNAL_RECOVERY_COMMAND
+        or capture["exit_code"] != 0
+        or capture["expected_exit_codes"] != [0]
+        or capture["host_dependent"] is not False
+        or capture["host_note"] is not None
+        or type(capture["description"]) is not str
+        or type(capture["title"]) is not str
+    ):
+        raise RuntimeError("journal recovery command contract is invalid")
+    if any(value in {"run", "run_experiment"} for value in argv):
+        raise RuntimeError("journal recovery command enters a forbidden runtime")
+
+    stderr = capture["stderr"]
+    if (
+        type(stderr) is not dict
+        or stderr
+        != {
+            "byte_count": 0,
+            "sha256": _sha256(b""),
+        }
+    ):
+        raise RuntimeError("journal recovery stderr record is invalid")
+
+    sources = capture["sources"]
+    if type(sources) is not list or len(sources) != len(
+        JOURNAL_RECOVERY_SOURCE_PATHS
+    ):
+        raise RuntimeError("journal recovery source inventory is invalid")
+    observed_source_paths: list[str] = []
+    for raw_source, expected_path in zip(
+        sources,
+        JOURNAL_RECOVERY_SOURCE_PATHS,
+        strict=True,
+    ):
+        _verified_file_record(
+            raw_source,
+            expected_path=expected_path,
+            label=f"journal recovery source {expected_path}",
+        )
+        observed_source_paths.append(expected_path)
+
+    transcript = _verified_file_record(
+        capture["stdout"],
+        expected_path=JOURNAL_RECOVERY_TRANSCRIPT,
+        label="journal recovery transcript",
+    )
+    _verified_file_record(
+        capture["visual"],
+        expected_path=JOURNAL_RECOVERY_TERMINAL_SVG,
+        label="journal recovery terminal visual",
+    )
+    try:
+        lines = transcript.decode("utf-8").splitlines()
+    except UnicodeDecodeError as error:
+        raise RuntimeError("journal recovery transcript is not UTF-8") from error
+    if len(lines) != 23:
+        raise RuntimeError("journal recovery transcript line count is invalid")
+    fixed_lines = {
+        0: "GWorker journal demo | real SQLite store, synthetic events",
+        1: "Workspace: .gworker/visual-demo/terminal-capture",
+        2: (
+            "Database:  .gworker/visual-demo/terminal-capture/"
+            "live/events.sqlite3"
+        ),
+        4: "",
+        5: "Append-only event stream",
+        6: " seq  occurred_at                  event_type",
+        13: "",
+        17: "",
+        18: "Safe synthetic tamper copy",
+        19: (
+            "Copy:      .gworker/visual-demo/terminal-capture/"
+            "tamper-copy/events.sqlite3"
+        ),
+        22: "Live journal remains verified and unchanged.",
+    }
+    if any(lines[index] != value for index, value in fixed_lines.items()):
+        raise RuntimeError("journal recovery transcript fixed text is invalid")
+
+    security = _transcript_match(
+        r"Security:  file ([0-7]{4}), directory ([0-7]{4}), "
+        r"owner=current-user",
+        lines[3],
+        label="security line",
+    )
+    event_types: list[str] = []
+    for expected_sequence, line in enumerate(lines[7:13], start=1):
+        event = _transcript_match(
+            r"\s+([1-9][0-9]*)  "
+            r"([0-9]{4}-[0-9]{2}-[0-9]{2}T"
+            r"[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}Z)  "
+            r"([a-z][a-z0-9_]*)",
+            line,
+            label=f"event {expected_sequence}",
+        )
+        if int(event.group(1)) != expected_sequence:
+            raise RuntimeError("journal recovery event sequence is invalid")
+        event_types.append(event.group(3))
+    expected_event_types = (
+        "session_planned",
+        "focus_started",
+        "interruption_recorded",
+        "focus_completed",
+        "break_started",
+        "break_completed",
+    )
+    if tuple(event_types) != expected_event_types:
+        raise RuntimeError("journal recovery event types are invalid")
+
+    replay = _transcript_match(
+        r"Reopen \+ replay: phase=([a-z_]+), revision=([1-9][0-9]*), "
+        r"terminal=(True|False)",
+        lines[14],
+        label="replay line",
+    )
+    durations = _transcript_match(
+        r"Durations: focus=([0-9]+)s, break=([0-9]+)s, "
+        r"interruptions=([0-9]+)",
+        lines[15],
+        label="duration line",
+    )
+    integrity = _transcript_match(
+        r"Integrity: PRAGMA quick_check=([a-z]+), sessions=([0-9]+), "
+        r"events=([0-9]+)",
+        lines[16],
+        label="integrity line",
+    )
+    tamper_sqlite = _transcript_match(
+        r"SQLite:    quick_check=([a-z]+)",
+        lines[20],
+        label="tamper SQLite line",
+    )
+    tamper = _transcript_match(
+        r"Replay:    detected=(true|false) "
+        r"\(([A-Za-z][A-Za-z0-9]*): cannot decode stored event at "
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-"
+        r"[0-9a-f]{12}:([1-9][0-9]*)\)",
+        lines[21],
+        label="tamper replay line",
+    )
+    evidence = JournalRecoveryEvidence(
+        command=tuple(argv),
+        source_paths=tuple(observed_source_paths),
+        transcript_sha256=_sha256(transcript),
+        event_types=tuple(event_types),
+        file_mode=security.group(1),
+        directory_mode=security.group(2),
+        phase=replay.group(1),
+        revision=int(replay.group(2)),
+        terminal=replay.group(3) == "True",
+        focus_seconds=int(durations.group(1)),
+        break_seconds=int(durations.group(2)),
+        interruption_count=int(durations.group(3)),
+        sqlite_check=integrity.group(1),
+        session_count=int(integrity.group(2)),
+        event_count=int(integrity.group(3)),
+        tamper_sqlite_check=tamper_sqlite.group(1),
+        tamper_detected=tamper.group(1) == "true",
+        tamper_error_type=tamper.group(2),
+        tamper_sequence=int(tamper.group(3)),
+        capture_reports_live_unchanged=(
+            lines[22] == "Live journal remains verified and unchanged."
+        ),
+    )
+    if (
+        evidence.file_mode != "0600"
+        or evidence.directory_mode != "0700"
+        or evidence.phase != "completed"
+        or evidence.revision != 6
+        or not evidence.terminal
+        or evidence.focus_seconds != 2_382
+        or evidence.break_seconds != 480
+        or evidence.interruption_count != 1
+        or evidence.sqlite_check != "ok"
+        or evidence.session_count != 1
+        or evidence.event_count != len(expected_event_types)
+        or evidence.tamper_sqlite_check != "ok"
+        or not evidence.tamper_detected
+        or evidence.tamper_error_type != "CorruptJournal"
+        or evidence.tamper_sequence != 3
+        or not evidence.capture_reports_live_unchanged
+        or observed_locked_outcome_artifacts()
+    ):
+        raise RuntimeError("journal recovery evidence invariants drifted")
+    return evidence
 
 
 def build_event_replay() -> tuple[tuple[ReplayStep, ...], SessionState]:
@@ -1292,6 +1696,7 @@ def _architecture_box(
     lines: tuple[str, ...],
     color: str,
     dashed: bool = False,
+    title_fill: str | None = None,
 ) -> None:
     body.append(
         _rect(
@@ -1305,7 +1710,16 @@ def _architecture_box(
             dash="8 6" if dashed else None,
         )
     )
-    body.append(_text(x + 18, y + 30, title, size=16, weight=750, fill=color))
+    body.append(
+        _text(
+            x + 18,
+            y + 30,
+            title,
+            size=16,
+            weight=750,
+            fill=color if title_fill is None else title_fill,
+        )
+    )
     body.append(
         _multiline(
             x + 18,
@@ -1315,6 +1729,237 @@ def _architecture_box(
             fill=GRAY,
             line_height=20,
         )
+    )
+
+
+def _render_journal_recovery_trust_boundaries() -> RenderedVisual:
+    evidence = build_journal_recovery_evidence()
+    title = "Canonical replay catches logical tamper after SQLite accepts the copy"
+    description = (
+        "A source-bound architecture view derives every value from the committed "
+        "genuine journal-recovery terminal transcript and manifest. Six exact "
+        "source records bind the production SQLiteEventStore demo. The fixed "
+        "synthetic workflow writes six events, closes and reopens the live "
+        "journal, replays revision six, and verifies SQLite. A separate copy "
+        "still passes SQLite quick_check after one known event mutation, while "
+        "canonical decode rejects sequence three. The terminal text reports "
+        "the live journal unchanged; this generator does not independently "
+        "recompute that boolean. This is not arbitrary-corruption coverage, "
+        "cryptographic authenticity, a human outcome, or locked-evaluation "
+        "evidence."
+    )
+    body = [
+        _text(
+            42,
+            48,
+            "SOURCE-BOUND JOURNAL RECOVERY · GENUINE CLI CAPTURE",
+            size=14,
+            weight=700,
+            fill=BLUE,
+        ),
+        _text(42, 84, title, size=27, weight=700),
+        _text(
+            42,
+            116,
+            (
+                "Recorded production-storage facts · architecture reconstructed "
+                "without command execution"
+            ),
+            size=15,
+            fill=GRAY,
+        ),
+        _rect(42, 140, 1356, 72, fill="#F7FBFF", stroke=SKY, stroke_width=2),
+        _text(66, 170, "BOUND CAPTURE", size=12, weight=800, fill=BLUE),
+        _text(
+            66,
+            195,
+            (
+                f"exit 0 · transcript SHA-256 "
+                f"{evidence.transcript_sha256[:16]}… · "
+                f"{len(evidence.source_paths)} exact source records verified"
+            ),
+            size=15,
+            weight=650,
+        ),
+    ]
+    _architecture_box(
+        body,
+        x=42,
+        y=248,
+        width=300,
+        height=198,
+        title="ALLOWLISTED CLI",
+        lines=(
+            "python scripts/demo_journal.py",
+            "--repo-root . · --workspace",
+            ".gworker/visual-demo/",
+            "terminal-capture · --reset",
+            "shell = false · exit = 0",
+        ),
+        color=BLUE,
+        title_fill=BLACK,
+    )
+    _architecture_box(
+        body,
+        x=390,
+        y=248,
+        width=330,
+        height=198,
+        title="LIVE PRIVATE JOURNAL",
+        lines=(
+            "production SQLiteEventStore",
+            f"{evidence.event_count} canonical events appended",
+            (
+                f"file {evidence.file_mode} · "
+                f"directory {evidence.directory_mode}"
+            ),
+            "append → close",
+            "synthetic records only",
+        ),
+        color=GREEN,
+        title_fill=BLACK,
+    )
+    _architecture_box(
+        body,
+        x=768,
+        y=248,
+        width=630,
+        height=198,
+        title="REOPEN + PRODUCTION VERIFY",
+        lines=(
+            f"load = exact {evidence.event_count}-event stream",
+            (
+                f"replay = {evidence.phase} · revision {evidence.revision} · "
+                f"terminal {str(evidence.terminal).lower()}"
+            ),
+            (
+                f"focus {evidence.focus_seconds}s · break "
+                f"{evidence.break_seconds}s · interruptions "
+                f"{evidence.interruption_count}"
+            ),
+            (
+                f"PRAGMA quick_check = {evidence.sqlite_check} · "
+                f"sessions / events = {evidence.session_count} / "
+                f"{evidence.event_count}"
+            ),
+            "canonical bytes + reducer transitions agree",
+        ),
+        color=GREEN,
+        title_fill=BLACK,
+    )
+    body.extend(
+        [
+            _line(342, 347, 386, 347, arrow=True),
+            _line(720, 347, 764, 347, arrow=True),
+            (
+                '<path d="M1083 446 V478 H342 V506" '
+                f'fill="none" stroke="{GRAY}" stroke-width="2" '
+                'marker-end="url(#arrow)"/>'
+            ),
+        ]
+    )
+    _architecture_box(
+        body,
+        x=42,
+        y=510,
+        width=600,
+        height=190,
+        title="SEPARATE SYNTHETIC TAMPER COPY",
+        lines=(
+            f"sequence {evidence.tamper_sequence} event_json altered",
+            f"SQLite quick_check = {evidence.tamper_sqlite_check}",
+            (
+                "canonical replay = "
+                f"{evidence.tamper_error_type}"
+            ),
+            "one known logical mutation is detected",
+            "the live database is never the mutation target",
+        ),
+        color=VERMILION,
+        title_fill=BLACK,
+    )
+    _architecture_box(
+        body,
+        x=750,
+        y=510,
+        width=648,
+        height=190,
+        title="CAPTURED LIVE-JOURNAL REPORT",
+        lines=(
+            f"session / events = {evidence.session_count} / {evidence.event_count}",
+            "terminal text reports live unchanged",
+            f"PRAGMA quick_check = {evidence.sqlite_check}",
+            "the boolean is not exposed in the transcript",
+            "not independently recomputed by this generator",
+            "source-bound report · not a fresh execution",
+        ),
+        color=GREEN,
+        title_fill=BLACK,
+    )
+    body.extend(
+        [
+            _line(642, 605, 746, 605, arrow=True),
+            _rect(42, 734, 1356, 82, fill=PANEL, stroke=ORANGE),
+            _text(
+                66,
+                765,
+                "STRUCTURAL CHECK ≠ DOMAIN INTEGRITY",
+                size=13,
+                weight=800,
+                fill=BLACK,
+            ),
+            _text(
+                66,
+                793,
+                (
+                    "SQLite accepts the copied container · canonical codec + "
+                    "event replay reject the altered domain record"
+                ),
+                size=16,
+                weight=650,
+            ),
+            _rect(42, 848, 1356, 96, fill="#FBF7FC", stroke=PURPLE),
+            _text(
+                66,
+                878,
+                "EVIDENCE / CLAIM BOUNDARY",
+                size=12,
+                weight=800,
+                fill=BLACK,
+            ),
+            _multiline(
+                66,
+                902,
+                (
+                    (
+                        "Synthetic fixture · one known logical mutation only · "
+                        "not arbitrary-corruption coverage or authenticity"
+                    ),
+                    (
+                        "Evaluator/publication not invoked · locked outcome "
+                        "artifacts = 0 · live status is capture-reported · "
+                        "no human-effectiveness claim"
+                    ),
+                ),
+                size=14,
+                weight=600,
+                line_height=22,
+            ),
+        ]
+    )
+    content = _svg_document(
+        stem="journal-recovery-trust-boundaries",
+        title=title,
+        description=description,
+        width=1440,
+        height=982,
+        body=body,
+    )
+    return RenderedVisual(
+        "journal-recovery-trust-boundaries.svg",
+        title,
+        description,
+        content,
     )
 
 
@@ -2552,6 +3197,7 @@ def render_visuals() -> tuple[RenderedVisual, ...]:
         _render_event_replay(),
         _render_focus_session_linkage(),
         _render_guardrail_matrix(),
+        _render_journal_recovery_trust_boundaries(),
         _render_protocol_inventory(),
         _render_policy_scores(),
         _render_publication_lifecycle(),
