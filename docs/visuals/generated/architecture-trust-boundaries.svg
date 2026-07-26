@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="architecture-title architecture-description">
   <title id="architecture-title">Current architecture separates private journals from publication</title>
-  <desc id="architecture-description">A source-backed architecture map shows explicit caller inputs, the domain and policy cores, private canonical storage, and the locked synthetic publication path. No private journal data enters publication. Durable journal-policy linkage and its CLI are current; the dashed box marks rendering and sealing as next work.</desc>
+  <desc id="architecture-description">A source-backed architecture map shows explicit caller inputs, the domain and policy cores, private canonical storage, and the locked synthetic publication path. No private journal data enters publication. Durable session linkage is implemented in the storage API; no linkage CLI exists. The dashed box marks rendering and sealing as next work.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
@@ -41,7 +41,7 @@
   <text x="528" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="528" dy="0">versioned JSON</tspan><tspan x="528" dy="20">unknown fields fail</tspan><tspan x="528" dy="20">byte-stable events</tspan></text>
   <rect x="710" y="204" width="176" height="132" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
   <text x="728" y="234" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">SQLite journal</text>
-  <text x="728" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="728" dy="0">events + decisions</tspan><tspan x="728" dy="20">reviews + history edges</tspan><tspan x="728" dy="20">transactional replay</tspan></text>
+  <text x="728" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="728" dy="0">events + decisions</tspan><tspan x="728" dy="20">reviews + provenance links</tspan><tspan x="728" dy="20">transactional replay</tspan></text>
   <line x1="686" y1="270" x2="706" y2="270" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
   <rect x="558" y="390" width="278" height="138" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
   <text x="576" y="420" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">Local trust boundary</text>

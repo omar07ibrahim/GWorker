@@ -1,6 +1,6 @@
 """Generate deterministic SVG evidence from the implemented GWorker APIs.
 
-The seven visuals in this bundle are deliberately non-result evidence.  They
+The eight visuals in this bundle are deliberately non-result evidence.  They
 exercise the event reducer, durable policy lineage, policy guardrails,
 publication state, and locked protocol inventory without entering the held-out
 evaluation namespace.
@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 import random
+import sqlite3
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from xml.sax.saxutils import escape
 
 from gworker.domain import (
+    AbandonReason,
     BreakCompleted,
     BreakStarted,
     DomainEvent,
@@ -30,6 +32,7 @@ from gworker.domain import (
     FocusStarted,
     InterruptionKind,
     InterruptionRecorded,
+    SessionAbandoned,
     SessionPhase,
     SessionPlanned,
     SessionState,
@@ -56,20 +59,33 @@ from gworker.policy import (
     TaskKind,
 )
 from gworker.publication_state import PublicationStage
-from gworker.storage import PolicyJournalVerification, SQLiteEventStore
+from gworker.storage import (
+    SCHEMA_VERSION,
+    FocusSessionLink,
+    JournalVerification,
+    PolicyJournalVerification,
+    SQLiteEventStore,
+)
 
 ROOT: Final = Path(__file__).resolve().parents[2]
 VISUAL_ROOT: Final = ROOT / "docs" / "visuals"
 GENERATED_DIRECTORY_NAME: Final = "generated"
 MANIFEST_NAME: Final = "manifest.json"
 TOOL_NAME: Final = "gworker-visual-evidence"
-TOOL_VERSION: Final = "3"
+TOOL_VERSION: Final = "4"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
 VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
 DURABLE_FIRST_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9101")
 DURABLE_SECOND_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9102")
 DURABLE_FIRST_SEED: Final = 20_260_725
 DURABLE_SECOND_SEED: Final = 20_260_726
+LINKAGE_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9201")
+LINKAGE_SESSION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9202")
+LINKAGE_PLANNED_EVENT_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9203")
+LINKAGE_STARTED_EVENT_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9204")
+LINKAGE_ABANDONED_EVENT_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9205")
+LINKAGE_SEED: Final = 20_260_726
+LINKAGE_BASE_TIME: Final = datetime(2026, 7, 26, 10, 0, tzinfo=UTC)
 
 # The Okabe-Ito palette remains distinguishable for common color-vision
 # deficiencies. Every encoded value also has a direct text label.
@@ -154,6 +170,23 @@ class DurableDecisionLineage:
 
 
 @dataclass(frozen=True, slots=True)
+class FocusSessionLinkageEvidence:
+    """One fixed decision-plan-link-progress-review-reopen workflow."""
+
+    recommendation: Recommendation
+    planned: SessionPlanned
+    link: FocusSessionLink
+    before_review: PolicyJournalVerification
+    review: ReviewedDecision
+    reopened_link: FocusSessionLink
+    state: SessionState
+    journal_verification: JournalVerification
+    policy_verification: PolicyJournalVerification
+    schema_version: int
+    link_columns: tuple[str, str]
+
+
+@dataclass(frozen=True, slots=True)
 class GuardrailRow:
     """One real feasible-template query and its directly labelled cells."""
 
@@ -174,6 +207,11 @@ def _file_sha256(path: Path) -> str:
 
 def _safe_text(value: object) -> str:
     return escape(str(value), {'"': "&quot;"})
+
+
+def _short_uuid(value: UUID) -> str:
+    canonical = str(value)
+    return f"{canonical[:6]}…{canonical[-4:]}"
 
 
 def _text(
@@ -549,6 +587,176 @@ def build_durable_decision_lineage() -> DurableDecisionLineage:
         review=review,
         second=second,
         verification=verification,
+    )
+
+
+def build_focus_session_linkage() -> FocusSessionLinkageEvidence:
+    """Exercise schema-v3 focus linkage through the public storage API."""
+
+    policy = HierarchicalSoftmaxUCB()
+    context = FocusContext(
+        task_kind=TaskKind.DEEP_WORK,
+        energy=EnergyLevel.HIGH,
+        available_seconds=3_600,
+    )
+    with tempfile.TemporaryDirectory(
+        prefix="gworker-visual-focus-linkage-"
+    ) as temporary:
+        database = Path(temporary) / "events.sqlite3"
+        store = SQLiteEventStore(database)
+        recommendation = store.recommend(
+            policy,
+            context,
+            decision_id=LINKAGE_DECISION_ID,
+            rng_seed=LINKAGE_SEED,
+        )
+        planned = SessionPlanned(
+            event_id=LINKAGE_PLANNED_EVENT_ID,
+            session_id=LINKAGE_SESSION_ID,
+            sequence=1,
+            occurred_at=LINKAGE_BASE_TIME,
+            objective="Exercise explicit linkage with a synthetic session",
+            target_focus_seconds=recommendation.template.focus_seconds,
+            target_break_seconds=recommendation.template.break_seconds,
+            policy_id=recommendation.policy_id,
+        )
+        planned_state = store.append(planned)
+        link = store.link_focus_session(
+            policy,
+            recommendation.decision_id,
+            session_id=planned.session_id,
+        )
+        store.append(
+            FocusStarted(
+                event_id=LINKAGE_STARTED_EVENT_ID,
+                session_id=planned.session_id,
+                sequence=2,
+                occurred_at=LINKAGE_BASE_TIME + timedelta(minutes=1),
+            )
+        )
+        state = store.append(
+            SessionAbandoned(
+                event_id=LINKAGE_ABANDONED_EVENT_ID,
+                session_id=planned.session_id,
+                sequence=3,
+                occurred_at=LINKAGE_BASE_TIME + timedelta(minutes=13),
+                reason=AbandonReason.PRIORITY_CHANGED,
+            )
+        )
+        before_review = store.verify_policy_history(policy)
+        if store.reviewed_decisions(policy):
+            raise RuntimeError("session progress inferred policy feedback")
+        review = store.record_review(
+            policy,
+            recommendation.decision_id,
+            fit=DurationFit.TOO_SHORT,
+            objective_completed=False,
+        )
+
+        reopened = SQLiteEventStore(database)
+        reopened_link = reopened.focus_session_link(
+            policy,
+            session_id=planned.session_id,
+        )
+        replayed_state = reopened.replay(planned.session_id)
+        journal_verification = reopened.verify()
+        policy_verification = reopened.verify_policy_history(policy)
+        reviewed = reopened.reviewed_decisions(policy)
+        with sqlite3.connect(database) as connection:
+            stored_schema_version = int(
+                connection.execute(
+                    """
+                    SELECT value
+                    FROM journal_metadata
+                    WHERE key = 'schema_version'
+                    """
+                ).fetchone()[0]
+            )
+            stored_link_columns = tuple(
+                row[1]
+                for row in connection.execute("PRAGMA table_info(focus_session_links)")
+            )
+            stored_link_row = connection.execute(
+                """
+                SELECT decision_id, planned_event_id
+                FROM focus_session_links
+                """
+            ).fetchone()
+
+    if (
+        planned_state.phase is not SessionPhase.PLANNED
+        or planned_state.revision != 1
+        or recommendation.decision_id != LINKAGE_DECISION_ID
+        or recommendation.decision_sequence != 1
+        or recommendation.template.template_id != "focus-15"
+        or recommendation.propensity.hex() != "0x1.0000000000000p-2"
+        or recommendation.evidence_count != 0
+    ):
+        raise RuntimeError("focus-linkage recommendation fixture drifted")
+    if (
+        link.decision_id != recommendation.decision_id
+        or link.session_id != planned.session_id
+        or link.planned_event_id != planned.event_id
+        or link.policy_id != policy.policy_id
+        or link.template_id != recommendation.template.template_id
+        or reopened_link != link
+    ):
+        raise RuntimeError("focus-linkage provenance drifted")
+    if (
+        state != replayed_state
+        or state.phase is not SessionPhase.ABANDONED
+        or state.revision != 3
+        or state.abandon_reason is not AbandonReason.PRIORITY_CHANGED
+    ):
+        raise RuntimeError("focus-linkage session replay drifted")
+    if (
+        before_review.decision_count,
+        before_review.review_count,
+        before_review.history_edge_count,
+        before_review.sqlite_check,
+    ) != (1, 0, 0, "ok"):
+        raise RuntimeError("focus-linkage inferred feedback before explicit review")
+    if (
+        review.decision_id != recommendation.decision_id
+        or review.fit is not DurationFit.TOO_SHORT
+        or review.objective_completed
+        or reviewed != (review,)
+    ):
+        raise RuntimeError("focus-linkage explicit review drifted")
+    if (
+        journal_verification.session_count,
+        journal_verification.event_count,
+        journal_verification.sqlite_check,
+    ) != (1, 3, "ok"):
+        raise RuntimeError("focus-linkage journal verification drifted")
+    if (
+        policy_verification.decision_count,
+        policy_verification.review_count,
+        policy_verification.history_edge_count,
+        policy_verification.sqlite_check,
+    ) != (1, 1, 0, "ok"):
+        raise RuntimeError("focus-linkage policy verification drifted")
+    if (
+        SCHEMA_VERSION != 3
+        or stored_schema_version != SCHEMA_VERSION
+        or stored_link_columns != ("decision_id", "planned_event_id")
+        or stored_link_row != (str(recommendation.decision_id), str(planned.event_id))
+    ):
+        raise RuntimeError("focus-linkage schema version drifted")
+    if observed_locked_outcome_artifacts():
+        raise RuntimeError("locked outcome artifacts now exist")
+    return FocusSessionLinkageEvidence(
+        recommendation=recommendation,
+        planned=planned,
+        link=link,
+        before_review=before_review,
+        review=review,
+        reopened_link=reopened_link,
+        state=state,
+        journal_verification=journal_verification,
+        policy_verification=policy_verification,
+        schema_version=stored_schema_version,
+        link_columns=stored_link_columns,
     )
 
 
@@ -1333,14 +1541,421 @@ def _render_durable_decision_lineage() -> RenderedVisual:
     )
 
 
+def _render_focus_session_linkage() -> RenderedVisual:
+    scenario = build_focus_session_linkage()
+    recommendation = scenario.recommendation
+    planned = scenario.planned
+    link = scenario.link
+    state = scenario.state
+    before = scenario.before_review
+    after = scenario.policy_verification
+    journal = scenario.journal_verification
+    title = "Session progress stays provenance until an explicit review"
+    description = (
+        "A fixed synthetic workflow exercises the public SQLiteEventStore in a "
+        "disposable private journal. It durably recommends, separately appends "
+        "a matching plan, links before start, starts and abandons the session, "
+        "proves zero inferred reviews, records one explicit review, reopens, "
+        "derives the session identity through the planned event, and verifies "
+        "the journal. Identifiers are stable and truncated; no objective or "
+        "host path is rendered."
+    )
+    step_x = (42, 270, 498, 726, 954, 1182)
+    step_width = 210
+    step_y = 168
+    step_height = 196
+    body = [
+        _text(
+            42,
+            48,
+            "SCHEMA-v3 FOCUS LINKAGE · REAL PUBLIC STORAGE API",
+            size=14,
+            weight=700,
+            fill=PURPLE,
+        ),
+        _text(42, 84, title, size=28, weight=700),
+        _text(
+            42,
+            116,
+            (
+                "Fixed synthetic records · disposable private journal · "
+                "replay and lookup verified after reopen"
+            ),
+            size=15,
+            fill=GRAY,
+        ),
+        _rect(42, 132, 1350, 24, fill="#FBF7FC", stroke=PURPLE, radius=6),
+        _text(
+            717,
+            149,
+            (
+                "Provenance link ≠ feedback · event codec remains v1 · "
+                "locked outcome artifacts = 0"
+            ),
+            size=13,
+            weight=700,
+            fill=PURPLE,
+            anchor="middle",
+        ),
+    ]
+    steps = (
+        (
+            "1 · RECOMMEND",
+            (
+                f"decision {_short_uuid(recommendation.decision_id)}",
+                (
+                    f"seq {recommendation.decision_sequence} · "
+                    f"{recommendation.template.template_id}"
+                ),
+                (
+                    f"{recommendation.template.focus_seconds // 60}+"
+                    f"{recommendation.template.break_seconds // 60} min"
+                ),
+                f"reviews seen = {recommendation.evidence_count}",
+            ),
+            BLUE,
+        ),
+        (
+            "2 · APPEND PLAN",
+            (
+                f"event {_short_uuid(planned.event_id)}",
+                f"session {_short_uuid(planned.session_id)}",
+                "revision 1 · planned",
+                "durations match choice",
+            ),
+            SKY,
+        ),
+        (
+            "3 · LINK BEFORE START",
+            (
+                "link_focus_session()",
+                "decision ↔ planned event",
+                "one immutable row",
+                "reviews remain 0",
+            ),
+            GREEN,
+        ),
+        (
+            "4 · START → ABANDON",
+            (
+                "FocusStarted · seq 2",
+                "SessionAbandoned · seq 3",
+                f"phase = {state.phase.value}",
+                f"reason = {state.abandon_reason.value}",
+            ),
+            ORANGE,
+        ),
+        (
+            "5 · EXPLICIT REVIEW",
+            (
+                "record_review() separately",
+                f"fit = {scenario.review.fit.value}",
+                "objective completed = false",
+                f"reviews {before.review_count} → {after.review_count}",
+            ),
+            PURPLE,
+        ),
+        (
+            "6 · REOPEN + LOOKUP",
+            (
+                f"input session {_short_uuid(link.session_id)}",
+                f"derived decision {_short_uuid(link.decision_id)}",
+                f"derived plan {_short_uuid(link.planned_event_id)}",
+                "same link = true",
+            ),
+            GREEN,
+        ),
+    )
+    for index, (x, step) in enumerate(zip(step_x, steps, strict=True)):
+        heading, lines, color = step
+        if index < len(steps) - 1:
+            body.append(
+                _line(
+                    x + step_width,
+                    step_y + step_height / 2,
+                    step_x[index + 1] - 4,
+                    step_y + step_height / 2,
+                    arrow=True,
+                )
+            )
+        body.extend(
+            [
+                _rect(
+                    x,
+                    step_y,
+                    step_width,
+                    step_height,
+                    fill=WHITE,
+                    stroke=color,
+                    stroke_width=2,
+                ),
+                _text(
+                    x + step_width / 2,
+                    step_y + 32,
+                    heading,
+                    size=13,
+                    weight=800,
+                    fill=color,
+                    anchor="middle",
+                ),
+                _multiline(
+                    x + 16,
+                    step_y + 72,
+                    lines,
+                    size=12,
+                    fill=GRAY,
+                    line_height=28,
+                ),
+            ]
+        )
+
+    body.extend(
+        [
+            _rect(
+                42,
+                402,
+                662,
+                272,
+                fill="#F6FBF8",
+                stroke=GREEN,
+                stroke_width=2,
+                radius=18,
+            ),
+            _text(
+                66,
+                438,
+                "PROVENANCE · focus_session_links",
+                size=15,
+                weight=800,
+                fill=GREEN,
+            ),
+            _text(
+                680,
+                438,
+                f"SQLite schema v{scenario.schema_version}",
+                size=13,
+                weight=700,
+                fill=GRAY,
+                anchor="end",
+            ),
+            _rect(66, 462, 614, 118, fill=WHITE, stroke=GREEN, stroke_width=2),
+            _rect(66, 462, 614, 42, fill="#E7F5EF", stroke=GREEN, radius=10),
+            _line(368, 462, 368, 580, stroke=GREEN, width=1),
+            _text(
+                217,
+                489,
+                scenario.link_columns[0],
+                size=14,
+                weight=800,
+                fill=GREEN,
+                anchor="middle",
+            ),
+            _text(
+                524,
+                489,
+                scenario.link_columns[1],
+                size=14,
+                weight=800,
+                fill=GREEN,
+                anchor="middle",
+            ),
+            _text(
+                217,
+                548,
+                _short_uuid(link.decision_id),
+                size=16,
+                weight=700,
+                anchor="middle",
+                family="monospace",
+            ),
+            _text(
+                524,
+                548,
+                _short_uuid(link.planned_event_id),
+                size=16,
+                weight=700,
+                anchor="middle",
+                family="monospace",
+            ),
+            _text(
+                66,
+                610,
+                "session_id is not stored in this table",
+                size=15,
+                weight=750,
+                fill=GREEN,
+            ),
+            _text(
+                66,
+                640,
+                (
+                    "Lookup joins planned_event_id → events and derives "
+                    f"session {_short_uuid(link.session_id)}."
+                ),
+                size=14,
+                fill=GRAY,
+            ),
+            _rect(
+                730,
+                402,
+                662,
+                272,
+                fill="#FBF7FC",
+                stroke=PURPLE,
+                stroke_width=2,
+                radius=18,
+            ),
+            _text(
+                754,
+                438,
+                "FEEDBACK · policy_reviews",
+                size=15,
+                weight=800,
+                fill=PURPLE,
+            ),
+            _line(1056, 466, 1056, 642, stroke=LIGHT_GRAY, width=2),
+            _text(
+                778,
+                478,
+                "BEFORE EXPLICIT REVIEW",
+                size=12,
+                weight=800,
+                fill=ORANGE,
+            ),
+            _text(
+                778,
+                526,
+                str(before.review_count),
+                size=46,
+                weight=800,
+                fill=ORANGE,
+            ),
+            _text(838, 516, "reviews", size=16, weight=700),
+            _multiline(
+                778,
+                558,
+                (
+                    f"{journal.event_count} session events",
+                    f"terminal phase = {state.phase.value}",
+                    f"history edges = {before.history_edge_count}",
+                ),
+                size=14,
+                fill=GRAY,
+                line_height=26,
+            ),
+            _text(
+                1080,
+                478,
+                "AFTER record_review()",
+                size=12,
+                weight=800,
+                fill=PURPLE,
+            ),
+            _text(
+                1080,
+                526,
+                str(after.review_count),
+                size=46,
+                weight=800,
+                fill=PURPLE,
+            ),
+            _text(1140, 516, "review", size=16, weight=700),
+            _multiline(
+                1080,
+                558,
+                (
+                    f"fit = {scenario.review.fit.value}",
+                    "completion = false",
+                    f"history edges = {after.history_edge_count}",
+                ),
+                size=14,
+                fill=GRAY,
+                line_height=26,
+            ),
+            _text(
+                754,
+                650,
+                "Starting and abandoning the session never synthesize feedback.",
+                size=14,
+                weight=700,
+                fill=PURPLE,
+            ),
+        ]
+    )
+
+    metrics = (
+        (
+            f"{journal.session_count} / {journal.event_count}",
+            "SESSIONS / EVENTS",
+            BLUE,
+        ),
+        (
+            f"{before.decision_count} / {before.review_count}",
+            "DECISIONS / REVIEWS · BEFORE",
+            ORANGE,
+        ),
+        (
+            f"{after.decision_count} / {after.review_count}",
+            "DECISIONS / REVIEWS · AFTER",
+            PURPLE,
+        ),
+        (str(after.history_edge_count), "HISTORY EDGES", GREEN),
+        (journal.sqlite_check.upper(), "SQLITE QUICK_CHECK", GREEN),
+    )
+    for index, (value, label, color) in enumerate(metrics):
+        x = 42 + index * 270
+        body.extend(
+            [
+                _rect(x, 710, 246, 92, fill=WHITE, stroke=color, stroke_width=2),
+                _text(x + 18, 750, value, size=26, weight=800, fill=color),
+                _text(x + 18, 778, label, size=11, weight=750, fill=GRAY),
+            ]
+        )
+    body.extend(
+        [
+            _rect(42, 838, 1350, 94, fill="#F7FBFF", stroke=SKY),
+            _text(66, 870, "PRIVACY / CLAIM BOUNDARY", size=12, weight=800, fill=BLUE),
+            _multiline(
+                66,
+                896,
+                (
+                    "Synthetic fixture only · objective and host path omitted · "
+                    "temporary journal removed",
+                    (
+                        "No evaluator, publication run, result metric, inferred "
+                        "feedback, or causal claim"
+                    ),
+                ),
+                size=14,
+                weight=600,
+                line_height=22,
+            ),
+        ]
+    )
+    content = _svg_document(
+        stem="focus-session-linkage",
+        title=title,
+        description=description,
+        width=1434,
+        height=970,
+        body=body,
+    )
+    return RenderedVisual(
+        "focus-session-linkage.svg",
+        title,
+        description,
+        content,
+    )
+
+
 def _render_architecture() -> RenderedVisual:
     title = "Current architecture separates private journals from publication"
     description = (
         "A source-backed architecture map shows explicit caller inputs, the "
         "domain and policy cores, private canonical storage, and the locked "
         "synthetic publication path. No private journal data enters publication. "
-        "Durable journal-policy linkage and its CLI are current; the dashed box "
-        "marks rendering and sealing as next work."
+        "Durable session linkage is implemented in the storage API; no linkage "
+        "CLI exists. The dashed box marks rendering and sealing as next work."
     )
     body = [
         _text(
@@ -1451,7 +2066,11 @@ def _render_architecture() -> RenderedVisual:
         width=176,
         height=132,
         title="SQLite journal",
-        lines=("events + decisions", "reviews + history edges", "transactional replay"),
+        lines=(
+            "events + decisions",
+            "reviews + provenance links",
+            "transactional replay",
+        ),
         color=GREEN,
     )
     body.append(_line(686, 270, 706, 270, arrow=True))
@@ -1931,6 +2550,7 @@ def render_visuals() -> tuple[RenderedVisual, ...]:
         _render_architecture(),
         _render_durable_decision_lineage(),
         _render_event_replay(),
+        _render_focus_session_linkage(),
         _render_guardrail_matrix(),
         _render_protocol_inventory(),
         _render_policy_scores(),

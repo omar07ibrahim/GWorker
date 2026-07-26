@@ -3,15 +3,15 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "9e975011c1360d656040f5af370ccb2caf9a1d4a6b458b7f6d698ae3225ddb38"
+      "sha256": "c56612c6f868809715359bcedd5f326b99e801ba5818ec9a484f5f62412baa16"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "ef44bc3e1c2a0e000b73e4342788c3e494b3ed2c4f1d3312ca65bb8a52007dec"
+      "sha256": "5c7934c8ac077555e523bdd1ef36fecf600ae21f6c272b580228e2408c57d956"
     },
     {
       "path": "docs/decision-lineage.md",
-      "sha256": "db798650db299f924fe7e1d0127e612852b86105febfecb57f48fb6a52091fb8"
+      "sha256": "35566c33e9f93eeebb4dcf7516fd62e499879c9359232172e3e73198fae8f8cc"
     },
     {
       "path": "docs/evaluation-protocol.md",
@@ -23,7 +23,7 @@
     },
     {
       "path": "docs/session-linkage.md",
-      "sha256": "56b9f7123070abef2f56fd1cd5146fd55859dc26649841718fba8fcb116fc0b7"
+      "sha256": "e5960b596a80edbb630e99cf4ad5ed30697220098dbd1c173d9e533c7d4d8a1f"
     },
     {
       "path": "pyproject.toml",
@@ -35,11 +35,11 @@
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "1821d9005e8b184045d111acb9c639d5fe2d0f74ac5c98fe56934b1a6ca3b1eb"
+      "sha256": "eab879dc945bccad292df84dcfa3ec363f5623354e4f823be160bcf3daa0bcc4"
     },
     {
       "path": "src/gworker/__init__.py",
-      "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+      "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
     },
     {
       "path": "src/gworker/cli.py",
@@ -91,7 +91,7 @@
     },
     {
       "path": "src/gworker/storage.py",
-      "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+      "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
     }
   ],
   "observations": {
@@ -100,9 +100,9 @@
   },
   "outputs": [
     {
-      "byte_count": 9671,
+      "byte_count": 9700,
       "path": "generated/architecture-trust-boundaries.svg",
-      "sha256": "3576ceac5cb83c84b208995ccc2999e0bc1aa2d70c60e59657a1ee7e093f954c",
+      "sha256": "b5570f843e1fcedea1b08205d08a87f13ad9b029e87c86c35e2452bbc3a459bf",
       "title": "Current architecture separates private journals from publication"
     },
     {
@@ -116,6 +116,12 @@
       "path": "generated/event-replay.svg",
       "sha256": "69e412bc5277adaee2cc2624e84d45e05b81179d7a3d8cba170acb03eaccbbad",
       "title": "A real seven-event replay reaches a completed projection"
+    },
+    {
+      "byte_count": 10884,
+      "path": "generated/focus-session-linkage.svg",
+      "sha256": "ddb05c16a0247c4a6fc4e0546681910bec282af7d1d20b91f5acf400b559f86e",
+      "title": "Session progress stays provenance until an explicit review"
     },
     {
       "byte_count": 12153,
@@ -153,6 +159,6 @@
   "schema_version": "gworker-visual-manifest-v1",
   "tool": {
     "name": "gworker-visual-evidence",
-    "version": "3"
+    "version": "4"
   }
 }

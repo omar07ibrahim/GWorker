@@ -9,20 +9,23 @@ from dataclasses import fields
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
-from gworker.domain import SessionPhase
+from gworker.domain import AbandonReason, SessionPhase
 from gworker.evaluation import DEFAULT_EXPERIMENT_CONFIG
 from gworker.policy import DurationFit, EvidenceBucket, HierarchicalSoftmaxUCB
 from scripts.visuals import generate
 
 FROZEN_OUTPUT_SHA256 = {
     "architecture-trust-boundaries.svg": (
-        "3576ceac5cb83c84b208995ccc2999e0bc1aa2d70c60e59657a1ee7e093f954c"
+        "b5570f843e1fcedea1b08205d08a87f13ad9b029e87c86c35e2452bbc3a459bf"
     ),
     "durable-decision-lineage.svg": (
         "95af9d5e568a9152fee2069fed5aaebf4c1a72e450e0c7f90ca555f8a3651c5d"
     ),
     "event-replay.svg": (
         "69e412bc5277adaee2cc2624e84d45e05b81179d7a3d8cba170acb03eaccbbad"
+    ),
+    "focus-session-linkage.svg": (
+        "ddb05c16a0247c4a6fc4e0546681910bec282af7d1d20b91f5acf400b559f86e"
     ),
     "guardrail-matrix.svg": (
         "edae712494e97ec8f5fcbd467ca2272a9c17f9e7f87a7d70520cff05f706ed30"
@@ -38,7 +41,7 @@ FROZEN_OUTPUT_SHA256 = {
     ),
 }
 FROZEN_MANIFEST_SHA256 = (
-    "73f96fe6409707e53aa82d47d578c0246987f17c2e6686777c072a56125ef701"
+    "75fb4184ffd3e25714b6732d86586de4afe902712b61c8677748b5f92d69405c"
 )
 
 
@@ -242,6 +245,121 @@ class VisualDataTests(unittest.TestCase):
         self.assertNotIn("<image", content)
         self.assertNotIn(" href=", content)
 
+    def test_focus_linkage_uses_public_storage_and_explicit_review(self) -> None:
+        scenario = generate.build_focus_session_linkage()
+
+        self.assertEqual(scenario.schema_version, 3)
+        self.assertEqual(
+            scenario.link_columns,
+            ("decision_id", "planned_event_id"),
+        )
+        self.assertEqual(
+            (
+                scenario.recommendation.decision_id,
+                scenario.recommendation.decision_sequence,
+                scenario.recommendation.template.template_id,
+                scenario.recommendation.propensity.hex(),
+                scenario.recommendation.evidence_count,
+            ),
+            (
+                generate.LINKAGE_DECISION_ID,
+                1,
+                "focus-15",
+                "0x1.0000000000000p-2",
+                0,
+            ),
+        )
+        self.assertEqual(scenario.planned.session_id, generate.LINKAGE_SESSION_ID)
+        self.assertEqual(
+            scenario.planned.event_id,
+            generate.LINKAGE_PLANNED_EVENT_ID,
+        )
+        self.assertEqual(
+            (
+                scenario.link.decision_id,
+                scenario.link.session_id,
+                scenario.link.planned_event_id,
+            ),
+            (
+                scenario.recommendation.decision_id,
+                scenario.planned.session_id,
+                scenario.planned.event_id,
+            ),
+        )
+        self.assertEqual(scenario.reopened_link, scenario.link)
+        self.assertEqual(scenario.state.phase, SessionPhase.ABANDONED)
+        self.assertEqual(scenario.state.revision, 3)
+        self.assertEqual(
+            scenario.state.abandon_reason,
+            AbandonReason.PRIORITY_CHANGED,
+        )
+        self.assertEqual(
+            (
+                scenario.before_review.decision_count,
+                scenario.before_review.review_count,
+                scenario.before_review.history_edge_count,
+            ),
+            (1, 0, 0),
+        )
+        self.assertEqual(scenario.review.fit, DurationFit.TOO_SHORT)
+        self.assertFalse(scenario.review.objective_completed)
+        self.assertEqual(
+            (
+                scenario.policy_verification.decision_count,
+                scenario.policy_verification.review_count,
+                scenario.policy_verification.history_edge_count,
+            ),
+            (1, 1, 0),
+        )
+        self.assertEqual(
+            (
+                scenario.journal_verification.session_count,
+                scenario.journal_verification.event_count,
+                scenario.journal_verification.sqlite_check,
+            ),
+            (1, 3, "ok"),
+        )
+
+    def test_focus_linkage_svg_is_accessible_synthetic_and_path_free(self) -> None:
+        visual = generate._render_focus_session_linkage()
+        content = visual.content.decode("utf-8")
+        root = ElementTree.fromstring(content)
+        namespace = {"svg": "http://www.w3.org/2000/svg"}
+
+        self.assertEqual(visual.filename, "focus-session-linkage.svg")
+        self.assertEqual(
+            visual.content,
+            generate._render_focus_session_linkage().content,
+        )
+        self.assertEqual(root.attrib["role"], "img")
+        self.assertIsNotNone(root.find("svg:title", namespace))
+        self.assertIsNotNone(root.find("svg:desc", namespace))
+        for label in (
+            "LINK BEFORE START",
+            "START → ABANDON",
+            "EXPLICIT REVIEW",
+            "PROVENANCE · focus_session_links",
+            "decision_id",
+            "planned_event_id",
+            "session_id is not stored in this table",
+            "BEFORE EXPLICIT REVIEW",
+            "reviews 0 → 1",
+            "No evaluator, publication run",
+        ):
+            self.assertIn(label, content)
+        self.assertNotIn(
+            "Exercise explicit linkage with a synthetic session",
+            content,
+        )
+        self.assertNotIn(str(generate.LINKAGE_DECISION_ID), content)
+        self.assertNotIn(str(generate.LINKAGE_SESSION_ID), content)
+        self.assertNotIn(str(generate.LINKAGE_PLANNED_EVENT_ID), content)
+        self.assertNotIn("/tmp/", content)
+        self.assertNotIn("/home/", content)
+        self.assertNotIn("<script", content)
+        self.assertNotIn("<image", content)
+        self.assertNotIn(" href=", content)
+
     def test_render_set_and_architecture_show_current_journal_linkage(self) -> None:
         visuals = generate.render_visuals()
         self.assertEqual(
@@ -250,6 +368,7 @@ class VisualDataTests(unittest.TestCase):
                 "architecture-trust-boundaries.svg",
                 "durable-decision-lineage.svg",
                 "event-replay.svg",
+                "focus-session-linkage.svg",
                 "guardrail-matrix.svg",
                 "locked-protocol-inventory.svg",
                 "policy-score-decomposition.svg",
@@ -263,7 +382,7 @@ class VisualDataTests(unittest.TestCase):
         )
         self.assertIn("Journal storage + CLI", architecture)
         self.assertIn("events + decisions", architecture)
-        self.assertIn("reviews + history edges", architecture)
+        self.assertIn("reviews + provenance links", architecture)
         self.assertIn("Render + seal · NEXT", architecture)
         self.assertIn("private journal has no publication path", architecture)
         self.assertNotIn("Journal linkage + CLI", architecture)
@@ -271,7 +390,7 @@ class VisualDataTests(unittest.TestCase):
         self.assertEqual(architecture.count('stroke-dasharray="8 6"'), 1)
 
     def test_lineage_sources_are_bound_and_generator_version_is_bumped(self) -> None:
-        self.assertEqual(generate.TOOL_VERSION, "3")
+        self.assertEqual(generate.TOOL_VERSION, "4")
         self.assertTrue(
             {
                 "docs/decision-lineage.md",
@@ -436,6 +555,11 @@ class VisualArtifactTests(unittest.TestCase):
                 "no locked evaluator or publication run",
             ),
             "event-replay.svg": ("session_planned", "FINAL PROJECTION"),
+            "focus-session-linkage.svg": (
+                "PROVENANCE · focus_session_links",
+                "reviews 0 → 1",
+                "locked outcome artifacts = 0",
+            ),
             "guardrail-matrix.svg": ("ALLOW", "BLOCK · budget"),
             "locked-protocol-inventory.svg": (
                 "OBSERVED LOCKED OUTCOME ARTIFACTS",

@@ -9,7 +9,7 @@ bounded duration from explicit context and reviews.
 > SQLite event and policy-decision journal, explainable duration policy,
 > journal-backed CLI, locked synthetic evaluator, reporting/evidence builders,
 > canonical result codecs, and the fail-closed publication runner are
-> implemented. Four deterministic synthetic demos, seven source-derived
+> implemented. Four deterministic synthetic demos, eight source-derived
 > non-result diagrams, and six genuine terminal captures are reproducible from
 > the repository. The locked evaluation has **not** run: there are zero locked
 > outcome artifacts and no benchmark result plots. Publication rendering and
@@ -42,6 +42,15 @@ storage API:
 *Source-derived evidence from a real temporary SQLite journal: the second
 decision consumes the reviewed first decision, and policy-scoped verification
 recomputes both choices after reopen.*
+
+![Focus-session linkage remains separate from feedback](docs/visuals/generated/focus-session-linkage.svg)
+
+*A second source-derived workflow uses the public storage API to persist a
+recommendation and matching plan separately, links them before focus starts,
+then starts and abandons the synthetic session. Verification still finds zero
+reviews until a separate explicit review call. After reopen, lookup derives the
+session through the planned event; the schema-v3 link table itself stores only
+`decision_id` and `planned_event_id`.*
 
 Install the package in a virtual environment and reproduce the same workflow:
 
@@ -243,7 +252,7 @@ result data and never invokes the evaluator.*
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
-- Four deterministic synthetic demos, seven source-derived diagrams, and six
+- Four deterministic synthetic demos, eight source-derived diagrams, and six
   real terminal captures with reproducible checksum-bound evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.

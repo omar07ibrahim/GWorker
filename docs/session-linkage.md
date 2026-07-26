@@ -305,20 +305,31 @@ Tests use fixed synthetic UUIDs and objectives in private temporary journals.
 They must not import or invoke the evaluator, publication runner, recorder, or
 locked artifact workflow.
 
-## Evidence plan
+## Reproducible source-derived evidence
 
-The implementation is complete without claiming visual evidence that has not
-yet been rebound. The next source-derived diagram should exercise the public
-storage API against a disposable journal and show:
+![Decision-to-session provenance remains separate from explicit feedback](visuals/generated/focus-session-linkage.svg)
+
+The committed diagram exercises the public storage API against a disposable
+private journal and recomputes:
 
 1. one durable recommendation;
 2. one separately persisted `SessionPlanned` at revision 1;
 3. one explicit link created before the focus starts;
-4. subsequent session events with zero inferred reviews;
+4. a valid `FocusStarted` → `SessionAbandoned` stream with zero inferred
+   reviews;
 5. one separate explicit review;
 6. successful reopen, session-derived lookup, and verification.
 
-No linkage CLI exists, so this evidence should be generated through the
-public storage API rather than a staged terminal command. The artifact must use
-synthetic records, be checksum-bound to implementation and documentation
-inputs, and reproduce through the existing source-visual check mode.
+No linkage CLI exists, so this evidence is generated through the public storage
+API rather than a staged terminal command. The SVG renders only recomputed
+counts and stable truncated identifiers; it omits the synthetic objective and
+host path. The source-visual manifest binds the implementation, documentation,
+generator, and exact SVG bytes. Run:
+
+```bash
+PYTHONPATH=src python3 scripts/visuals/generate.py --check
+```
+
+The check regenerates the complete eight-diagram bundle in a temporary
+directory and compares it byte-for-byte without invoking the evaluator,
+publication runner, recorder, or terminal-capture workflow.
