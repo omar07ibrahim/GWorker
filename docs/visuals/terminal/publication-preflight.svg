@@ -9,18 +9,18 @@
 <circle cx="112" cy="60" r="7" fill="#6CE9A6"/>
 <text x="640" y="66" fill="#98A2B3" font-size="15" font-family="monospace" text-anchor="middle">GWORKER · REPRODUCIBLE TERMINAL EVIDENCE</text>
 <text x="62" y="112" fill="#F2F4F7" font-size="25" font-weight="700" font-family="monospace">Publication gate · capacity preflight</text>
-<rect x="1016" y="88" width="196" height="34" rx="17" fill="#0B1220" stroke="#FDB022" stroke-width="1"/>
-<text x="1114" y="111" fill="#FDB022" font-size="14" font-weight="700" font-family="monospace" text-anchor="middle">REAL OUTPUT · EXIT 2</text>
-<text x="62" y="144" fill="#7CD4FD" font-size="14" font-family="monospace">TRANSCRIPT SHA-256 · bc8d9c4b3b596d14813fe4bb41c10498432ea83bdedda75b6681ee71ca1e02cd</text>
+<rect x="1016" y="88" width="196" height="34" rx="17" fill="#0B1220" stroke="#6CE9A6" stroke-width="1"/>
+<text x="1114" y="111" fill="#6CE9A6" font-size="14" font-weight="700" font-family="monospace" text-anchor="middle">REAL OUTPUT · EXIT 0</text>
+<text x="62" y="144" fill="#7CD4FD" font-size="14" font-family="monospace">TRANSCRIPT SHA-256 · 5b7cb2677e8d75b4c8244cf1a4edebe56d66d9ff9796ef8b6b83cef9f4456808</text>
 <rect x="62" y="160" width="1150" height="28" rx="6" fill="#0B1220" stroke="#FDB022" stroke-width="1"/>
 <text x="76" y="180" fill="#FDB022" font-size="14" font-weight="700" font-family="monospace">CAPTURED ON THIS HOST · readiness may vary elsewhere</text>
 <text x="62" y="204" fill="#6CE9A6" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">$ python -m gworker.publication_runner preflight</text>
 <text x="62" y="226" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
-<text x="62" y="248" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">{&quot;effective_memory_bytes&quot;:1944449024,&quot;effective_swap_bytes&quot;:36864,&quot;failure_codes&quot;:[&quot;memory-headroom&quot;,&quot;swap-h</text>
-<text x="62" y="270" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">eadroom&quot;],&quot;filesystem_available_bytes&quot;:36196450304,&quot;filesystem_available_inodes&quot;:24646833,&quot;nofile_soft_limit</text>
-<text x="62" y="292" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">&quot;:1024,&quot;ok&quot;:false,&quot;ready&quot;:false}</text>
+<text x="62" y="248" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">{&quot;effective_memory_bytes&quot;:23120244736,&quot;effective_swap_bytes&quot;:8589930496,&quot;failure_codes&quot;:[],&quot;filesystem_avail</text>
+<text x="62" y="270" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">able_bytes&quot;:32287223808,&quot;filesystem_available_inodes&quot;:24664438,&quot;nofile_soft_limit&quot;:1024,&quot;ok&quot;:true,&quot;ready&quot;:tr</text>
+<text x="62" y="292" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve">ue}</text>
 <text x="62" y="314" fill="#F2F4F7" font-size="15" font-weight="400" font-family="monospace" xml:space="preserve"></text>
-<text x="62" y="336" fill="#FDB022" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">[exit 2]</text>
+<text x="62" y="336" fill="#6CE9A6" font-size="15" font-weight="700" font-family="monospace" xml:space="preserve">[exit 0]</text>
 <line x1="62" y1="370" x2="1212" y2="370" stroke="#344054" stroke-width="1"/>
 <text x="62" y="397" fill="#98A2B3" font-size="13" font-family="monospace">Canonical transcript · docs/visuals/terminal/publication-preflight.txt</text>
 </svg>

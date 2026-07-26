@@ -1,0 +1,10 @@
+GWorker durable policy journal | deterministic synthetic workflow
+Policy: hierarchical-softmax-ucb-v1.8c10875dd38a025d
+D1 recommend | sequence 1 | focus-40 | exact p=0x1.0000000000000p-2
+D1 review    | fit=just_right | completed=true | exact propensity preserved
+D2 recommend | sequence 2 | focus-25 | history evidence=1 | exact p=0x1.1e5ae1020930fp-2
+Verify       | decisions/reviews/history edges = 2/1/1 | SQLite=ok
+Storage      | workspace 0700 | journal 0600 | path omitted
+Reopen        | every CLI call reopened the same disposable journal
+Cleanup       | temporary workspace removed
+Scope         | synthetic CLI/storage evidence only; not a human outcome or locked evaluation

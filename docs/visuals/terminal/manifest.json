@@ -1,11 +1,12 @@
 {
   "capture": {
-    "base_input_commit": "261dfd6694b6e80045ccfc9476270f10daa51a80",
+    "base_input_commit": "04c6eea51e0bf1403af5d9c161c7852f5c3af2d2",
     "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
     "environment": {
       "HOME": ".gworker/terminal-capture-runtime/home",
       "LANG": "C",
       "LC_ALL": "C",
+      "PATH": "<OS_DEFPATH>",
       "PYTHONHASHSEED": "0",
       "PYTHONIOENCODING": "utf-8",
       "PYTHONPATH": "src",
@@ -30,6 +31,72 @@
     {
       "argv": [
         "python",
+        "scripts/demo_policy_journal.py"
+      ],
+      "capture_id": "durable-policy-workflow",
+      "description": "Real output from the fixed synthetic CLI/storage harness. Four public CLI-handler calls reopen one disposable private journal, preserve exact propensity, freeze one history edge, verify it, and remove the workspace.",
+      "exit_code": 0,
+      "expected_exit_codes": [
+        0
+      ],
+      "host_dependent": false,
+      "host_note": null,
+      "sources": [
+        {
+          "byte_count": 9343,
+          "path": "scripts/demo_policy_journal.py",
+          "sha256": "7e0c365f1ce2d6ae9536702375efcde23d8a8dfaa2d40145e036eef45ddcdbd7"
+        },
+        {
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
+          "byte_count": 13199,
+          "path": "src/gworker/cli.py",
+          "sha256": "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
+          "byte_count": 26252,
+          "path": "src/gworker/policy.py",
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+        },
+        {
+          "byte_count": 59471,
+          "path": "src/gworker/storage.py",
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+        }
+      ],
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": {
+        "byte_count": 685,
+        "path": "docs/visuals/terminal/durable-policy-workflow.txt",
+        "sha256": "aadff023da66499811b6790764495a02227cc44d3385741279b7f5448ab1b420"
+      },
+      "title": "Durable decisions \u00b7 recommend, review, reopen, verify",
+      "visual": {
+        "byte_count": 4402,
+        "path": "docs/visuals/terminal/durable-policy-workflow.svg",
+        "sha256": "ad0d49d259a7088fb45a8f12b3f9190a7a703668c30fb5f2ce8d89c367c80c0f"
+      }
+    },
+    {
+      "argv": [
+        "python",
         "scripts/demo_policy.py"
       ],
       "capture_id": "policy-demo",
@@ -47,9 +114,29 @@
           "sha256": "a9e4d6a459af30a5d920cead9b20d3a80b67c9a86b7b17ad05a34b419e8faa83"
         },
         {
-          "byte_count": 25419,
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
+          "byte_count": 26252,
           "path": "src/gworker/policy.py",
-          "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+        },
+        {
+          "byte_count": 59471,
+          "path": "src/gworker/storage.py",
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
         }
       ],
       "stderr": {
@@ -93,6 +180,11 @@
           "sha256": "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
         },
         {
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
           "byte_count": 9923,
           "path": "src/gworker/codec.py",
           "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
@@ -103,9 +195,14 @@
           "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
         },
         {
-          "byte_count": 22350,
+          "byte_count": 26252,
+          "path": "src/gworker/policy.py",
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+        },
+        {
+          "byte_count": 59471,
           "path": "src/gworker/storage.py",
-          "sha256": "f43d0c735fac30862bb8c33aa555dfd8e113038f3d00ad2f6d8f4320bf4249e3"
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
         }
       ],
       "stderr": {
@@ -144,6 +241,21 @@
           "sha256": "7b81d54c902dd837a9d3d7fefa2465dcbd0d778830e7879b1ee156830d1159d4"
         },
         {
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
           "byte_count": 111328,
           "path": "src/gworker/evaluation.py",
           "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
@@ -154,14 +266,19 @@
           "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
         },
         {
-          "byte_count": 25419,
+          "byte_count": 26252,
           "path": "src/gworker/policy.py",
-          "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
         },
         {
           "byte_count": 57791,
           "path": "src/gworker/reporting.py",
           "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+        },
+        {
+          "byte_count": 59471,
+          "path": "src/gworker/storage.py",
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
         }
       ],
       "stderr": {
@@ -197,6 +314,41 @@
       "host_note": null,
       "sources": [
         {
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
+          "byte_count": 111328,
+          "path": "src/gworker/evaluation.py",
+          "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+        },
+        {
+          "byte_count": 97084,
+          "path": "src/gworker/evidence.py",
+          "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+        },
+        {
+          "byte_count": 26252,
+          "path": "src/gworker/policy.py",
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+        },
+        {
+          "byte_count": 39177,
+          "path": "src/gworker/publication_codec.py",
+          "sha256": "3514265191e225ab9a7b0588f254e9587940b1c64b4eda607989834748dad20a"
+        },
+        {
           "byte_count": 77982,
           "path": "src/gworker/publication_runner.py",
           "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
@@ -205,6 +357,26 @@
           "byte_count": 70911,
           "path": "src/gworker/publication_state.py",
           "sha256": "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+        },
+        {
+          "byte_count": 57791,
+          "path": "src/gworker/reporting.py",
+          "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+        },
+        {
+          "byte_count": 61778,
+          "path": "src/gworker/resource_preflight.py",
+          "sha256": "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+        },
+        {
+          "byte_count": 48823,
+          "path": "src/gworker/result_codec.py",
+          "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
+        },
+        {
+          "byte_count": 59471,
+          "path": "src/gworker/storage.py",
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
         }
       ],
       "stderr": {
@@ -232,7 +404,7 @@
       ],
       "capture_id": "publication-preflight",
       "description": "Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked.",
-      "exit_code": 2,
+      "exit_code": 0,
       "expected_exit_codes": [
         0,
         2
@@ -241,14 +413,69 @@
       "host_note": "CAPTURED ON THIS HOST \u00b7 readiness may vary elsewhere",
       "sources": [
         {
+          "byte_count": 1897,
+          "path": "src/gworker/__init__.py",
+          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        },
+        {
+          "byte_count": 9923,
+          "path": "src/gworker/codec.py",
+          "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+        },
+        {
+          "byte_count": 17751,
+          "path": "src/gworker/domain.py",
+          "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+        },
+        {
+          "byte_count": 111328,
+          "path": "src/gworker/evaluation.py",
+          "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+        },
+        {
+          "byte_count": 97084,
+          "path": "src/gworker/evidence.py",
+          "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+        },
+        {
+          "byte_count": 26252,
+          "path": "src/gworker/policy.py",
+          "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+        },
+        {
+          "byte_count": 39177,
+          "path": "src/gworker/publication_codec.py",
+          "sha256": "3514265191e225ab9a7b0588f254e9587940b1c64b4eda607989834748dad20a"
+        },
+        {
           "byte_count": 77982,
           "path": "src/gworker/publication_runner.py",
           "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
         },
         {
+          "byte_count": 70911,
+          "path": "src/gworker/publication_state.py",
+          "sha256": "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+        },
+        {
+          "byte_count": 57791,
+          "path": "src/gworker/reporting.py",
+          "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+        },
+        {
           "byte_count": 61778,
           "path": "src/gworker/resource_preflight.py",
           "sha256": "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+        },
+        {
+          "byte_count": 48823,
+          "path": "src/gworker/result_codec.py",
+          "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
+        },
+        {
+          "byte_count": 59471,
+          "path": "src/gworker/storage.py",
+          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
         }
       ],
       "stderr": {
@@ -256,15 +483,15 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "stdout": {
-        "byte_count": 249,
+        "byte_count": 220,
         "path": "docs/visuals/terminal/publication-preflight.txt",
-        "sha256": "bc8d9c4b3b596d14813fe4bb41c10498432ea83bdedda75b6681ee71ca1e02cd"
+        "sha256": "5b7cb2677e8d75b4c8244cf1a4edebe56d66d9ff9796ef8b6b83cef9f4456808"
       },
       "title": "Publication gate \u00b7 capacity preflight",
       "visual": {
-        "byte_count": 3417,
+        "byte_count": 3368,
         "path": "docs/visuals/terminal/publication-preflight.svg",
-        "sha256": "6e594cae6792954c6b9c9170d5151c7323b4630514d6732fea5209a0ff69e739"
+        "sha256": "21e8e8077d665ef8e2493e9fb0434d79e9db3db511ae4046c816f0265742ee86"
       }
     }
   ],
@@ -277,6 +504,7 @@
     "arbitrary_commands_accepted": false,
     "evaluator_executed": false,
     "journal_workspace": ".gworker/visual-demo/terminal-capture",
+    "policy_journal_workspace": "private temporary directory; removed by the fixed harness",
     "publication_run_executed": false,
     "shell_used": false,
     "synthetic_demo_data_only": true
@@ -285,11 +513,11 @@
   "tool": {
     "name": "gworker-terminal-capture",
     "source": {
-      "byte_count": 36362,
+      "byte_count": 47749,
       "path": "scripts/visuals/capture_terminal.py",
-      "sha256": "b165a9199d5fd19d16573fc5859ca456c2769544c3fee24dbcc00686be6a7ad6"
+      "sha256": "7dda32eac9fdc42c3f5734568a3bc9383442cf6598f91aa76fa2e54ffe9d2706"
     },
     "stdlib_only": true,
-    "version": "1"
+    "version": "2"
   }
 }

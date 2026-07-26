@@ -16,7 +16,10 @@ from scripts.visuals import generate
 
 FROZEN_OUTPUT_SHA256 = {
     "architecture-trust-boundaries.svg": (
-        "0f524f08919028213576037b03e30c3297f8616726eca1f2b811b843ee09ec33"
+        "93cba055b0a4836bdd1a97e9a4d6faa32431b846e3e354695bbdfb05f6b343bc"
+    ),
+    "durable-decision-lineage.svg": (
+        "95af9d5e568a9152fee2069fed5aaebf4c1a72e450e0c7f90ca555f8a3651c5d"
     ),
     "event-replay.svg": (
         "69e412bc5277adaee2cc2624e84d45e05b81179d7a3d8cba170acb03eaccbbad"
@@ -35,7 +38,7 @@ FROZEN_OUTPUT_SHA256 = {
     ),
 }
 FROZEN_MANIFEST_SHA256 = (
-    "b154b238b98fc4e2ba060b302ae6a1683ca2074d4ef9d6e037d6509aee6a735f"
+    "d9b64e881bcaaf5d18c1839df8ed07c9dff3e78f539b5e6231b39b9ba077af60"
 )
 
 

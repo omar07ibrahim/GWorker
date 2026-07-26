@@ -3,11 +3,15 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "b9b4b24e1da93d0b95f5689358b02fc21a3f90035f325ff0e904184bc928744f"
+      "sha256": "02e96b1d11ca6f217f6adcb6f8b922cf4f6cc5c7bbb9674d7a2fdb6b19bc0875"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "8c390eec04e7d489f40c71a2389bd7994fc40034971b20b6382d34efc66012e6"
+      "sha256": "519410c4b4a250548e9afbbf9b2a761c8c562a6f3cfa279877f45cd85c1944e1"
+    },
+    {
+      "path": "docs/decision-lineage.md",
+      "sha256": "0d533405d9ebdf4919a964b0dcf7dea08a262c4b7b4377c28181e36cd7747d07"
     },
     {
       "path": "docs/evaluation-protocol.md",
@@ -19,11 +23,23 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "69495654c6a67035aedc696400a29d5fcdb5b5a0ea3d8c1a47852f5334938bd4"
+      "sha256": "4782b684e575fe363586ff618312c611fd8cbd1082d0cc562fb71ab7b8868790"
+    },
+    {
+      "path": "scripts/demo_policy_journal.py",
+      "sha256": "7e0c365f1ce2d6ae9536702375efcde23d8a8dfaa2d40145e036eef45ddcdbd7"
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "9c759c36c609c309987bbad0f1aa002cc1dcf577c14cae0911c369e31528431c"
+      "sha256": "e7362ad571fbaee1449e0433bb0ccaac1674447ada0c4324cfc08c3b037ecbad"
+    },
+    {
+      "path": "src/gworker/__init__.py",
+      "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+    },
+    {
+      "path": "src/gworker/cli.py",
+      "sha256": "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
     },
     {
       "path": "src/gworker/codec.py",
@@ -43,7 +59,7 @@
     },
     {
       "path": "src/gworker/policy.py",
-      "sha256": "8c3828c7fdef1ef7e1cae61eba6fc4d9d846ed992a6d84e07da107a7204cf286"
+      "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
     },
     {
       "path": "src/gworker/publication_codec.py",
@@ -71,7 +87,7 @@
     },
     {
       "path": "src/gworker/storage.py",
-      "sha256": "f43d0c735fac30862bb8c33aa555dfd8e113038f3d00ad2f6d8f4320bf4249e3"
+      "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
     }
   ],
   "observations": {
@@ -80,10 +96,16 @@
   },
   "outputs": [
     {
-      "byte_count": 9499,
+      "byte_count": 9671,
       "path": "generated/architecture-trust-boundaries.svg",
-      "sha256": "0f524f08919028213576037b03e30c3297f8616726eca1f2b811b843ee09ec33",
+      "sha256": "93cba055b0a4836bdd1a97e9a4d6faa32431b846e3e354695bbdfb05f6b343bc",
       "title": "Current architecture separates private journals from publication"
+    },
+    {
+      "byte_count": 8049,
+      "path": "generated/durable-decision-lineage.svg",
+      "sha256": "95af9d5e568a9152fee2069fed5aaebf4c1a72e450e0c7f90ca555f8a3651c5d",
+      "title": "Durable recommendations retain exact review and replay lineage"
     },
     {
       "byte_count": 8102,
@@ -127,6 +149,6 @@
   "schema_version": "gworker-visual-manifest-v1",
   "tool": {
     "name": "gworker-visual-evidence",
-    "version": "1"
+    "version": "2"
   }
 }
