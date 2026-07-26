@@ -17,8 +17,8 @@ from .policy import (
     FIT_REWARD_WEIGHT,
     MAX_DECISION_SEQUENCE,
     MAX_TEMPLATES,
-    DurationFit,
 )
+from .policy import DurationFit as DurationFit
 
 MAX_REPLAY_ROWS = 100_000
 PROBABILITY_SUM_TOLERANCE = 1e-12
