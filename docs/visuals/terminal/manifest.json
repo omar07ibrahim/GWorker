@@ -1,6 +1,6 @@
 {
   "capture": {
-    "base_input_commit": "04c6eea51e0bf1403af5d9c161c7852f5c3af2d2",
+    "base_input_commit": "4218a990493eb871e452e76ee792445edb0dc628",
     "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
     "environment": {
       "HOME": ".gworker/terminal-capture-runtime/home",
@@ -48,9 +48,9 @@
           "sha256": "7e0c365f1ce2d6ae9536702375efcde23d8a8dfaa2d40145e036eef45ddcdbd7"
         },
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 13199,
@@ -73,9 +73,9 @@
           "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -114,9 +114,9 @@
           "sha256": "a9e4d6a459af30a5d920cead9b20d3a80b67c9a86b7b17ad05a34b419e8faa83"
         },
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 9923,
@@ -134,9 +134,9 @@
           "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -180,9 +180,9 @@
           "sha256": "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
         },
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 9923,
@@ -200,9 +200,9 @@
           "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -241,9 +241,9 @@
           "sha256": "7b81d54c902dd837a9d3d7fefa2465dcbd0d778830e7879b1ee156830d1159d4"
         },
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 9923,
@@ -276,9 +276,9 @@
           "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -314,9 +314,9 @@
       "host_note": null,
       "sources": [
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 9923,
@@ -374,9 +374,9 @@
           "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -413,9 +413,9 @@
       "host_note": "CAPTURED ON THIS HOST \u00b7 readiness may vary elsewhere",
       "sources": [
         {
-          "byte_count": 1897,
+          "byte_count": 1943,
           "path": "src/gworker/__init__.py",
-          "sha256": "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+          "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
         },
         {
           "byte_count": 9923,
@@ -473,9 +473,9 @@
           "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
         },
         {
-          "byte_count": 59471,
+          "byte_count": 74533,
           "path": "src/gworker/storage.py",
-          "sha256": "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+          "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
         }
       ],
       "stderr": {
@@ -485,13 +485,13 @@
       "stdout": {
         "byte_count": 220,
         "path": "docs/visuals/terminal/publication-preflight.txt",
-        "sha256": "5b7cb2677e8d75b4c8244cf1a4edebe56d66d9ff9796ef8b6b83cef9f4456808"
+        "sha256": "02c19cb6aec896e2d5210ed92cd340b6215b705a52a5677c1a22ba3f914c3046"
       },
       "title": "Publication gate \u00b7 capacity preflight",
       "visual": {
         "byte_count": 3368,
         "path": "docs/visuals/terminal/publication-preflight.svg",
-        "sha256": "21e8e8077d665ef8e2493e9fb0434d79e9db3db511ae4046c816f0265742ee86"
+        "sha256": "4151242d90c6b47732578a0a406686395f19d7e6551fa2fa68f5c6b4296a7750"
       }
     }
   ],

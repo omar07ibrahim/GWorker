@@ -20,7 +20,7 @@ from unittest.mock import call, patch
 from scripts.visuals import capture_terminal
 
 TEST_TEMP_ROOT = capture_terminal.ROOT / ".gworker" / "terminal-capture-tests"
-FROZEN_BASE_INPUT_COMMIT = "04c6eea51e0bf1403af5d9c161c7852f5c3af2d2"
+FROZEN_BASE_INPUT_COMMIT = "4218a990493eb871e452e76ee792445edb0dc628"
 FROZEN_TERMINAL_SHA256 = {
     "durable-policy-workflow.svg": (
         "ad0d49d259a7088fb45a8f12b3f9190a7a703668c30fb5f2ce8d89c367c80c0f"
@@ -35,7 +35,7 @@ FROZEN_TERMINAL_SHA256 = {
         "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91"
     ),
     "manifest.json": (
-        "1dca0ffeaa4d9f83ecb6dc589d76138e70894d0cc61fa12b30bba4c1fe6db677"
+        "1c3a2a7d7eeb2c885e915bac67f9c9976274a44f61981966f7c97e9b9f86645e"
     ),
     "policy-demo.svg": (
         "9c263b3ce0045268b9eee4d0d8e2683aa933595241e9bf43d0cd7dcfd3cebf06"
@@ -50,10 +50,10 @@ FROZEN_TERMINAL_SHA256 = {
         "306534aa044285aa55e06c86d275a00ea752a660f89caaf4d6f2e231d36ee31a"
     ),
     "publication-preflight.svg": (
-        "21e8e8077d665ef8e2493e9fb0434d79e9db3db511ae4046c816f0265742ee86"
+        "4151242d90c6b47732578a0a406686395f19d7e6551fa2fa68f5c6b4296a7750"
     ),
     "publication-preflight.txt": (
-        "5b7cb2677e8d75b4c8244cf1a4edebe56d66d9ff9796ef8b6b83cef9f4456808"
+        "02c19cb6aec896e2d5210ed92cd340b6215b705a52a5677c1a22ba3f914c3046"
     ),
     "publication-status.svg": (
         "8ca14d43b5b66a17da61d1f8045ba26e09d84f25f55d80133975252e267c8170"
@@ -94,7 +94,7 @@ FROZEN_CAPTURE_SOURCE_SHA256 = {
         "7dda32eac9fdc42c3f5734568a3bc9383442cf6598f91aa76fa2e54ffe9d2706"
     ),
     "src/gworker/__init__.py": (
-        "5c2ef83dd1474b7a78629cca26de006471498a5039c191f8aa4aeb0c2d6148f6"
+        "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
     ),
     "src/gworker/cli.py": (
         "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
@@ -133,7 +133,7 @@ FROZEN_CAPTURE_SOURCE_SHA256 = {
         "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
     ),
     "src/gworker/storage.py": (
-        "3fe04691ecc1f650e7a25caf4585a8e4243e56233e84a63c1da4c975a431eabd"
+        "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
     ),
 }
 
@@ -1305,11 +1305,11 @@ class CommittedTerminalBundleTests(unittest.TestCase):
         self.assertEqual(
             preflight,
             {
-                "effective_memory_bytes": 23_120_244_736,
-                "effective_swap_bytes": 8_589_930_496,
+                "effective_memory_bytes": 14_231_404_544,
+                "effective_swap_bytes": 8_589_922_304,
                 "failure_codes": [],
-                "filesystem_available_bytes": 32_287_223_808,
-                "filesystem_available_inodes": 24_664_438,
+                "filesystem_available_bytes": 24_234_668_032,
+                "filesystem_available_inodes": 24_617_649,
                 "nofile_soft_limit": 1_024,
                 "ok": True,
                 "ready": True,
