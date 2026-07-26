@@ -14,6 +14,7 @@ from uuid import UUID
 POLICY_FAMILY = "hierarchical-softmax-ucb-v1"
 MAX_AVAILABLE_SECONDS = 24 * 60 * 60
 MAX_DECISION_SEQUENCE = 2**63 - 1
+MAX_RNG_SEED = 2**63 - 1
 MAX_TEMPLATES = 32
 FIT_REWARD_WEIGHT = 0.8
 COMPLETION_REWARD_WEIGHT = 0.2
@@ -699,4 +700,31 @@ class HierarchicalSoftmaxUCB:
             evidence_count=len(evidence),
             arm_scores=arm_scores,
             reason_codes=tuple(reasons),
+        )
+
+    def recommend_seeded(
+        self,
+        context: FocusContext,
+        history: Sequence[ReviewedDecision],
+        *,
+        decision_id: UUID,
+        decision_sequence: int,
+        rng_seed: int,
+    ) -> Recommendation:
+        """Recommend reproducibly from one bounded, explicitly logged seed."""
+
+        if (
+            isinstance(rng_seed, bool)
+            or not isinstance(rng_seed, int)
+            or not 0 <= rng_seed <= MAX_RNG_SEED
+        ):
+            raise PolicyInputError(
+                f"rng_seed must be an integer between 0 and {MAX_RNG_SEED}"
+            )
+        return self.recommend(
+            context,
+            history,
+            decision_id=decision_id,
+            decision_sequence=decision_sequence,
+            rng=random.Random(rng_seed),
         )

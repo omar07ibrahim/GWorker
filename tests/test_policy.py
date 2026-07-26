@@ -10,6 +10,7 @@ from uuid import UUID
 from gworker.policy import (
     MAX_AVAILABLE_SECONDS,
     MAX_DECISION_SEQUENCE,
+    MAX_RNG_SEED,
     MAX_TEMPLATES,
     POLICY_FAMILY,
     POLICY_ID,
@@ -310,6 +311,41 @@ class PolicyConstructionTests(unittest.TestCase):
 
 
 class RecommendationTests(unittest.TestCase):
+    def test_seeded_path_matches_an_explicit_rng(self) -> None:
+        policy = HierarchicalSoftmaxUCB()
+        recommendation_context = context()
+        identifier = decision_id(1)
+        seeded = policy.recommend_seeded(
+            recommendation_context,
+            (),
+            decision_id=identifier,
+            decision_sequence=1,
+            rng_seed=20_260_725,
+        )
+        explicit = policy.recommend(
+            recommendation_context,
+            (),
+            decision_id=identifier,
+            decision_sequence=1,
+            rng=random.Random(20_260_725),
+        )
+        self.assertEqual(seeded, explicit)
+
+    def test_seeded_path_rejects_unbounded_values(self) -> None:
+        policy = HierarchicalSoftmaxUCB()
+        for value in (-1, True, 1.5, MAX_RNG_SEED + 1):
+            with (
+                self.subTest(value=value),
+                self.assertRaisesRegex(PolicyInputError, "rng_seed"),
+            ):
+                policy.recommend_seeded(
+                    context(),
+                    (),
+                    decision_id=decision_id(1),
+                    decision_sequence=1,
+                    rng_seed=value,  # type: ignore[arg-type]
+                )
+
     def test_cold_start_is_seeded_exploration_with_exact_propensity(self) -> None:
         policy = HierarchicalSoftmaxUCB()
         first = policy.recommend(
