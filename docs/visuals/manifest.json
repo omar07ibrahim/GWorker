@@ -3,7 +3,7 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "3c1259e0eb34ccf456e071d509a2b8eb461613467d4d50917e764768e232635a"
+      "sha256": "bd19e75c4d757d2a18a9b9d02a7b6d8b673511a97248615b1705c3d567d783f5"
     },
     {
       "path": "docs/architecture.md",

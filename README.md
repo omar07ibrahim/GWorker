@@ -195,10 +195,14 @@ fields. Replay reconstructs a canonical policy from the supplied
 configuration, requires its fingerprint to match the rows selected for that
 policy, and recomputes each choice from context, RNG seed, and exact ordered
 history. It then requires the selected template and hexadecimal propensity to
-match. The next offline milestone is constrained by a
-[one-step off-policy replay specification](docs/offline-replay.md): it measures
-support for declared score reweightings, not a sequential or causal policy
-effect. Journal schema v3 implements the optional one-to-one
+match. The pure
+[one-step off-policy replay core](docs/offline-replay.md) now computes raw and
+clipped IPS/SNIPS, effective sample size, per-template sufficient statistics,
+raw-support readiness, and an exact behavior negative control over strictly
+ordered reviewed rows. It measures support for declared score reweightings, not
+a sequential or causal policy effect. Reading those rows from the verified
+journal and publishing a canonical aggregate report remain separate
+boundaries. Journal schema v3 implements the optional one-to-one
 [decision-to-`SessionPlanned` association](docs/session-linkage.md) without
 changing event-codec v1. `link_focus_session()` accepts only an exact replayed
 policy decision and an existing unstarted revision-1 plan; lookup derives the
@@ -251,6 +255,10 @@ result data and never invokes the evaluator.*
 - A sliding-window hierarchical softmax-UCB duration policy with explicit
   feedback, bounded exploration, logged propensities, and explainable arm
   scores.
+- A pure aggregate-only one-step replay kernel with behavior, uniform, and
+  score-temperature targets; raw and clipped support diagnostics; explicit
+  empty-snapshot behavior; and interpretation flags that cannot be promoted to
+  causal, sequential, or locked-evaluation claims.
 - A path-private `gworker` CLI for seeded recommendations, closed reviews, and
   policy-scoped replay verification, with stable errors that do not echo
   untrusted arguments or host paths.
@@ -381,7 +389,8 @@ release decision for Omar.
 2. On a clean host that passes the frozen resource gate, execute the
    pre-registered locked evaluation exactly once and publish every required
    result, denominator, diagnostic, and negative finding.
-3. Implement the specified one-step off-policy replay diagnostics, behavior
-   negative control, and declared baseline comparisons.
+3. Extract privacy-minimal reviewed rows from one verified journal snapshot,
+   encode the aggregate replay report canonically, and expose the source-backed
+   CLI without row-level public output.
 4. Add a real timer interaction surface while preserving explicit-review-only
    learning and the local privacy boundary.

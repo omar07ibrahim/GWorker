@@ -1,6 +1,8 @@
 # One-step off-policy replay diagnostics
 
-Status: design contract; no estimator or CLI command is implemented yet.
+Status: pure aggregate arithmetic is implemented in `gworker.offline`; verified
+journal extraction, the canonical machine codec, CLI integration, and
+synthetic publication evidence remain separate milestones.
 
 GWorker records the probability of every selected duration and can reconstruct
 the complete score vector that produced it. That is enough to ask a narrow
@@ -142,11 +144,12 @@ of three states:
 | `unstable-support` | Review count passes, but a raw effective-sample-size or raw maximum-weight guardrail fails |
 | `reportable` | All declared count and raw-support guardrails pass; this does not mean the target is effective |
 
-The default contract will require at least 12 reviews, an effective-sample-size
-ratio computed from raw weights of at least 0.25, and a raw maximum weight no
-greater than the declared cap. Clipped weights never determine readiness and
-cannot hide poor raw support. These thresholds are inputs to the report
-fingerprint. A non-reportable result remains visible with its exact aggregate
+The pure core defaults to at least 12 reviews, an effective-sample-size ratio
+computed from raw weights of at least 0.25, and a raw maximum weight no greater
+than 10.0. Its declared clipping sensitivity defaults to 5.0. All four values
+are explicit `ReplayConfig` inputs and will enter the canonical report
+fingerprint. Clipped weights never determine readiness and cannot hide poor raw
+support. A non-reportable result remains visible with its exact aggregate
 diagnostics; it is never silently dropped or promoted to a policy comparison.
 
 Clipping changes the descriptive summary. The raw inverse-propensity and
@@ -156,7 +159,9 @@ both clipped values.
 
 ## Canonical report
 
-The planned machine document is `gworker-offline-replay-v1`. It binds:
+The planned machine document is `gworker-offline-replay-v1`. The implemented
+pure value objects intentionally do not serialize themselves; the future codec
+will bind:
 
 - exact behavior policy fingerprint;
 - target kind and all numeric target parameters;
