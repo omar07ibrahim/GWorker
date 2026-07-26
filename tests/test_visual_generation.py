@@ -261,20 +261,21 @@ class VisualDataTests(unittest.TestCase):
             for visual in visuals
             if visual.filename == "architecture-trust-boundaries.svg"
         )
-        self.assertIn("Journal linkage + CLI", architecture)
+        self.assertIn("Journal storage + CLI", architecture)
         self.assertIn("events + decisions", architecture)
         self.assertIn("reviews + history edges", architecture)
         self.assertIn("Render + seal · NEXT", architecture)
         self.assertIn("private journal has no publication path", architecture)
-        self.assertNotIn("Journal linkage · NEXT", architecture)
+        self.assertNotIn("Journal linkage + CLI", architecture)
         self.assertNotIn('x1="886" y1="270" x2="954" y2="270"', architecture)
         self.assertEqual(architecture.count('stroke-dasharray="8 6"'), 1)
 
     def test_lineage_sources_are_bound_and_generator_version_is_bumped(self) -> None:
-        self.assertEqual(generate.TOOL_VERSION, "2")
+        self.assertEqual(generate.TOOL_VERSION, "3")
         self.assertTrue(
             {
                 "docs/decision-lineage.md",
+                "docs/session-linkage.md",
                 "scripts/demo_policy_journal.py",
                 "src/gworker/__init__.py",
                 "src/gworker/cli.py",

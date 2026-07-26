@@ -95,7 +95,11 @@ fingerprint were recomputed.
 ![Durable decision lineage after reopen](visuals/generated/durable-decision-lineage.svg)
 
 There is deliberately no session-event-to-policy-decision foreign key yet.
-That optional linkage is `NEXT`; objective text remains outside the policy log.
+The optional one-to-one association has a [schema-v3
+specification](session-linkage.md), but it remains `NEXT`: the current journal
+schema is v2, event-codec v1 is unchanged, and no linkage table or API is
+implemented. Objective text remains outside the policy log, although the
+specification calls out that an identifier link still increases joinability.
 
 ## Locked evaluation and publication
 
@@ -179,7 +183,7 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 
 | Current | `NEXT` |
 | --- | --- |
-| Typed events, pure replay, canonical codec, and a private SQLite journal | Optional session-event-to-policy-decision identity |
+| Typed events, pure replay, canonical codec, and a private SQLite journal | [Specified schema-v3 decision-to-`SessionPlanned` identity](session-linkage.md) |
 | Journal-backed recommendation/review identity, exact propensities, and a path-private CLI | Offline replay evaluation with propensity-provenance diagnostics |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |

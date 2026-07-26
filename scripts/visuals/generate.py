@@ -63,7 +63,7 @@ VISUAL_ROOT: Final = ROOT / "docs" / "visuals"
 GENERATED_DIRECTORY_NAME: Final = "generated"
 MANIFEST_NAME: Final = "manifest.json"
 TOOL_NAME: Final = "gworker-visual-evidence"
-TOOL_VERSION: Final = "2"
+TOOL_VERSION: Final = "3"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
 VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
 DURABLE_FIRST_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9101")
@@ -92,6 +92,7 @@ INPUT_FILES: Final = (
     "docs/decision-lineage.md",
     "docs/evaluation-protocol.md",
     "docs/publication-evidence.md",
+    "docs/session-linkage.md",
     "pyproject.toml",
     "scripts/demo_policy_journal.py",
     "scripts/visuals/generate.py",
@@ -1419,7 +1420,7 @@ def _render_architecture() -> RenderedVisual:
         y=554,
         width=244,
         height=104,
-        title="Journal linkage + CLI",
+        title="Journal storage + CLI",
         lines=("recommend + explicit review", "seeded replay + verify"),
         color=PURPLE,
     )

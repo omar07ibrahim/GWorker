@@ -45,6 +45,12 @@ Existing `events` rows are neither rewritten nor re-encoded. Unknown versions
 and a damaged version-2 table set fail closed; `CREATE IF NOT EXISTS` is not
 used to conceal missing version-2 tables.
 
+An optional one-to-one decision-to-`SessionPlanned` association is defined in
+the [schema-v3 linkage specification](session-linkage.md). It is not
+implemented in this commit: the current journal schema remains v2, no
+historical relationship is inferred, and canonical event-codec v1 is
+unchanged.
+
 Propensities are text, not SQLite `REAL` values. Encoding them with
 `float.hex()` and requiring the canonical spelling preserves the exact binary
 value passed to propensity-aware evaluation.
@@ -145,5 +151,6 @@ printing exception text, credentials, host paths, or database contents.
 - cross-device synchronization;
 - encryption beyond the host's disk protection;
 - offline propensity evaluation or benchmark results;
-- a session-event-to-policy-decision foreign key;
+- the [specified schema-v3 decision-to-`SessionPlanned`
+  link](session-linkage.md);
 - any execution of the locked synthetic evaluation namespace.

@@ -177,7 +177,11 @@ configuration, requires its fingerprint to match the rows selected for that
 policy, and recomputes each choice from context, RNG seed, and exact ordered
 history. It then requires the selected template and hexadecimal propensity to
 match. Offline propensity-aware evaluation is still future work, and session
-events are not yet linked to policy decisions.
+events are not yet linked to policy decisions. The optional one-to-one
+association now has a reviewed [schema-v3 design
+contract](docs/session-linkage.md), but it is specification only in this
+commit: the journal schema remains v2 and no linkage API or table is
+implemented.
 
 The ordinal adjustment is a transparent preference heuristic, not observed
 counterfactual reward and not evidence that a longer or shorter session causes
@@ -355,8 +359,9 @@ release decision for Omar.
 2. On a clean host that passes the frozen resource gate, execute the
    pre-registered locked evaluation exactly once and publish every required
    result, denominator, diagnostic, and negative finding.
-3. Link optional session-event IDs to policy decisions without putting
-   objective text into the policy log.
+3. Implement the [specified schema-v3 one-to-one linkage](docs/session-linkage.md)
+   between a durable decision and its `SessionPlanned` event without changing
+   event-codec v1 or inferring feedback.
 4. Add offline replay evaluation with propensity-provenance diagnostics and
    declared baseline comparisons.
 5. Add a real timer interaction surface while preserving explicit-review-only
