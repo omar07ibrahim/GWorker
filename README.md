@@ -195,8 +195,10 @@ fields. Replay reconstructs a canonical policy from the supplied
 configuration, requires its fingerprint to match the rows selected for that
 policy, and recomputes each choice from context, RNG seed, and exact ordered
 history. It then requires the selected template and hexadecimal propensity to
-match. Offline propensity-aware evaluation is still future work. Journal
-schema v3 implements the optional one-to-one
+match. The next offline milestone is constrained by a
+[one-step off-policy replay specification](docs/offline-replay.md): it measures
+support for declared score reweightings, not a sequential or causal policy
+effect. Journal schema v3 implements the optional one-to-one
 [decision-to-`SessionPlanned` association](docs/session-linkage.md) without
 changing event-codec v1. `link_focus_session()` accepts only an exact replayed
 policy decision and an existing unstarted revision-1 plan; lookup derives the
@@ -379,7 +381,7 @@ release decision for Omar.
 2. On a clean host that passes the frozen resource gate, execute the
    pre-registered locked evaluation exactly once and publish every required
    result, denominator, diagnostic, and negative finding.
-3. Add offline replay evaluation with propensity-provenance diagnostics and
-   declared baseline comparisons.
+3. Implement the specified one-step off-policy replay diagnostics, behavior
+   negative control, and declared baseline comparisons.
 4. Add a real timer interaction surface while preserving explicit-review-only
    learning and the local privacy boundary.
