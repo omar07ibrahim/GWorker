@@ -31,7 +31,7 @@ timestamps, or a claim that the recommendation improved human productivity.
 
 ## Relational record
 
-Journal schema version 2 adds three append-only tables:
+Journal schema version 2 introduced three append-only tables:
 
 1. `policy_decisions` owns the decision UUID and contiguous sequence, context,
    RNG seed, selected template, propensity, bounded-history count, and digest.
@@ -39,17 +39,16 @@ Journal schema version 2 adds three append-only tables:
    sequence used for one recommendation.
 3. `policy_reviews` stores at most one closed-enum review for a decision.
 
-Opening an exact version-1 journal performs one explicit transactional
-migration: create the three policy tables, update the version row, and commit.
-Existing `events` rows are neither rewritten nor re-encoded. Unknown versions
-and a damaged version-2 table set fail closed; `CREATE IF NOT EXISTS` is not
-used to conceal missing version-2 tables.
+Schema version 3 adds only `focus_session_links`. Opening an exact version-1 or
+version-2 journal performs one explicit transactional migration to v3.
+Existing event and policy rows are neither rewritten nor re-encoded, and no
+historical link is inferred. Unknown versions and damaged or hybrid layouts
+fail closed; `CREATE IF NOT EXISTS` is not used to conceal missing objects.
 
-An optional one-to-one decision-to-`SessionPlanned` association is defined in
-the [schema-v3 linkage specification](session-linkage.md). It is not
-implemented in this commit: the current journal schema remains v2, no
-historical relationship is inferred, and canonical event-codec v1 is
-unchanged.
+The optional one-to-one decision-to-`SessionPlanned` association is implemented
+by the [schema-v3 linkage contract](session-linkage.md). It records provenance
+outside event-codec v1, allows unlinked decisions and sessions, and never
+infers review fields from timer events.
 
 Propensities are text, not SQLite `REAL` values. Encoding them with
 `float.hex()` and requiring the canonical spelling preserves the exact binary
@@ -151,6 +150,4 @@ printing exception text, credentials, host paths, or database contents.
 - cross-device synchronization;
 - encryption beyond the host's disk protection;
 - offline propensity evaluation or benchmark results;
-- the [specified schema-v3 decision-to-`SessionPlanned`
-  link](session-linkage.md);
 - any execution of the locked synthetic evaluation namespace.

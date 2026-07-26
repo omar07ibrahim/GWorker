@@ -17,6 +17,8 @@ from .codec import EventCodecError, decode_event, encode_event
 from .domain import (
     DomainEvent,
     InvalidTransition,
+    SessionPhase,
+    SessionPlanned,
     SessionState,
     apply_event,
     reduce_events,
@@ -35,7 +37,7 @@ from .policy import (
     TaskKind,
 )
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 DATABASE_NAME = "events.sqlite3"
 
 _CREATE_SCHEMA_V1 = (
@@ -129,6 +131,21 @@ _CREATE_SCHEMA_V2 = (
     """,
 )
 
+_CREATE_SCHEMA_V3 = (
+    """
+    CREATE TABLE focus_session_links (
+        decision_id TEXT PRIMARY KEY
+            REFERENCES policy_decisions(decision_id)
+            ON UPDATE RESTRICT
+            ON DELETE RESTRICT,
+        planned_event_id TEXT NOT NULL UNIQUE
+            REFERENCES events(event_id)
+            ON UPDATE RESTRICT
+            ON DELETE RESTRICT
+    ) WITHOUT ROWID
+    """,
+)
+
 _EXPECTED_TABLE_COLUMNS = {
     "journal_metadata": ("key", "value"),
     "events": (
@@ -158,16 +175,44 @@ _EXPECTED_TABLE_COLUMNS = {
         "position",
         "reviewed_decision_id",
     ),
+    "focus_session_links": ("decision_id", "planned_event_id"),
 }
 
-_EXPECTED_SCHEMA_SQL = {
+_EXPECTED_SCHEMA_SQL_V1 = {
     "journal_metadata": _CREATE_SCHEMA_V1[0],
     "events": _CREATE_SCHEMA_V1[1],
+}
+
+_EXPECTED_SCHEMA_SQL_V2 = {
+    **_EXPECTED_SCHEMA_SQL_V1,
     "policy_decisions": _CREATE_SCHEMA_V2[0],
     "policy_reviews": _CREATE_SCHEMA_V2[1],
     "policy_decision_history": _CREATE_SCHEMA_V2[2],
     "policy_decisions_policy_sequence": _CREATE_SCHEMA_V2[3],
     "policy_history_reviewed_decision": _CREATE_SCHEMA_V2[4],
+}
+
+_EXPECTED_SCHEMA_SQL_V3 = {
+    **_EXPECTED_SCHEMA_SQL_V2,
+    "focus_session_links": _CREATE_SCHEMA_V3[0],
+}
+
+_EXPECTED_SCHEMA_SQL_BY_VERSION = {
+    1: _EXPECTED_SCHEMA_SQL_V1,
+    2: _EXPECTED_SCHEMA_SQL_V2,
+    3: _EXPECTED_SCHEMA_SQL_V3,
+}
+
+_EXPECTED_TABLES_BY_VERSION = {
+    1: ("journal_metadata", "events"),
+    2: (
+        "journal_metadata",
+        "events",
+        "policy_decisions",
+        "policy_reviews",
+        "policy_decision_history",
+    ),
+    3: tuple(_EXPECTED_TABLE_COLUMNS),
 }
 
 
@@ -205,6 +250,18 @@ class PolicyJournalVerification:
     review_count: int
     history_edge_count: int
     sqlite_check: str
+
+
+@dataclass(frozen=True, slots=True)
+class FocusSessionLink:
+    """Immutable provenance link between a decision and one planned session."""
+
+    decision_id: UUID
+    decision_sequence: int
+    session_id: UUID
+    planned_event_id: UUID
+    policy_id: str
+    template_id: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -247,6 +304,15 @@ class _PolicyReplay:
     history_edge_count: int
     sqlite_check: str
     snapshot: _PolicyJournalSnapshot
+    links: _FocusLinkSnapshot
+
+
+@dataclass(frozen=True, slots=True)
+class _FocusLinkSnapshot:
+    links: tuple[FocusSessionLink, ...]
+    by_decision: Mapping[UUID, FocusSessionLink]
+    by_planned_event: Mapping[UUID, FocusSessionLink]
+    by_session: Mapping[UUID, FocusSessionLink]
 
 
 def default_journal_path() -> Path:
@@ -620,11 +686,10 @@ class SQLiteEventStore:
         *,
         version: int,
     ) -> None:
-        expected_names = (
-            {"journal_metadata", "events"}
-            if version == 1
-            else set(_EXPECTED_SCHEMA_SQL)
-        )
+        expected_sql = _EXPECTED_SCHEMA_SQL_BY_VERSION.get(version)
+        if expected_sql is None:
+            raise CorruptJournal("cannot validate unknown journal schema")
+        expected_names = set(expected_sql)
         try:
             rows = connection.execute(
                 """
@@ -643,10 +708,10 @@ class SQLiteEventStore:
         for row in rows:
             name = row["name"]
             stored_sql = row["sql"]
-            expected_sql = _EXPECTED_SCHEMA_SQL[name]
+            expected_definition = expected_sql[name]
             if not isinstance(stored_sql, str):
                 raise CorruptJournal(f"journal schema object has no SQL: {name}")
-            if " ".join(stored_sql.split()) != " ".join(expected_sql.split()):
+            if " ".join(stored_sql.split()) != " ".join(expected_definition.split()):
                 raise CorruptJournal(
                     f"journal schema object has unexpected definition: {name}"
                 )
@@ -659,6 +724,23 @@ class SQLiteEventStore:
         for statement in statements:
             connection.execute(statement)
 
+    @staticmethod
+    def _insert_focus_link(
+        connection: sqlite3.Connection,
+        decision_id: str,
+        planned_event_id: str,
+    ) -> None:
+        connection.execute(
+            """
+            INSERT INTO focus_session_links (
+                decision_id,
+                planned_event_id
+            )
+            VALUES (?, ?)
+            """,
+            (decision_id, planned_event_id),
+        )
+
     def _initialize_schema(self) -> None:
         connection, directory_descriptor = self._connect()
         try:
@@ -667,6 +749,7 @@ class SQLiteEventStore:
             if not tables:
                 self._create_statements(connection, _CREATE_SCHEMA_V1)
                 self._create_statements(connection, _CREATE_SCHEMA_V2)
+                self._create_statements(connection, _CREATE_SCHEMA_V3)
                 connection.execute(
                     """
                     INSERT INTO journal_metadata (key, value)
@@ -681,10 +764,10 @@ class SQLiteEventStore:
                     )
                 stored_version = self._require_schema_version(
                     connection,
-                    allowed=(1, SCHEMA_VERSION),
+                    allowed=(1, 2, SCHEMA_VERSION),
                 )
                 if stored_version == 1:
-                    if tables != {"journal_metadata", "events"}:
+                    if tables != set(_EXPECTED_TABLES_BY_VERSION[1]):
                         raise CorruptJournal(
                             "version 1 journal contains unexpected tables"
                         )
@@ -694,6 +777,7 @@ class SQLiteEventStore:
                     )
                     self._require_schema_layout(connection, version=1)
                     self._create_statements(connection, _CREATE_SCHEMA_V2)
+                    self._create_statements(connection, _CREATE_SCHEMA_V3)
                     connection.execute(
                         """
                         UPDATE journal_metadata
@@ -702,9 +786,28 @@ class SQLiteEventStore:
                         """,
                         (str(SCHEMA_VERSION),),
                     )
-                elif tables != set(_EXPECTED_TABLE_COLUMNS):
+                elif stored_version == 2:
+                    if tables != set(_EXPECTED_TABLES_BY_VERSION[2]):
+                        raise CorruptJournal(
+                            "version 2 journal contains unexpected tables"
+                        )
+                    self._require_table_columns(
+                        connection,
+                        _EXPECTED_TABLES_BY_VERSION[2],
+                    )
+                    self._require_schema_layout(connection, version=2)
+                    self._create_statements(connection, _CREATE_SCHEMA_V3)
+                    connection.execute(
+                        """
+                        UPDATE journal_metadata
+                        SET value = ?
+                        WHERE key = 'schema_version'
+                        """,
+                        (str(SCHEMA_VERSION),),
+                    )
+                elif tables != set(_EXPECTED_TABLES_BY_VERSION[3]):
                     raise CorruptJournal(
-                        "version 2 journal has unexpected or missing tables"
+                        "version 3 journal has unexpected or missing tables"
                     )
             self._require_table_columns(
                 connection,
@@ -1152,6 +1255,104 @@ class SQLiteEventStore:
         finally:
             active.remove(decision.decision_id)
 
+    def _load_focus_links(
+        self,
+        connection: sqlite3.Connection,
+        snapshot: _PolicyJournalSnapshot,
+        recommendations: Mapping[UUID, Recommendation],
+    ) -> _FocusLinkSnapshot:
+        try:
+            rows = connection.execute(
+                """
+                SELECT
+                    links.decision_id AS link_decision_id,
+                    links.planned_event_id AS link_planned_event_id,
+                    events.session_id AS session_id,
+                    events.sequence AS sequence,
+                    events.event_id AS event_id,
+                    events.event_type AS event_type,
+                    events.event_json AS event_json
+                FROM focus_session_links AS links
+                LEFT JOIN events
+                    ON events.event_id = links.planned_event_id
+                ORDER BY links.decision_id
+                """
+            ).fetchall()
+        except sqlite3.Error as exc:
+            raise CorruptJournal("cannot read focus-session links") from exc
+
+        links: list[FocusSessionLink] = []
+        by_decision: dict[UUID, FocusSessionLink] = {}
+        by_planned_event: dict[UUID, FocusSessionLink] = {}
+        by_session: dict[UUID, FocusSessionLink] = {}
+        for row in rows:
+            decision_id = self._decode_uuid_text(
+                row["link_decision_id"],
+                "link decision_id",
+            )
+            planned_event_id = self._decode_uuid_text(
+                row["link_planned_event_id"],
+                "link planned_event_id",
+            )
+            decision = snapshot.decisions_by_id.get(decision_id)
+            if decision is None or row["event_json"] is None:
+                raise CorruptJournal("stored focus-session link is orphaned")
+            try:
+                event = self._decode_row(row)
+            except CorruptJournal as exc:
+                raise CorruptJournal("linked planned event is invalid") from exc
+            if event.event_id != planned_event_id:
+                raise CorruptJournal(
+                    "link planned_event_id disagrees with the referenced event"
+                )
+            if not isinstance(event, SessionPlanned) or event.sequence != 1:
+                raise CorruptJournal(
+                    "focus-session link must reference a sequence-1 plan"
+                )
+            if event.policy_id != decision.policy_id:
+                raise CorruptJournal(
+                    "linked event policy_id disagrees with policy decision"
+                )
+            recommendation = recommendations.get(decision_id)
+            if recommendation is not None:
+                if recommendation.policy_id != event.policy_id:
+                    raise CorruptJournal(
+                        "linked recommendation policy_id disagrees with event"
+                    )
+                if (
+                    event.target_focus_seconds != recommendation.template.focus_seconds
+                    or event.target_break_seconds
+                    != recommendation.template.break_seconds
+                ):
+                    raise CorruptJournal(
+                        "linked plan durations disagree with policy recomputation"
+                    )
+            link = FocusSessionLink(
+                decision_id=decision_id,
+                decision_sequence=decision.decision_sequence,
+                session_id=event.session_id,
+                planned_event_id=planned_event_id,
+                policy_id=decision.policy_id,
+                template_id=decision.template_id,
+            )
+            if (
+                decision_id in by_decision
+                or planned_event_id in by_planned_event
+                or event.session_id in by_session
+            ):
+                raise CorruptJournal("stored focus-session links are not one-to-one")
+            links.append(link)
+            by_decision[decision_id] = link
+            by_planned_event[planned_event_id] = link
+            by_session[event.session_id] = link
+
+        return _FocusLinkSnapshot(
+            links=tuple(links),
+            by_decision=MappingProxyType(by_decision),
+            by_planned_event=MappingProxyType(by_planned_event),
+            by_session=MappingProxyType(by_session),
+        )
+
     @staticmethod
     def _policy_integrity_check(connection: sqlite3.Connection) -> str:
         try:
@@ -1207,12 +1408,22 @@ class SQLiteEventStore:
                     )
                 except PolicyInputError as exc:
                     raise CorruptJournal("stored policy review is invalid") from exc
+        recommendation_by_id = {
+            recommendation.decision_id: recommendation
+            for recommendation in recommendations
+        }
+        links = self._load_focus_links(
+            connection,
+            snapshot,
+            recommendation_by_id,
+        )
         return _PolicyReplay(
             recommendations=tuple(recommendations),
             reviews=tuple(reviews),
             history_edge_count=edge_count,
             sqlite_check=sqlite_check,
             snapshot=snapshot,
+            links=links,
         )
 
     def recommend(
@@ -1306,6 +1517,157 @@ class SQLiteEventStore:
             if self._is_lock_error(exc):
                 raise JournalConflict("policy journal is locked by a writer") from exc
             raise JournalError("cannot persist policy decision") from exc
+        except Exception:
+            self._rollback(connection)
+            raise
+        finally:
+            self._close_connection(connection, directory_descriptor)
+
+    def link_focus_session(
+        self,
+        policy: HierarchicalSoftmaxUCB,
+        decision_id: UUID,
+        *,
+        session_id: UUID,
+    ) -> FocusSessionLink:
+        """Atomically link an unreviewed decision to an existing planned session."""
+
+        checked_policy = self._require_policy(policy)
+        decision_identifier = _canonical_uuid(decision_id, "decision_id")
+        _canonical_uuid(session_id, "session_id")
+        connection, directory_descriptor = self._connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            replay = self._replay_policy_with_connection(
+                connection,
+                checked_policy,
+            )
+            decision = replay.snapshot.decisions_by_id.get(decision_id)
+            if decision is None:
+                raise JournalConflict("policy decision does not exist")
+            if decision.policy_id != checked_policy.policy_id:
+                raise JournalConflict("policy decision belongs to a different policy")
+            if decision_id in replay.snapshot.reviews:
+                raise JournalConflict("policy decision is already reviewed")
+            if decision_id in replay.links.by_decision:
+                raise JournalConflict("policy decision is already linked")
+            recommendation = next(
+                (
+                    candidate
+                    for candidate in replay.recommendations
+                    if candidate.decision_id == decision_id
+                ),
+                None,
+            )
+            if recommendation is None:
+                raise CorruptJournal(
+                    "policy decision is missing from recomputed history"
+                )
+
+            events = self._load_with_connection(connection, session_id)
+            if not events:
+                raise JournalConflict("focus session does not exist")
+            try:
+                state = reduce_events(events)
+            except InvalidTransition as exc:
+                raise CorruptJournal("target focus session cannot be replayed") from exc
+            if (
+                len(events) != 1
+                or state.phase is not SessionPhase.PLANNED
+                or state.revision != 1
+                or not isinstance(events[0], SessionPlanned)
+            ):
+                raise JournalConflict(
+                    "focus session must be an unstarted revision-1 plan"
+                )
+            planned = events[0]
+            if planned.event_id in replay.links.by_planned_event:
+                raise JournalConflict("focus session is already linked")
+            if planned.policy_id != checked_policy.policy_id:
+                raise JournalConflict("focus session belongs to a different policy")
+            if (
+                planned.target_focus_seconds != recommendation.template.focus_seconds
+                or planned.target_break_seconds != recommendation.template.break_seconds
+            ):
+                raise JournalConflict(
+                    "focus session durations do not match the recommendation"
+                )
+
+            self._insert_focus_link(
+                connection,
+                decision_identifier,
+                str(planned.event_id),
+            )
+            connection.execute("COMMIT")
+            return FocusSessionLink(
+                decision_id=decision_id,
+                decision_sequence=decision.decision_sequence,
+                session_id=session_id,
+                planned_event_id=planned.event_id,
+                policy_id=decision.policy_id,
+                template_id=decision.template_id,
+            )
+        except sqlite3.IntegrityError as exc:
+            self._rollback(connection)
+            raise JournalConflict("focus-session link conflicts with journal") from exc
+        except sqlite3.OperationalError as exc:
+            self._rollback(connection)
+            if self._is_lock_error(exc):
+                raise JournalConflict(
+                    "focus-session journal is locked by a writer"
+                ) from exc
+            raise JournalError("cannot persist focus-session link") from exc
+        except Exception:
+            self._rollback(connection)
+            raise
+        finally:
+            self._close_connection(connection, directory_descriptor)
+
+    def focus_session_link(
+        self,
+        policy: HierarchicalSoftmaxUCB,
+        *,
+        session_id: UUID,
+    ) -> FocusSessionLink | None:
+        """Return the validated link derived from one session's planned event."""
+
+        checked_policy = self._require_policy(policy)
+        _canonical_uuid(session_id, "session_id")
+        connection, directory_descriptor = self._connect()
+        try:
+            connection.execute("BEGIN")
+            replay = self._replay_policy_with_connection(
+                connection,
+                checked_policy,
+            )
+            link = replay.links.by_session.get(session_id)
+            if link is not None:
+                if link.policy_id != checked_policy.policy_id:
+                    raise JournalConflict(
+                        "focus session is linked to a different policy"
+                    )
+                events = self._load_with_connection(connection, session_id)
+                try:
+                    state = reduce_events(events)
+                except InvalidTransition as exc:
+                    raise CorruptJournal(
+                        "linked focus session cannot be replayed"
+                    ) from exc
+                if (
+                    not events
+                    or state.session_id != session_id
+                    or events[0].event_id != link.planned_event_id
+                ):
+                    raise CorruptJournal("linked focus session disagrees with its plan")
+            connection.execute("COMMIT")
+            return link
+        except sqlite3.OperationalError as exc:
+            self._rollback(connection)
+            if self._is_lock_error(exc):
+                raise JournalConflict(
+                    "focus-session journal is locked by a writer"
+                ) from exc
+            raise JournalError("cannot read focus-session link") from exc
         except Exception:
             self._rollback(connection)
             raise
@@ -1439,6 +1801,14 @@ class SQLiteEventStore:
         try:
             connection.execute("BEGIN IMMEDIATE")
             self._require_schema_version(connection)
+            self._require_table_columns(
+                connection,
+                tuple(_EXPECTED_TABLE_COLUMNS),
+            )
+            self._require_schema_layout(connection, version=SCHEMA_VERSION)
+            self._policy_integrity_check(connection)
+            policy_snapshot = self._load_policy_snapshot(connection)
+            self._load_focus_links(connection, policy_snapshot, {})
             existing = self._load_with_connection(connection, event.session_id)
             try:
                 state = reduce_events(existing) if existing else None
@@ -1561,6 +1931,11 @@ class SQLiteEventStore:
         try:
             connection.execute("BEGIN")
             self._require_schema_version(connection)
+            self._require_table_columns(
+                connection,
+                tuple(_EXPECTED_TABLE_COLUMNS),
+            )
+            self._require_schema_layout(connection, version=SCHEMA_VERSION)
             check_rows = connection.execute("PRAGMA quick_check").fetchall()
             check_values = [row[0] for row in check_rows]
             if check_values != ["ok"]:
@@ -1574,6 +1949,11 @@ class SQLiteEventStore:
                 ORDER BY session_id, sequence
                 """
             ).fetchall()
+            foreign_key_rows = connection.execute("PRAGMA foreign_key_check").fetchall()
+            if foreign_key_rows:
+                raise CorruptJournal("SQLite foreign_key_check failed")
+            policy_snapshot = self._load_policy_snapshot(connection)
+            self._load_focus_links(connection, policy_snapshot, {})
             connection.execute("COMMIT")
         except sqlite3.Error as exc:
             self._rollback(connection)

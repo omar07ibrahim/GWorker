@@ -162,11 +162,12 @@ class SQLitePolicyStorageTests(unittest.TestCase):
             )
         }
         connection.close()
-        self.assertEqual(version, "2")
+        self.assertEqual(version, "3")
         self.assertEqual(
             tables,
             {
                 "events",
+                "focus_session_links",
                 "journal_metadata",
                 "policy_decision_history",
                 "policy_decisions",
@@ -944,7 +945,7 @@ class SQLitePolicyStorageTests(unittest.TestCase):
         connection.close()
         with self.assertRaisesRegex(
             CorruptJournal,
-            "version 2 journal has unexpected or missing tables",
+            "version 3 journal has unexpected or missing tables",
         ):
             SQLiteEventStore(extra_v2_path)
 

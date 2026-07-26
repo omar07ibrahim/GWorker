@@ -39,6 +39,7 @@ from .policy import (
 )
 from .storage import (
     CorruptJournal,
+    FocusSessionLink,
     JournalConflict,
     JournalError,
     JournalSecurityError,
@@ -64,6 +65,7 @@ __all__ = [
     "EvidenceBucket",
     "FocusCompleted",
     "FocusContext",
+    "FocusSessionLink",
     "FocusStarted",
     "FocusTemplate",
     "HierarchicalSoftmaxUCB",

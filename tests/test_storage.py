@@ -472,7 +472,7 @@ class SQLiteEventStoreTests(unittest.TestCase):
             replacement.load(SESSION_ID)
         with self.assertRaisesRegex(CorruptJournal, "list journal sessions"):
             replacement.session_ids()
-        with self.assertRaisesRegex(CorruptJournal, "verify SQLite journal"):
+        with self.assertRaisesRegex(CorruptJournal, "missing table: events"):
             replacement.verify()
 
 

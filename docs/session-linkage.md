@@ -1,9 +1,9 @@
 # Policy decision to focus-session linkage
 
-> **Specification status:** this is a design contract for a later implementation,
-> not a description of code that exists in this commit. The current journal
-> schema remains version 2; `focus_session_links`, the APIs sketched below, and
-> their tests do not exist yet. The domain event codec remains version 1.
+> **Implementation status:** the schema-v3 table, exact v1/v2 migrations,
+> immutable projection, mutation, lookup, bulk verification, and fail-closed
+> tests are implemented. The domain event schema and canonical event codec
+> remain version 1.
 
 ## Purpose and boundary
 
@@ -18,7 +18,7 @@ journal:
 A policy decision can be made without starting a session, and a session can be
 planned without using the adaptive policy. That optionality must remain. When a
 caller does use a durable recommendation to plan a session, schema version 3
-will be able to record one explicit association between those records.
+records one explicit association between those records.
 
 The link is provenance, not feedback. Creating it, starting or completing the
 timer, measuring elapsed focus, abandoning the session, or reopening the
@@ -46,7 +46,7 @@ Keeping the association in a table avoids rewriting historical event bytes,
 duplicating a decision ID throughout domain projections, or forcing every
 session source to create a policy decision.
 
-## Proposed relational record
+## Relational record
 
 Schema v3 adds exactly one table to the canonical v2 layout:
 
@@ -112,8 +112,8 @@ which decision-session association to record.
 
 ## Link transaction
 
-The first implementation exposes a narrow `link_focus_session()` mutation for
-a durable decision and an already-persisted session that has not started:
+The implemented API exposes a narrow `link_focus_session()` mutation for a
+durable decision and an already-persisted session that has not started:
 
 1. Validate the exact policy object, decision UUID, and session UUID before
    opening a write transaction.
@@ -151,8 +151,8 @@ event-codec v1. No CLI command is part of this contract.
 
 ## Migration contract
 
-All migration paths execute under the same permission, file-identity, exact
-schema, and transaction checks as the current v1-to-v2 migration.
+All migration paths execute under the journal's permission, file-identity,
+exact-schema, and transaction checks.
 
 ### New journal
 
@@ -190,9 +190,7 @@ does not guess which objects are trustworthy, and does not backfill links.
 Any migration error rolls the whole transaction back to the original exact
 layout and metadata value.
 
-## Read and verification API sketch
-
-Names are illustrative; their contracts are the normative part:
+## Read and verification API
 
 ```python
 @dataclass(frozen=True, slots=True)
@@ -270,22 +268,22 @@ timestamps, measured durations, interruptions, and abandonment reason. “No
 objective in the policy table” therefore does not mean that linked policy data
 is anonymous or harmless.
 
-The eventual v3 journal must remain local, permission-hardened, ignored by Git,
-and unencrypted by GWorker. Device or full-disk encryption remains the at-rest
+The v3 journal remains local, permission-hardened, ignored by Git, and
+unencrypted by GWorker. Device or full-disk encryption remains the at-rest
 protection. Link rows from user journals and joined user-data exports must never
 enter committed demos, telemetry, the synthetic evaluator, publication
 evidence, logs, or error messages. Any future export feature must make the join
 explicit and require a separate privacy review.
 
-## Implementation test plan
+## Implemented test coverage
 
-The implementation commit is not complete until targeted, non-evaluation tests
-cover:
+Targeted, non-evaluation tests cover:
 
 - byte-for-byte preservation of v1 codec fixtures and existing event rows;
 - new-journal v3 creation plus exact v1-to-v3 and v2-to-v3 migrations;
 - preservation of all old rows and an empty link table after migration;
-- rollback on injected failure at every migration and link-insert boundary;
+- rollback on injected failures during both migration paths and after link
+  insertion;
 - rejection of unknown, hybrid, missing, extra, or altered schema objects;
 - the exact two-column table shape and one-to-one uniqueness for decisions and
   planned-event IDs;
@@ -300,7 +298,8 @@ cover:
   verifying create no review and change no future policy history;
 - an explicit linked review that preserves the recomputed template and exact
   propensity;
-- path-, objective-, credential-, and attacker-input-free errors and outputs.
+- linkage failures that do not echo the journal path, objective, or a fixed
+  secret-like marker.
 
 Tests use fixed synthetic UUIDs and objectives in private temporary journals.
 They must not import or invoke the evaluator, publication runner, recorder, or
@@ -308,8 +307,8 @@ locked artifact workflow.
 
 ## Evidence plan
 
-Only after schema v3 and its tests are implemented should the repository add
-visual evidence. A suitable source-derived diagram would exercise the public
+The implementation is complete without claiming visual evidence that has not
+yet been rebound. The next source-derived diagram should exercise the public
 storage API against a disposable journal and show:
 
 1. one durable recommendation;
@@ -319,9 +318,7 @@ storage API against a disposable journal and show:
 5. one separate explicit review;
 6. successful reopen, session-derived lookup, and verification.
 
-No linkage CLI is proposed, so this evidence should be generated through the
+No linkage CLI exists, so this evidence should be generated through the
 public storage API rather than a staged terminal command. The artifact must use
 synthetic records, be checksum-bound to implementation and documentation
-inputs, and reproduce through the existing source-visual check mode. This
-specification commit does not change generated evidence or claim that such a
-workflow can run today.
+inputs, and reproduce through the existing source-visual check mode.

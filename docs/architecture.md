@@ -25,6 +25,7 @@ artifacts, never a user's local work history.
 | SQLite event store | A private journal path and one next event | Transactional append, unique aggregate revision, full replay, and integrity summary | Linux/POSIX path, ownership, permission, file-identity, schema, codec, and replay checks fail closed | [`storage.py`](../src/gworker/storage.py#L95) |
 | Duration policy | Explicit coarse context, an ordered bounded review tail, and caller RNG | Feasible templates, per-arm score decomposition, sampled action, exact propensity, evidence bucket, and reason codes | Rejects foreign policy IDs, duplicate/non-increasing decisions, unknown templates, invalid probability structure, and impossible histories | [`policy.py`](../src/gworker/policy.py#L387) |
 | Durable policy lineage | Current policy fingerprint, bounded context, caller UUID/seed, and closed review fields | Append-only decisions, reviews, exact ordered history edges, canonical propensities, and deterministic replay | Rejects stale/forged policy objects, sequence or schema damage, orphan/duplicate reviews, altered history, and any recomputation mismatch | [`storage.py`](../src/gworker/storage.py#L1218), [`decision-lineage.md`](decision-lineage.md) |
+| Focus-session linkage | Exact policy, durable decision UUID, and an existing revision-1 plan | Immutable one-to-one provenance link with a session-derived lookup; no inferred review | Rejects reviewed or already-linked decisions, started sessions, policy/template/duration mismatch, link corruption, and concurrent consumption | [`storage.py`](../src/gworker/storage.py), [`session-linkage.md`](session-linkage.md) |
 | Policy CLI | Explicit `recommend`, `review`, or `verify` arguments and an optional private journal path | Human or canonical JSON output without objective text or journal paths | Invalid arguments are not echoed; operational errors use stable categories; verification is explicitly policy-scoped | [`cli.py`](../src/gworker/cli.py#L89) |
 | Synthetic evaluator | An explicit experiment configuration; locked `eval` additionally requires the private consumed permit | Balanced synthetic environments, paired potential outcomes, strategy summaries, traces, and exact cardinality validation | Any missing scenario, invariant breach, non-finite probability, invalid guardrail choice, or denominator mismatch invalidates the whole run | [`evaluation.py`](../src/gworker/evaluation.py#L2818) |
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
@@ -94,12 +95,13 @@ fingerprint were recomputed.
 
 ![Durable decision lineage after reopen](visuals/generated/durable-decision-lineage.svg)
 
-There is deliberately no session-event-to-policy-decision foreign key yet.
-The optional one-to-one association has a [schema-v3
-specification](session-linkage.md), but it remains `NEXT`: the current journal
-schema is v2, event-codec v1 is unchanged, and no linkage table or API is
-implemented. Objective text remains outside the policy log, although the
-specification calls out that an identifier link still increases joinability.
+Schema v3 implements the optional
+[one-to-one association](session-linkage.md) outside canonical event bytes.
+The link references a durable decision and the exact sequence-1
+`SessionPlanned` event; its lookup derives `session_id` through that event.
+Event-codec v1 is unchanged, unlinked histories remain valid, and only an
+explicit `record_review()` changes policy history. Objective text remains
+outside the policy log, although the identifier link increases joinability.
 
 ## Locked evaluation and publication
 
@@ -183,8 +185,8 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 
 | Current | `NEXT` |
 | --- | --- |
-| Typed events, pure replay, canonical codec, and a private SQLite journal | [Specified schema-v3 decision-to-`SessionPlanned` identity](session-linkage.md) |
-| Journal-backed recommendation/review identity, exact propensities, and a path-private CLI | Offline replay evaluation with propensity-provenance diagnostics |
+| Typed events, pure replay, canonical codec, and a private schema-v3 SQLite journal | Offline replay evaluation with propensity-provenance diagnostics |
+| Journal-backed recommendation/review identity, exact propensities, and immutable decision-to-plan linkage | A source-derived linkage workflow visual rebound to the implementation |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |
 | Four demos, seven source-derived diagrams, and six genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |
