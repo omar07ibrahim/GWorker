@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Record and render genuine, reproducible GWorker terminal captures.
 
-``record`` is the only mode that starts subprocesses.  It executes five
-literal, reviewed command vectors: the public policy demo, the descriptor-safe
-SQLite journal demo, the locked protocol inventory, publication status, and
-publication preflight.  It never exposes an arbitrary command surface and
-never calls the publication ``run`` command or evaluator.
+``record`` is the only mode that starts subprocesses.  It executes six literal,
+reviewed command vectors: the durable policy-journal workflow, public policy
+demo, descriptor-safe SQLite event-journal demo, locked protocol inventory,
+publication status, and publication preflight.  It never exposes an arbitrary
+command surface and never calls the publication ``run`` command or evaluator.
 
 ``render`` rebuilds SVGs from committed transcripts.  ``check`` is entirely
 read-only and does not rerun even the host-dependent resource preflight.
@@ -20,6 +20,7 @@ import os
 import platform
 import re
 import socket
+import stat
 import subprocess
 import sys
 import tempfile
@@ -37,7 +38,7 @@ TERMINAL_ROOT: Final = ROOT / "docs" / "visuals" / "terminal"
 MANIFEST_NAME: Final = "manifest.json"
 SCHEMA_VERSION: Final = "gworker-terminal-capture-manifest-v1"
 TOOL_NAME: Final = "gworker-terminal-capture"
-TOOL_VERSION: Final = "1"
+TOOL_VERSION: Final = "2"
 RECORD_COMMAND: Final = (
     "PYTHONPATH=src python scripts/visuals/capture_terminal.py record"
 )
@@ -47,9 +48,24 @@ RENDER_COMMAND: Final = (
 CHECK_COMMAND: Final = "PYTHONPATH=src python scripts/visuals/capture_terminal.py check"
 JOURNAL_WORKSPACE: Final = ".gworker/visual-demo/terminal-capture"
 RUNTIME_ROOT: Final = ROOT / ".gworker" / "terminal-capture-runtime"
+GIT_EXECUTABLE: Final = "/usr/bin/git"
+GIT_STATUS_ARGV: Final = (
+    "git",
+    "-c",
+    "core.fsmonitor=false",
+    "-c",
+    "core.untrackedCache=false",
+    "status",
+    "--porcelain=v1",
+    "-z",
+    "--untracked-files=all",
+    "--ignore-submodules=none",
+    "--",
+)
 EMPTY_SHA256: Final = hashlib.sha256(b"").hexdigest()
 HEX_SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 HEX_COMMIT: Final = re.compile(r"^[0-9a-f]{40,64}$")
+CAPTURE_PYTHON_VERSION: Final = re.compile(r"^3\.(?:11|12)\.\d+$")
 ANSI_ESCAPE: Final = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|[@-_])")
 ABSOLUTE_PATH: Final = re.compile(
     r"(?<![A-Za-z0-9_.-])/(?:[A-Za-z0-9_.@+-]+/)+[A-Za-z0-9_.@+-]*"
@@ -63,6 +79,77 @@ SECRET_PATTERN: Final = re.compile(
     r"|Bearer[ \t]+[A-Za-z0-9._~+/-]{12,}=*"
     r"|-----BEGIN[ A-Z]+PRIVATE KEY-----)"
 )
+
+BASE_INPUT_COMMIT_ROLE: Final = (
+    "Git HEAD at record time; per-file hashes bind exact source bytes."
+)
+CAPTURE_ENVIRONMENT: Final[dict[str, str]] = {
+    "HOME": ".gworker/terminal-capture-runtime/home",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "PATH": "<OS_DEFPATH>",
+    "PYTHONHASHSEED": "0",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONPATH": "src",
+    "TMPDIR": ".gworker/terminal-capture-runtime/tmp",
+    "TZ": "UTC",
+}
+CAPTURE_NORMALIZATION: Final[dict[str, str]] = {
+    "absolute_paths": "<REPO> or <RUNTIME>",
+    "ansi_controls": "rejected",
+    "hostname": "<HOST>",
+    "runtime_timings": "not emitted by allowlisted commands",
+    "secret_signatures": "<REDACTED>",
+    "semantic_numbers": "preserved verbatim",
+}
+REPRODUCTION_CONTRACT: Final[dict[str, str]] = {
+    "check": CHECK_COMMAND,
+    "record": RECORD_COMMAND,
+    "render_without_execution": RENDER_COMMAND,
+}
+SAFETY_CONTRACT: Final[dict[str, object]] = {
+    "arbitrary_commands_accepted": False,
+    "evaluator_executed": False,
+    "journal_workspace": JOURNAL_WORKSPACE,
+    "policy_journal_workspace": (
+        "private temporary directory; removed by the fixed harness"
+    ),
+    "publication_run_executed": False,
+    "shell_used": False,
+    "synthetic_demo_data_only": True,
+}
+MANIFEST_FIELDS: Final = frozenset(
+    {"capture", "commands", "reproduction", "safety", "schema_version", "tool"}
+)
+CAPTURE_FIELDS: Final = frozenset(
+    {
+        "base_input_commit",
+        "base_input_commit_role",
+        "environment",
+        "interpreter",
+        "normalization",
+        "working_directory",
+    }
+)
+INTERPRETER_FIELDS: Final = frozenset({"implementation", "version"})
+COMMAND_FIELDS: Final = frozenset(
+    {
+        "argv",
+        "capture_id",
+        "description",
+        "exit_code",
+        "expected_exit_codes",
+        "host_dependent",
+        "host_note",
+        "sources",
+        "stderr",
+        "stdout",
+        "title",
+        "visual",
+    }
+)
+SOURCE_RECORD_FIELDS: Final = frozenset({"byte_count", "path", "sha256"})
+TOOL_FIELDS: Final = frozenset({"name", "source", "stdlib_only", "version"})
 
 BACKGROUND: Final = "#0B1220"
 PANEL: Final = "#101828"
@@ -100,7 +187,64 @@ class CaptureRecord:
     exit_code: int
 
 
+@dataclass(frozen=True, slots=True)
+class SourceFileSnapshot:
+    """One stable source identity captured around command execution."""
+
+    path: str
+    byte_count: int
+    sha256: str
+    mode: int
+
+
+@dataclass(frozen=True, slots=True)
+class CaptureSourceState:
+    """Clean HEAD and complete source snapshot for one recording attempt."""
+
+    commit: str
+    files: tuple[SourceFileSnapshot, ...]
+
+
+CORE_IMPORT_SOURCES: Final = (
+    "src/gworker/__init__.py",
+    "src/gworker/codec.py",
+    "src/gworker/domain.py",
+    "src/gworker/policy.py",
+    "src/gworker/storage.py",
+)
+PUBLICATION_IMPORT_SOURCES: Final = (
+    *CORE_IMPORT_SOURCES,
+    "src/gworker/evaluation.py",
+    "src/gworker/evidence.py",
+    "src/gworker/publication_codec.py",
+    "src/gworker/publication_runner.py",
+    "src/gworker/publication_state.py",
+    "src/gworker/reporting.py",
+    "src/gworker/resource_preflight.py",
+    "src/gworker/result_codec.py",
+)
+
+
 COMMANDS: Final[tuple[CommandSpec, ...]] = (
+    CommandSpec(
+        capture_id="durable-policy-workflow",
+        title="Durable decisions · recommend, review, reopen, verify",
+        description=(
+            "Real output from the fixed synthetic CLI/storage harness. Four "
+            "public CLI-handler calls reopen one disposable private journal, "
+            "preserve exact propensity, freeze one history edge, verify it, "
+            "and remove the workspace."
+        ),
+        argv=("python", "scripts/demo_policy_journal.py"),
+        expected_exit_codes=(0,),
+        transcript_name="durable-policy-workflow.txt",
+        visual_name="durable-policy-workflow.svg",
+        source_paths=(
+            "scripts/demo_policy_journal.py",
+            *CORE_IMPORT_SOURCES,
+            "src/gworker/cli.py",
+        ),
+    ),
     CommandSpec(
         capture_id="policy-demo",
         title="Adaptive policy · 12 verified reviews",
@@ -115,7 +259,7 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         visual_name="policy-demo.svg",
         source_paths=(
             "scripts/demo_policy.py",
-            "src/gworker/policy.py",
+            *CORE_IMPORT_SOURCES,
         ),
     ),
     CommandSpec(
@@ -140,9 +284,7 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         visual_name="journal-recovery.svg",
         source_paths=(
             "scripts/demo_journal.py",
-            "src/gworker/codec.py",
-            "src/gworker/domain.py",
-            "src/gworker/storage.py",
+            *CORE_IMPORT_SOURCES,
         ),
     ),
     CommandSpec(
@@ -159,9 +301,9 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         visual_name="protocol-inventory.svg",
         source_paths=(
             "scripts/protocol_inventory.py",
+            *CORE_IMPORT_SOURCES,
             "src/gworker/evaluation.py",
             "src/gworker/evidence.py",
-            "src/gworker/policy.py",
             "src/gworker/reporting.py",
         ),
     ),
@@ -181,10 +323,7 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         expected_exit_codes=(0,),
         transcript_name="publication-status.txt",
         visual_name="publication-status.svg",
-        source_paths=(
-            "src/gworker/publication_runner.py",
-            "src/gworker/publication_state.py",
-        ),
+        source_paths=PUBLICATION_IMPORT_SOURCES,
     ),
     CommandSpec(
         capture_id="publication-preflight",
@@ -203,10 +342,7 @@ COMMANDS: Final[tuple[CommandSpec, ...]] = (
         expected_exit_codes=(0, 2),
         transcript_name="publication-preflight.txt",
         visual_name="publication-preflight.svg",
-        source_paths=(
-            "src/gworker/publication_runner.py",
-            "src/gworker/resource_preflight.py",
-        ),
+        source_paths=PUBLICATION_IMPORT_SOURCES,
         host_dependent=True,
         host_note="CAPTURED ON THIS HOST · readiness may vary elsewhere",
     ),
@@ -229,6 +365,70 @@ def _file_sha256(path: Path) -> str:
         raise CaptureError(f"cannot read provenance source: {path.name}") from exc
 
 
+def _provenance_paths() -> tuple[str, ...]:
+    paths = {
+        "scripts/visuals/capture_terminal.py",
+        *(source for spec in COMMANDS for source in spec.source_paths),
+    }
+    return tuple(sorted(paths))
+
+
+def _snapshot_sources(commit: str) -> CaptureSourceState:
+    """Read every declared source once and reject an unstable file identity."""
+
+    if not HEX_COMMIT.fullmatch(commit):
+        raise CaptureError("source snapshot commit is malformed")
+    files: list[SourceFileSnapshot] = []
+    for relative in _provenance_paths():
+        relative_path = Path(relative)
+        if (
+            relative_path.is_absolute()
+            or ".." in relative_path.parts
+            or relative_path.as_posix() != relative
+        ):
+            raise CaptureError("provenance source path is unsafe")
+        path = ROOT / relative_path
+        try:
+            before = os.lstat(path)
+            if not stat.S_ISREG(before.st_mode):
+                raise CaptureError(
+                    f"provenance source is not a regular file: {relative}"
+                )
+            content = path.read_bytes()
+            after = os.lstat(path)
+        except CaptureError:
+            raise
+        except OSError as exc:
+            raise CaptureError(
+                f"cannot snapshot provenance source: {relative}"
+            ) from exc
+        identity_before = (
+            before.st_dev,
+            before.st_ino,
+            before.st_mode,
+            before.st_size,
+            before.st_mtime_ns,
+        )
+        identity_after = (
+            after.st_dev,
+            after.st_ino,
+            after.st_mode,
+            after.st_size,
+            after.st_mtime_ns,
+        )
+        if identity_after != identity_before or len(content) != before.st_size:
+            raise CaptureError(f"provenance source changed while reading: {relative}")
+        files.append(
+            SourceFileSnapshot(
+                path=relative,
+                byte_count=len(content),
+                sha256=_sha256(content),
+                mode=stat.S_IMODE(before.st_mode),
+            )
+        )
+    return CaptureSourceState(commit=commit, files=tuple(files))
+
+
 def _canonical_json(document: Mapping[str, object]) -> bytes:
     return (
         json.dumps(
@@ -240,6 +440,30 @@ def _canonical_json(document: Mapping[str, object]) -> bytes:
         )
         + "\n"
     ).encode("utf-8")
+
+
+def _json_exact(actual: object, expected: object) -> bool:
+    """Compare JSON values without Python's bool/int equality alias."""
+
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict) or set(actual) != set(expected):
+            return False
+        return all(
+            _json_exact(actual[key], expected_value)
+            for key, expected_value in expected.items()
+        )
+    if isinstance(expected, list):
+        return (
+            isinstance(actual, list)
+            and len(actual) == len(expected)
+            and all(
+                _json_exact(actual_value, expected_value)
+                for actual_value, expected_value in zip(actual, expected, strict=True)
+            )
+        )
+    return actual == expected
 
 
 def _git_directory() -> Path:
@@ -322,6 +546,70 @@ def _minimal_environment() -> dict[str, str]:
     }
 
 
+def _run_process(
+    argv: Sequence[str],
+    *,
+    executable: str,
+    environment: Mapping[str, str],
+    timeout: int,
+) -> subprocess.CompletedProcess[bytes]:
+    """Run one fixed process shape without a shell or inherited input."""
+
+    return subprocess.run(
+        argv,
+        cwd=ROOT,
+        env=environment,
+        executable=executable,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        check=False,
+        timeout=timeout,
+    )
+
+
+def _git_environment() -> dict[str, str]:
+    environment = _minimal_environment()
+    environment.update(
+        {
+            "GIT_ATTR_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": os.devnull,
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_NO_REPLACE_OBJECTS": "1",
+            "GIT_OPTIONAL_LOCKS": "0",
+            "GIT_TERMINAL_PROMPT": "0",
+        }
+    )
+    return environment
+
+
+def _require_clean_worktree() -> None:
+    try:
+        completed = _run_process(
+            GIT_STATUS_ARGV,
+            executable=GIT_EXECUTABLE,
+            environment=_git_environment(),
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise CaptureError("cannot verify a clean recording worktree") from exc
+    if completed.returncode != 0 or completed.stderr:
+        raise CaptureError("cannot verify a clean recording worktree")
+    if completed.stdout:
+        raise CaptureError("recording requires a clean committed worktree")
+
+
+def _capture_clean_source_state() -> CaptureSourceState:
+    """Bind a stable source snapshot between two clean-worktree observations."""
+
+    commit = _head_commit()
+    _require_clean_worktree()
+    state = _snapshot_sources(commit)
+    _require_clean_worktree()
+    if _head_commit() != commit:
+        raise CaptureError("repository HEAD changed while snapshotting sources")
+    return state
+
+
 def _scrub_output(content: bytes) -> bytes:
     try:
         text = content.decode("utf-8")
@@ -353,14 +641,10 @@ def _run_allowlisted(spec: CommandSpec) -> CaptureRecord:
         raise CaptureError("allowlisted command must use the pinned interpreter")
     if "run" in spec.argv or "run_experiment" in spec.argv:
         raise CaptureError("publication run and evaluator calls are forbidden")
-    completed = subprocess.run(
+    completed = _run_process(
         spec.argv,
-        cwd=ROOT,
-        env=_minimal_environment(),
         executable=sys.executable,
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        check=False,
+        environment=_minimal_environment(),
         timeout=120,
     )
     stdout = _scrub_output(completed.stdout)
@@ -519,9 +803,31 @@ def render_svg(spec: CommandSpec, record: CaptureRecord) -> bytes:
     return "\n".join(parts).encode("utf-8")
 
 
-def _source_records(paths: Sequence[str]) -> list[dict[str, object]]:
+def _source_records(
+    paths: Sequence[str],
+    source_state: CaptureSourceState | None = None,
+) -> list[dict[str, object]]:
+    snapshots = (
+        {snapshot.path: snapshot for snapshot in source_state.files}
+        if source_state is not None
+        else {}
+    )
     records = []
     for relative in sorted(set(paths)):
+        snapshot = snapshots.get(relative)
+        if source_state is not None:
+            if snapshot is None:
+                raise CaptureError(
+                    f"provenance source is absent from snapshot: {relative}"
+                )
+            records.append(
+                {
+                    "byte_count": snapshot.byte_count,
+                    "path": snapshot.path,
+                    "sha256": snapshot.sha256,
+                }
+            )
+            continue
         path = ROOT / relative
         if not path.is_file():
             raise CaptureError(f"provenance source is missing: {relative}")
@@ -548,7 +854,10 @@ def _manifest(
     visuals: Mapping[str, bytes],
     *,
     input_commit: str,
+    source_state: CaptureSourceState | None = None,
 ) -> dict[str, object]:
+    if source_state is not None and source_state.commit != input_commit:
+        raise CaptureError("manifest commit differs from captured source state")
     commands = []
     for spec in COMMANDS:
         record = records[spec.capture_id]
@@ -563,7 +872,7 @@ def _manifest(
                 "expected_exit_codes": list(spec.expected_exit_codes),
                 "host_dependent": spec.host_dependent,
                 "host_note": spec.host_note,
-                "sources": _source_records(spec.source_paths),
+                "sources": _source_records(spec.source_paths, source_state),
                 "stderr": {
                     "byte_count": len(record.stderr),
                     "sha256": _sha256(record.stderr),
@@ -577,58 +886,26 @@ def _manifest(
             }
         )
     tool_path = "scripts/visuals/capture_terminal.py"
+    tool_source = _source_records((tool_path,), source_state)[0]
     return {
         "capture": {
             "base_input_commit": input_commit,
-            "base_input_commit_role": (
-                "Git HEAD at record time; per-file hashes bind exact source bytes."
-            ),
-            "environment": {
-                "HOME": ".gworker/terminal-capture-runtime/home",
-                "LANG": "C",
-                "LC_ALL": "C",
-                "PYTHONHASHSEED": "0",
-                "PYTHONIOENCODING": "utf-8",
-                "PYTHONPATH": "src",
-                "TMPDIR": ".gworker/terminal-capture-runtime/tmp",
-                "TZ": "UTC",
-            },
+            "base_input_commit_role": BASE_INPUT_COMMIT_ROLE,
+            "environment": dict(CAPTURE_ENVIRONMENT),
             "interpreter": {
                 "implementation": platform.python_implementation(),
                 "version": platform.python_version(),
             },
-            "normalization": {
-                "absolute_paths": "<REPO> or <RUNTIME>",
-                "ansi_controls": "rejected",
-                "hostname": "<HOST>",
-                "runtime_timings": "not emitted by allowlisted commands",
-                "secret_signatures": "<REDACTED>",
-                "semantic_numbers": "preserved verbatim",
-            },
+            "normalization": dict(CAPTURE_NORMALIZATION),
             "working_directory": ".",
         },
         "commands": commands,
-        "reproduction": {
-            "check": CHECK_COMMAND,
-            "record": RECORD_COMMAND,
-            "render_without_execution": RENDER_COMMAND,
-        },
-        "safety": {
-            "arbitrary_commands_accepted": False,
-            "evaluator_executed": False,
-            "journal_workspace": JOURNAL_WORKSPACE,
-            "publication_run_executed": False,
-            "shell_used": False,
-            "synthetic_demo_data_only": True,
-        },
+        "reproduction": dict(REPRODUCTION_CONTRACT),
+        "safety": dict(SAFETY_CONTRACT),
         "schema_version": SCHEMA_VERSION,
         "tool": {
             "name": TOOL_NAME,
-            "source": {
-                "byte_count": (ROOT / tool_path).stat().st_size,
-                "path": tool_path,
-                "sha256": _file_sha256(ROOT / tool_path),
-            },
+            "source": tool_source,
             "stdlib_only": True,
             "version": TOOL_VERSION,
         },
@@ -659,13 +936,22 @@ def record_bundle(output_root: Path = TERMINAL_ROOT) -> dict[str, object]:
 
     if output_root != TERMINAL_ROOT:
         raise CaptureError("CLI recording target is fixed to the terminal bundle")
+    source_state = _capture_clean_source_state()
     records: dict[str, CaptureRecord] = {}
     for spec in COMMANDS:
         records[spec.capture_id] = _run_allowlisted(spec)
     visuals = {
         spec.capture_id: render_svg(spec, records[spec.capture_id]) for spec in COMMANDS
     }
-    manifest = _manifest(records, visuals, input_commit=_head_commit())
+    final_source_state = _capture_clean_source_state()
+    if final_source_state != source_state:
+        raise CaptureError("source state changed while recording terminal evidence")
+    manifest = _manifest(
+        records,
+        visuals,
+        input_commit=source_state.commit,
+        source_state=source_state,
+    )
     for spec in COMMANDS:
         _atomic_write(
             output_root / spec.transcript_name,
@@ -724,7 +1010,10 @@ def _record_from_manifest(
         stdout = (output_root / spec.transcript_name).read_bytes()
     except OSError as exc:
         raise CaptureError(f"{spec.capture_id} transcript is unavailable") from exc
-    if stderr_record != {"byte_count": 0, "sha256": EMPTY_SHA256}:
+    if not _json_exact(
+        stderr_record,
+        {"byte_count": 0, "sha256": EMPTY_SHA256},
+    ):
         raise CaptureError(f"{spec.capture_id} recorded stderr must be empty")
     return CaptureRecord(stdout=stdout, stderr=b"", exit_code=exit_code)
 
@@ -758,6 +1047,8 @@ def _validate_source_record(
     if not isinstance(record, dict):
         differences.append(f"{label}: malformed source record")
         return
+    if set(record) != SOURCE_RECORD_FIELDS:
+        differences.append(f"{label}: source record fields differ")
     path = record.get("path")
     expected_sha256 = record.get("sha256")
     expected_size = record.get("byte_count")
@@ -765,8 +1056,11 @@ def _validate_source_record(
         not isinstance(path, str)
         or Path(path).is_absolute()
         or ".." in Path(path).parts
+        or Path(path).as_posix() != path
         or not isinstance(expected_sha256, str)
+        or not HEX_SHA256.fullmatch(expected_sha256)
         or type(expected_size) is not int
+        or expected_size < 0
     ):
         differences.append(f"{label}: unsafe source record")
         return
@@ -831,6 +1125,8 @@ def check_bundle(output_root: Path = TERMINAL_ROOT) -> tuple[str, ...]:
         commands = _manifest_commands(manifest)
     except CaptureError as exc:
         return (str(exc),)
+    if set(manifest) != MANIFEST_FIELDS:
+        differences.append("manifest top-level fields differ")
     expected_names = {
         MANIFEST_NAME,
         *(spec.transcript_name for spec in COMMANDS),
@@ -856,29 +1152,56 @@ def check_bundle(output_root: Path = TERMINAL_ROOT) -> tuple[str, ...]:
     if list(commands) != [spec.capture_id for spec in COMMANDS]:
         differences.append("manifest command order or set differs")
     capture = manifest.get("capture")
-    if not isinstance(capture, dict) or not HEX_COMMIT.fullmatch(
-        str(capture.get("base_input_commit", ""))
-    ):
-        differences.append("manifest base input commit is malformed")
+    if not isinstance(capture, dict):
+        differences.append("manifest capture record is malformed")
+    else:
+        if set(capture) != CAPTURE_FIELDS:
+            differences.append("manifest capture fields differ")
+        commit = capture.get("base_input_commit")
+        if not isinstance(commit, str) or not HEX_COMMIT.fullmatch(commit):
+            differences.append("manifest base input commit is malformed")
+        if capture.get("base_input_commit_role") != BASE_INPUT_COMMIT_ROLE:
+            differences.append("manifest base input commit role differs")
+        if not _json_exact(capture.get("environment"), CAPTURE_ENVIRONMENT):
+            differences.append("manifest capture environment differs")
+        if not _json_exact(capture.get("normalization"), CAPTURE_NORMALIZATION):
+            differences.append("manifest capture normalization differs")
+        if capture.get("working_directory") != ".":
+            differences.append("manifest capture working directory differs")
+        interpreter = capture.get("interpreter")
+        if (
+            not isinstance(interpreter, dict)
+            or set(interpreter) != INTERPRETER_FIELDS
+            or interpreter.get("implementation") != "CPython"
+            or not isinstance(interpreter.get("version"), str)
+            or not CAPTURE_PYTHON_VERSION.fullmatch(interpreter["version"])
+        ):
+            differences.append("manifest capture interpreter is unsupported")
+    if not _json_exact(manifest.get("reproduction"), REPRODUCTION_CONTRACT):
+        differences.append("manifest reproduction contract differs")
     safety = manifest.get("safety")
-    expected_safety = {
-        "arbitrary_commands_accepted": False,
-        "evaluator_executed": False,
-        "journal_workspace": JOURNAL_WORKSPACE,
-        "publication_run_executed": False,
-        "shell_used": False,
-        "synthetic_demo_data_only": True,
-    }
-    if safety != expected_safety:
+    if not _json_exact(safety, SAFETY_CONTRACT):
         differences.append("manifest safety declaration differs")
     tool = manifest.get("tool")
     if not isinstance(tool, dict):
         differences.append("manifest tool record is malformed")
     else:
-        if tool.get("name") != TOOL_NAME or tool.get("version") != TOOL_VERSION:
+        if set(tool) != TOOL_FIELDS:
+            differences.append("manifest tool fields differ")
+        if (
+            tool.get("name") != TOOL_NAME
+            or tool.get("version") != TOOL_VERSION
+            or tool.get("stdlib_only") is not True
+        ):
             differences.append("manifest tool identity differs")
+        tool_source = tool.get("source")
+        if (
+            not isinstance(tool_source, dict)
+            or tool_source.get("path") != "scripts/visuals/capture_terminal.py"
+        ):
+            differences.append("manifest tool source path differs")
         _validate_source_record(
-            tool.get("source"),
+            tool_source,
             differences=differences,
             label="capture tool",
         )
@@ -888,9 +1211,20 @@ def check_bundle(output_root: Path = TERMINAL_ROOT) -> tuple[str, ...]:
     for spec in COMMANDS:
         raw = commands[spec.capture_id]
         prefix = spec.capture_id
-        if raw.get("argv") != list(spec.argv):
+        if set(raw) != COMMAND_FIELDS:
+            differences.append(f"{prefix}: manifest record fields differ")
+        if raw.get("capture_id") != spec.capture_id:
+            differences.append(f"{prefix}: capture identifier differs")
+        if raw.get("title") != spec.title:
+            differences.append(f"{prefix}: title differs from allowlist")
+        if raw.get("description") != spec.description:
+            differences.append(f"{prefix}: description differs from allowlist")
+        if not _json_exact(raw.get("argv"), list(spec.argv)):
             differences.append(f"{prefix}: argv differs from allowlist")
-        if raw.get("expected_exit_codes") != list(spec.expected_exit_codes):
+        if not _json_exact(
+            raw.get("expected_exit_codes"),
+            list(spec.expected_exit_codes),
+        ):
             differences.append(f"{prefix}: expected exit codes differ")
         if raw.get("host_dependent") is not spec.host_dependent:
             differences.append(f"{prefix}: host-dependency flag differs")
@@ -926,7 +1260,7 @@ def check_bundle(output_root: Path = TERMINAL_ROOT) -> tuple[str, ...]:
             f"docs/visuals/terminal/{spec.transcript_name}",
             record.stdout,
         )
-        if transcript_record != expected_transcript:
+        if not _json_exact(transcript_record, expected_transcript):
             differences.append(f"{prefix}: transcript hash or size differs")
         try:
             sanitized = _scrub_output(record.stdout)
@@ -942,9 +1276,12 @@ def check_bundle(output_root: Path = TERMINAL_ROOT) -> tuple[str, ...]:
             differences.append(f"{prefix}: SVG is missing")
             continue
         visual_record = raw.get("visual")
-        if visual_record != _output_record(
-            f"docs/visuals/terminal/{spec.visual_name}",
-            actual_visual,
+        if not _json_exact(
+            visual_record,
+            _output_record(
+                f"docs/visuals/terminal/{spec.visual_name}",
+                actual_visual,
+            ),
         ):
             differences.append(f"{prefix}: SVG hash or size differs")
         if actual_visual != expected_visual:

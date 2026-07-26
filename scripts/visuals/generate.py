@@ -1,8 +1,9 @@
 """Generate deterministic SVG evidence from the implemented GWorker APIs.
 
-The six visuals in this bundle are deliberately non-result evidence.  They
-exercise the event reducer, policy, guardrails, publication state, and locked
-protocol inventory without entering the held-out evaluation namespace.
+The seven visuals in this bundle are deliberately non-result evidence.  They
+exercise the event reducer, durable policy lineage, policy guardrails,
+publication state, and locked protocol inventory without entering the held-out
+evaluation namespace.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Final
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, UUID, uuid5
 from xml.sax.saxutils import escape
 
 from gworker.domain import (
@@ -55,15 +56,20 @@ from gworker.policy import (
     TaskKind,
 )
 from gworker.publication_state import PublicationStage
+from gworker.storage import PolicyJournalVerification, SQLiteEventStore
 
 ROOT: Final = Path(__file__).resolve().parents[2]
 VISUAL_ROOT: Final = ROOT / "docs" / "visuals"
 GENERATED_DIRECTORY_NAME: Final = "generated"
 MANIFEST_NAME: Final = "manifest.json"
 TOOL_NAME: Final = "gworker-visual-evidence"
-TOOL_VERSION: Final = "1"
+TOOL_VERSION: Final = "2"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
 VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
+DURABLE_FIRST_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9101")
+DURABLE_SECOND_DECISION_ID: Final = UUID("018f4f69-e7a2-7f84-8c2d-9f531c4e9102")
+DURABLE_FIRST_SEED: Final = 20_260_725
+DURABLE_SECOND_SEED: Final = 20_260_726
 
 # The Okabe-Ito palette remains distinguishable for common color-vision
 # deficiencies. Every encoded value also has a direct text label.
@@ -83,10 +89,14 @@ PURPLE: Final = "#CC79A7"
 INPUT_FILES: Final = (
     "README.md",
     "docs/architecture.md",
+    "docs/decision-lineage.md",
     "docs/evaluation-protocol.md",
     "docs/publication-evidence.md",
     "pyproject.toml",
+    "scripts/demo_policy_journal.py",
     "scripts/visuals/generate.py",
+    "src/gworker/__init__.py",
+    "src/gworker/cli.py",
     "src/gworker/codec.py",
     "src/gworker/domain.py",
     "src/gworker/evaluation.py",
@@ -130,6 +140,16 @@ class PolicyScenario:
     reviewed_history: tuple[ReviewedDecision, ...]
     recommendation: Recommendation
     choices_minutes: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DurableDecisionLineage:
+    """One fixed recommend-review-reopen lineage from the public store."""
+
+    first: Recommendation
+    review: ReviewedDecision
+    second: Recommendation
+    verification: PolicyJournalVerification
 
 
 @dataclass(frozen=True, slots=True)
@@ -438,6 +458,96 @@ def build_policy_scenario() -> PolicyScenario:
         reviewed_history=tuple(history),
         recommendation=final_recommendation,
         choices_minutes=tuple(choices),
+    )
+
+
+def build_durable_decision_lineage() -> DurableDecisionLineage:
+    """Exercise fixed durable policy lineage through the public storage API."""
+
+    policy = HierarchicalSoftmaxUCB()
+    first_context = FocusContext(
+        task_kind=TaskKind.DEEP_WORK,
+        energy=EnergyLevel.MEDIUM,
+        available_seconds=3_600,
+    )
+    with tempfile.TemporaryDirectory(
+        prefix="gworker-visual-policy-lineage-"
+    ) as temporary:
+        database = Path(temporary) / "events.sqlite3"
+        store = SQLiteEventStore(database)
+        first = store.recommend(
+            policy,
+            first_context,
+            decision_id=DURABLE_FIRST_DECISION_ID,
+            rng_seed=DURABLE_FIRST_SEED,
+        )
+        review = store.record_review(
+            policy,
+            first.decision_id,
+            fit=DurationFit.JUST_RIGHT,
+            objective_completed=True,
+        )
+
+        reopened = SQLiteEventStore(database)
+        second = reopened.recommend(
+            policy,
+            FocusContext(
+                task_kind=TaskKind.DEEP_WORK,
+                energy=EnergyLevel.MEDIUM,
+                available_seconds=3_600,
+                previous_focus_seconds=first.template.focus_seconds,
+            ),
+            decision_id=DURABLE_SECOND_DECISION_ID,
+            rng_seed=DURABLE_SECOND_SEED,
+        )
+
+        verification_store = SQLiteEventStore(database)
+        journal_verification = verification_store.verify()
+        verification = verification_store.verify_policy_history(policy)
+
+    if (
+        first.decision_id != DURABLE_FIRST_DECISION_ID
+        or first.decision_sequence != 1
+        or first.template.template_id != "focus-40"
+        or first.propensity.hex() != "0x1.0000000000000p-2"
+    ):
+        raise RuntimeError("first durable policy decision drifted")
+    if (
+        review.decision_id != first.decision_id
+        or review.decision_sequence != first.decision_sequence
+        or review.propensity.hex() != first.propensity.hex()
+        or review.fit is not DurationFit.JUST_RIGHT
+        or not review.objective_completed
+    ):
+        raise RuntimeError("durable policy review lost recommendation provenance")
+    if (
+        second.decision_id != DURABLE_SECOND_DECISION_ID
+        or second.decision_sequence != 2
+        or second.template.template_id != "focus-25"
+        or second.propensity.hex() != "0x1.1e5ae1020930fp-2"
+        or second.evidence_count != 1
+    ):
+        raise RuntimeError("second durable policy decision drifted")
+    if (
+        first.policy_id != policy.policy_id
+        or review.policy_id != policy.policy_id
+        or second.policy_id != policy.policy_id
+        or verification.policy_id != policy.policy_id
+    ):
+        raise RuntimeError("durable policy fingerprint drifted")
+    if (
+        verification.decision_count,
+        verification.review_count,
+        verification.history_edge_count,
+        verification.sqlite_check,
+        journal_verification.sqlite_check,
+    ) != (2, 1, 1, "ok", "ok"):
+        raise RuntimeError("durable policy replay counts drifted")
+    return DurableDecisionLineage(
+        first=first,
+        review=review,
+        second=second,
+        verification=verification,
     )
 
 
@@ -999,13 +1109,237 @@ def _architecture_box(
     )
 
 
+def _render_durable_decision_lineage() -> RenderedVisual:
+    scenario = build_durable_decision_lineage()
+    first = scenario.first
+    review = scenario.review
+    second = scenario.second
+    verification = scenario.verification
+    title = "Durable recommendations retain exact review and replay lineage"
+    description = (
+        "A source-derived fixed workflow uses the public SQLiteEventStore on a "
+        "disposable private journal: recommend D1, record one explicit review, "
+        "reopen for D2, then reopen and verify two decisions, one review, one "
+        "history edge, the exact policy fingerprint, and SQLite integrity."
+    )
+    body = [
+        _text(
+            52,
+            50,
+            "DURABLE DECISION LINEAGE · REAL PUBLIC STORAGE API",
+            size=14,
+            weight=700,
+            fill=PURPLE,
+        ),
+        _text(52, 86, title, size=27, weight=700),
+        _text(
+            52,
+            116,
+            "Fixed synthetic context · every value below is recomputed from source.",
+            size=15,
+            fill=GRAY,
+        ),
+        _rect(52, 140, 1296, 52, fill="#FBF7FC", stroke=PURPLE),
+        _text(
+            72,
+            173,
+            f"Exact policy fingerprint: {verification.policy_id}",
+            size=15,
+            weight=700,
+            fill=PURPLE,
+            family="monospace",
+        ),
+    ]
+    _architecture_box(
+        body,
+        x=52,
+        y=224,
+        width=230,
+        height=154,
+        title="D1 · RECOMMEND",
+        lines=(
+            f"sequence {first.decision_sequence} · {first.template.template_id}",
+            f"seed {DURABLE_FIRST_SEED:,}",
+            f"p = {first.propensity.hex()}",
+        ),
+        color=BLUE,
+    )
+    _architecture_box(
+        body,
+        x=306,
+        y=224,
+        width=230,
+        height=154,
+        title="EXPLICIT REVIEW",
+        lines=(
+            f"fit = {review.fit.value}",
+            "objective completed = true",
+            "exact D1 propensity preserved",
+        ),
+        color=PURPLE,
+    )
+    _architecture_box(
+        body,
+        x=560,
+        y=224,
+        width=138,
+        height=154,
+        title="REOPEN",
+        lines=("new store", "same file", "path omitted"),
+        color=GREEN,
+    )
+    _architecture_box(
+        body,
+        x=722,
+        y=224,
+        width=230,
+        height=154,
+        title="D2 · RECOMMEND",
+        lines=(
+            f"sequence {second.decision_sequence} · {second.template.template_id}",
+            f"history evidence = {second.evidence_count}",
+            f"p = {second.propensity.hex()}",
+        ),
+        color=BLUE,
+    )
+    _architecture_box(
+        body,
+        x=976,
+        y=224,
+        width=372,
+        height=154,
+        title="REOPEN + VERIFY",
+        lines=(
+            "exact policy replay",
+            (
+                f"decisions / reviews = {verification.decision_count} / "
+                f"{verification.review_count}"
+            ),
+            f"history edges = {verification.history_edge_count}",
+            f"SQLite quick_check = {verification.sqlite_check}",
+        ),
+        color=GREEN,
+    )
+    body.extend(
+        [
+            _line(282, 301, 302, 301, arrow=True),
+            _line(536, 301, 556, 301, arrow=True),
+            _line(698, 301, 718, 301, arrow=True),
+            _line(952, 301, 972, 301, arrow=True),
+            _rect(52, 414, 1296, 252, fill=PANEL, radius=18),
+            _text(
+                72,
+                446,
+                "THREE APPEND-ONLY POLICY RELATIONS",
+                size=13,
+                weight=800,
+                fill=GREEN,
+            ),
+        ]
+    )
+    _architecture_box(
+        body,
+        x=72,
+        y=466,
+        width=486,
+        height=170,
+        title="policy_decisions",
+        lines=(
+            (
+                f"D1 · seq 1 · {first.template.template_id} · "
+                f"seed {DURABLE_FIRST_SEED:,}"
+            ),
+            (
+                f"D2 · seq 2 · {second.template.template_id} · "
+                f"seed {DURABLE_SECOND_SEED:,}"
+            ),
+            "canonical hexadecimal propensity + history digest",
+        ),
+        color=BLUE,
+    )
+    _architecture_box(
+        body,
+        x=582,
+        y=466,
+        width=330,
+        height=170,
+        title="policy_reviews",
+        lines=(
+            "D1 · fit = just_right",
+            "objective completed = true",
+            "caller supplies no propensity",
+        ),
+        color=PURPLE,
+    )
+    _architecture_box(
+        body,
+        x=936,
+        y=466,
+        width=392,
+        height=170,
+        title="policy_decision_history",
+        lines=(
+            "D2 · position 0 → reviewed D1",
+            "count + SHA-256 bind order",
+            "no future or orphaned review",
+        ),
+        color=GREEN,
+    )
+    metrics = (
+        ("2", "DECISIONS REPLAYED", BLUE),
+        ("1", "REVIEW REPLAYED", PURPLE),
+        ("1", "HISTORY EDGE VERIFIED", GREEN),
+        ("OK", "SQLITE QUICK_CHECK", ORANGE),
+    )
+    for index, (value, label, color) in enumerate(metrics):
+        x = 52 + index * 324
+        body.extend(
+            [
+                _rect(x, 690, 300, 92, fill=WHITE, stroke=color, stroke_width=2),
+                _text(x + 22, 734, value, size=30, weight=800, fill=color),
+                _text(x + 82, 734, label, size=13, weight=750, fill=GRAY),
+            ]
+        )
+    body.extend(
+        [
+            _rect(52, 806, 1296, 78, fill="#F7FBFF", stroke=SKY),
+            _text(72, 836, "PRIVACY / CLAIM BOUNDARY", size=12, weight=800, fill=BLUE),
+            _text(
+                72,
+                861,
+                (
+                    "Disposable private journal removed after verification · "
+                    "no host path rendered · no locked evaluator or publication run"
+                ),
+                size=14,
+                weight=600,
+            ),
+        ]
+    )
+    content = _svg_document(
+        stem="durable-decision-lineage",
+        title=title,
+        description=description,
+        width=1400,
+        height=920,
+        body=body,
+    )
+    return RenderedVisual(
+        "durable-decision-lineage.svg",
+        title,
+        description,
+        content,
+    )
+
+
 def _render_architecture() -> RenderedVisual:
     title = "Current architecture separates private journals from publication"
     description = (
         "A source-backed architecture map shows explicit caller inputs, the "
         "domain and policy cores, private canonical storage, and the locked "
-        "synthetic publication path. Dashed boxes directly mark journal-policy "
-        "integration and rendering as next work."
+        "synthetic publication path. No private journal data enters publication. "
+        "Durable journal-policy linkage and its CLI are current; the dashed box "
+        "marks rendering and sealing as next work."
     )
     body = [
         _text(
@@ -1085,10 +1419,19 @@ def _render_architecture() -> RenderedVisual:
         y=554,
         width=244,
         height=104,
-        title="Journal linkage · NEXT",
-        lines=("global decision identity", "verified propensity origin"),
-        color=GRAY,
-        dashed=True,
+        title="Journal linkage + CLI",
+        lines=("recommend + explicit review", "seeded replay + verify"),
+        color=PURPLE,
+    )
+    body.extend(
+        [
+            _line(350, 516, 350, 550, arrow=True),
+            (
+                '<path d="M402 606 H470 V350 H798 V340" '
+                f'fill="none" stroke="{GRAY}" stroke-width="2" '
+                'marker-end="url(#arrow)"/>'
+            ),
+        ]
     )
     _architecture_box(
         body,
@@ -1107,7 +1450,7 @@ def _render_architecture() -> RenderedVisual:
         width=176,
         height=132,
         title="SQLite journal",
-        lines=("WAL + FULL sync", "transactional append", "replay verification"),
+        lines=("events + decisions", "reviews + history edges", "transactional replay"),
         color=GREEN,
     )
     body.append(_line(686, 270, 706, 270, arrow=True))
@@ -1181,7 +1524,6 @@ def _render_architecture() -> RenderedVisual:
     body.extend(
         [
             _line(438, 270, 506, 270, arrow=True),
-            _line(886, 270, 954, 270, arrow=True),
             _line(1246, 346, 1046, 384, arrow=True),
             _line(1246, 530, 1180, 562, arrow=True, dash="7 5"),
             _rect(38, 730, 1324, 86, fill=PANEL),
@@ -1192,8 +1534,9 @@ def _render_architecture() -> RenderedVisual:
                 58,
                 790,
                 (
-                    "Policy never reads objective text · visuals use synthetic "
-                    "fixtures · no employee monitoring or causal productivity claim"
+                    "Policy omits objective text · private journal has no "
+                    "publication path · synthetic visuals · no monitoring or "
+                    "causal claim"
                 ),
                 size=15,
                 weight=600,
@@ -1585,6 +1928,7 @@ def render_visuals() -> tuple[RenderedVisual, ...]:
 
     visuals = (
         _render_architecture(),
+        _render_durable_decision_lineage(),
         _render_event_replay(),
         _render_guardrail_matrix(),
         _render_protocol_inventory(),

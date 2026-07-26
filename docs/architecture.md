@@ -11,7 +11,10 @@ synthetic fixtures only.
 
 Solid boxes are implemented in the current source. Dashed boxes are future
 integration work. The publication side is a control flow, not a result: the
-locked evaluation has not run and no locked outcome artifact exists.
+locked evaluation has not run and no locked outcome artifact exists. The
+private journal has no data-flow edge into the synthetic publication path;
+publication consumes frozen source/configuration and synthetic evaluation
+artifacts, never a user's local work history.
 
 ## Component contracts
 
@@ -21,10 +24,12 @@ locked evaluation has not run and no locked outcome artifact exists.
 | Canonical event codec | One known domain-event variant | Versioned, byte-stable JSON with exact keys | Rejects duplicate/unknown fields, unknown event types, invalid values, and non-canonical structure | [`codec.py`](../src/gworker/codec.py#L71) |
 | SQLite event store | A private journal path and one next event | Transactional append, unique aggregate revision, full replay, and integrity summary | Linux/POSIX path, ownership, permission, file-identity, schema, codec, and replay checks fail closed | [`storage.py`](../src/gworker/storage.py#L95) |
 | Duration policy | Explicit coarse context, an ordered bounded review tail, and caller RNG | Feasible templates, per-arm score decomposition, sampled action, exact propensity, evidence bucket, and reason codes | Rejects foreign policy IDs, duplicate/non-increasing decisions, unknown templates, invalid probability structure, and impossible histories | [`policy.py`](../src/gworker/policy.py#L387) |
+| Durable policy lineage | Current policy fingerprint, bounded context, caller UUID/seed, and closed review fields | Append-only decisions, reviews, exact ordered history edges, canonical propensities, and deterministic replay | Rejects stale/forged policy objects, sequence or schema damage, orphan/duplicate reviews, altered history, and any recomputation mismatch | [`storage.py`](../src/gworker/storage.py#L1218), [`decision-lineage.md`](decision-lineage.md) |
+| Policy CLI | Explicit `recommend`, `review`, or `verify` arguments and an optional private journal path | Human or canonical JSON output without objective text or journal paths | Invalid arguments are not echoed; operational errors use stable categories; verification is explicitly policy-scoped | [`cli.py`](../src/gworker/cli.py#L89) |
 | Synthetic evaluator | An explicit experiment configuration; locked `eval` additionally requires the private consumed permit | Balanced synthetic environments, paired potential outcomes, strategy summaries, traces, and exact cardinality validation | Any missing scenario, invariant breach, non-finite probability, invalid guardrail choice, or denominator mismatch invalidates the whole run | [`evaluation.py`](../src/gworker/evaluation.py#L2818) |
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
 | Publication state and runner | Clean committed source, a capacity assessment, and the fixed run key | Append-only state records, one evaluation permit, immutable artifacts, resumable materialization, and path-free status | Preflight failure does not claim; reopening `EVALUATING` burns the run; existing artifact mismatch fails; there is no force/reset/retry flag | [`publication_state.py`](../src/gworker/publication_state.py#L1240), [`publication_runner.py`](../src/gworker/publication_runner.py#L2051), [`resource_preflight.py`](../src/gworker/resource_preflight.py#L1672) |
-| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Six source-derived diagrams plus five sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py#L1696), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py#L825) |
+| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Seven source-derived diagrams plus six sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
 
 ## Event reduction and durable journal
 
@@ -62,15 +67,35 @@ objective text.
    uncertainty bonus, and total score.
 4. Softmax sampling retains the configured probability floor and returns the
    chosen action with its exact propensity and reason codes.
-5. `Recommendation.review()` binds explicit fit/completion feedback to that
-   recommendation for the next history.
+5. `SQLiteEventStore.recommend()` commits the UUID, database-owned sequence,
+   policy fingerprint, seed, context, selected action, exact propensity, and
+   every ordered history edge in one transaction.
+6. Apart from the exact policy object, `record_review()` accepts only that
+   decision UUID and closed feedback, recomputes the recommendation, and binds
+   the review to the preserved action and propensity.
 
 The [policy demo](../scripts/demo_policy.py) runs twelve sequential
 recommendation/review calls and prints the thirteenth recommendation. Its
 `focus-40` choice is fixture behavior, not evidence of an optimal duration or a
-human outcome. Persistently linking recommendations and reviews in the journal
-is still `NEXT`; directly constructing a `ReviewedDecision` does not prove
-propensity origin.
+human outcome. The separate
+[durable workflow](visuals/terminal/durable-policy-workflow.txt) makes two
+decisions through the public CLI handler, closes/reopens the store on every
+command, records one explicit review, and verifies a `2 / 1 / 1`
+decision/review/history-edge lineage.
+
+Opening the journal validates the exact schema definition. Policy replay uses
+three bulk reads to build an immutable snapshot, reconstructs the canonical
+policy from the supplied configuration, requires its fingerprint to match the
+stored rows, and recomputes every decision for that policy from context, seed,
+and ordered history. The same verification transaction also enforces
+database-wide relational invariants. Its reported decision/review/history
+counts are policy-scoped; it does not imply that rows for another policy
+fingerprint were recomputed.
+
+![Durable decision lineage after reopen](visuals/generated/durable-decision-lineage.svg)
+
+There is deliberately no session-event-to-policy-decision foreign key yet.
+That optional linkage is `NEXT`; objective text remains outside the policy log.
 
 ## Locked evaluation and publication
 
@@ -110,10 +135,11 @@ It emits accessible self-contained SVG and a
 and output checksum. `--check` generates a clean temporary bundle and requires
 byte equality.
 
-The terminal recorder has five literal allowlisted command vectors: policy
-demo, journal demo, protocol inventory, publication status, and publication
-preflight. Recording normalizes locale, timezone, hash seed, paths, hostnames,
-and known secret signatures; arbitrary commands are not accepted. Its
+The terminal recorder has six literal allowlisted command vectors: durable
+policy workflow, policy demo, journal demo, protocol inventory, publication
+status, and publication preflight. Recording normalizes locale, timezone, hash
+seed, paths, hostnames, and known secret signatures; arbitrary commands are not
+accepted. Its
 [terminal manifest](visuals/terminal/manifest.json) binds source bytes, command
 arguments, sanitized transcripts, exit codes, and SVG checksums. `check` is
 read-only and does not rerun the commands. The preflight capture is explicitly
@@ -153,8 +179,8 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 
 | Current | `NEXT` |
 | --- | --- |
-| Typed events, pure replay, canonical codec, private SQLite journal | Journal-backed recommendation/review identity and an end-user CLI |
-| Explainable bounded policy with explicit reviews and propensities | Offline replay evaluation after propensity provenance exists |
+| Typed events, pure replay, canonical codec, and a private SQLite journal | Optional session-event-to-policy-decision identity |
+| Journal-backed recommendation/review identity, exact propensities, and a path-private CLI | Offline replay evaluation with propensity-provenance diagnostics |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |
-| Three demos, six source-derived diagrams, and five genuine terminal captures | A pinned short terminal demo after the end-user CLI exists |
+| Four demos, seven source-derived diagrams, and six genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |

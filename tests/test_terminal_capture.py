@@ -144,6 +144,12 @@ def fake_records() -> dict[str, capture_terminal.CaptureRecord]:
     return records
 
 
+def fake_source_state(
+    commit: str = "a" * 40,
+) -> capture_terminal.CaptureSourceState:
+    return capture_terminal._snapshot_sources(commit)
+
+
 def write_test_bundle(root: Path) -> dict[str, object]:
     records = fake_records()
     visuals = {
@@ -175,6 +181,10 @@ class CommandAllowlistTests(unittest.TestCase):
         self.assertEqual(
             {spec.capture_id: spec.argv for spec in capture_terminal.COMMANDS},
             {
+                "durable-policy-workflow": (
+                    "python",
+                    "scripts/demo_policy_journal.py",
+                ),
                 "policy-demo": ("python", "scripts/demo_policy.py"),
                 "journal-recovery": (
                     "python",
@@ -207,6 +217,29 @@ class CommandAllowlistTests(unittest.TestCase):
             capture_terminal.COMMAND_BY_ID,
             {spec.capture_id: spec for spec in capture_terminal.COMMANDS},
         )
+        self.assertEqual(
+            set(capture_terminal.COMMAND_BY_ID["durable-policy-workflow"].source_paths),
+            {
+                "scripts/demo_policy_journal.py",
+                "src/gworker/__init__.py",
+                "src/gworker/cli.py",
+                "src/gworker/codec.py",
+                "src/gworker/domain.py",
+                "src/gworker/policy.py",
+                "src/gworker/storage.py",
+            },
+        )
+        for capture_id in capture_terminal.COMMAND_BY_ID:
+            self.assertTrue(
+                set(capture_terminal.CORE_IMPORT_SOURCES).issubset(
+                    capture_terminal.COMMAND_BY_ID[capture_id].source_paths
+                )
+            )
+        for capture_id in ("publication-status", "publication-preflight"):
+            self.assertEqual(
+                set(capture_terminal.COMMAND_BY_ID[capture_id].source_paths),
+                set(capture_terminal.PUBLICATION_IMPORT_SOURCES),
+            )
         for spec in capture_terminal.COMMANDS:
             self.assertNotIn("run", spec.argv)
             self.assertNotIn("run_experiment", spec.argv)
@@ -348,6 +381,11 @@ class CommandAllowlistTests(unittest.TestCase):
         with (
             patch.object(
                 capture_terminal,
+                "_capture_clean_source_state",
+                return_value=fake_source_state(),
+            ),
+            patch.object(
+                capture_terminal,
                 "_run_allowlisted",
                 side_effect=side_effects,
             ) as run,
@@ -364,6 +402,75 @@ class CommandAllowlistTests(unittest.TestCase):
             [call(spec) for spec in capture_terminal.COMMANDS],
         )
         write.assert_not_called()
+
+    def test_record_rejects_a_source_change_before_any_write(self) -> None:
+        initial = fake_source_state()
+        original = initial.files[0]
+        changed = capture_terminal.CaptureSourceState(
+            commit=initial.commit,
+            files=(
+                capture_terminal.SourceFileSnapshot(
+                    path=original.path,
+                    byte_count=original.byte_count,
+                    sha256="f" * 64,
+                    mode=original.mode,
+                ),
+                *initial.files[1:],
+            ),
+        )
+        with (
+            patch.object(
+                capture_terminal,
+                "_capture_clean_source_state",
+                side_effect=(initial, changed),
+            ),
+            patch.object(
+                capture_terminal,
+                "_run_allowlisted",
+                side_effect=tuple(fake_records().values()),
+            ),
+            patch.object(capture_terminal, "_atomic_write") as write,
+            self.assertRaisesRegex(
+                capture_terminal.CaptureError,
+                "source state changed",
+            ),
+        ):
+            capture_terminal.record_bundle()
+
+        write.assert_not_called()
+
+    def test_record_manifest_uses_the_bracketed_source_snapshot(self) -> None:
+        source_state = fake_source_state()
+        with (
+            patch.object(
+                capture_terminal,
+                "_capture_clean_source_state",
+                side_effect=(source_state, source_state),
+            ) as capture_state,
+            patch.object(
+                capture_terminal,
+                "_run_allowlisted",
+                side_effect=tuple(fake_records().values()),
+            ),
+            patch.object(capture_terminal, "_atomic_write"),
+        ):
+            manifest = capture_terminal.record_bundle()
+
+        self.assertEqual(capture_state.call_count, 2)
+        capture = cast(dict[str, object], manifest["capture"])
+        self.assertEqual(capture["base_input_commit"], source_state.commit)
+        command_records = cast(list[dict[str, object]], manifest["commands"])
+        observed = {
+            cast(str, source["path"]): cast(str, source["sha256"])
+            for command in command_records
+            for source in cast(list[dict[str, object]], command["sources"])
+        }
+        expected = {
+            snapshot.path: snapshot.sha256
+            for snapshot in source_state.files
+            if snapshot.path != "scripts/visuals/capture_terminal.py"
+        }
+        self.assertEqual(observed, expected)
 
     def test_cli_has_no_arbitrary_command_or_output_path_surface(self) -> None:
         parser = capture_terminal._parser()
@@ -458,6 +565,105 @@ class EnvironmentAndSanitizationTests(unittest.TestCase):
             self.assertEqual(location.stat().st_mode & 0o777, 0o700)
         self.assertNotIn("AWS_SECRET_ACCESS_KEY", environment)
         self.assertNotIn("GH_TOKEN", environment)
+
+    def test_clean_worktree_check_uses_fixed_git_controls(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=capture_terminal.GIT_STATUS_ARGV,
+            returncode=0,
+            stdout=b"",
+            stderr=b"",
+        )
+        with patch.object(subprocess, "run", return_value=completed) as run:
+            capture_terminal._require_clean_worktree()
+
+        arguments = run.call_args
+        self.assertEqual(arguments.args, (capture_terminal.GIT_STATUS_ARGV,))
+        self.assertEqual(arguments.kwargs["cwd"], capture_terminal.ROOT)
+        self.assertEqual(
+            arguments.kwargs["executable"],
+            capture_terminal.GIT_EXECUTABLE,
+        )
+        self.assertEqual(arguments.kwargs["stdin"], subprocess.DEVNULL)
+        self.assertTrue(arguments.kwargs["capture_output"])
+        self.assertFalse(arguments.kwargs["check"])
+        self.assertEqual(arguments.kwargs["timeout"], 30)
+        environment = cast(dict[str, str], arguments.kwargs["env"])
+        self.assertEqual(environment["GIT_CONFIG_GLOBAL"], os.devnull)
+        self.assertEqual(environment["GIT_CONFIG_NOSYSTEM"], "1")
+        self.assertEqual(environment["GIT_OPTIONAL_LOCKS"], "0")
+        self.assertNotIn("GH_TOKEN", environment)
+
+    def test_dirty_or_unverifiable_worktree_fails_without_path_leakage(self) -> None:
+        cases = (
+            subprocess.CompletedProcess(
+                capture_terminal.GIT_STATUS_ARGV,
+                0,
+                b"?? private-name\n",
+                b"",
+            ),
+            subprocess.CompletedProcess(
+                capture_terminal.GIT_STATUS_ARGV,
+                1,
+                b"",
+                b"/home/private/repository\n",
+            ),
+        )
+        for completed in cases:
+            with (
+                self.subTest(returncode=completed.returncode),
+                patch.object(
+                    capture_terminal,
+                    "_run_process",
+                    return_value=completed,
+                ),
+                self.assertRaises(capture_terminal.CaptureError) as raised,
+            ):
+                capture_terminal._require_clean_worktree()
+            self.assertNotIn("private-name", str(raised.exception))
+            self.assertNotIn("/home/private", str(raised.exception))
+
+    def test_source_snapshot_is_bracketed_by_clean_checks_and_stable_head(
+        self,
+    ) -> None:
+        expected = fake_source_state()
+        with (
+            patch.object(
+                capture_terminal,
+                "_head_commit",
+                side_effect=(expected.commit, expected.commit),
+            ) as head,
+            patch.object(capture_terminal, "_require_clean_worktree") as clean,
+            patch.object(
+                capture_terminal,
+                "_snapshot_sources",
+                return_value=expected,
+            ) as snapshot,
+        ):
+            observed = capture_terminal._capture_clean_source_state()
+
+        self.assertEqual(observed, expected)
+        self.assertEqual(head.call_count, 2)
+        self.assertEqual(clean.call_count, 2)
+        snapshot.assert_called_once_with(expected.commit)
+
+        with (
+            patch.object(
+                capture_terminal,
+                "_head_commit",
+                side_effect=(expected.commit, "b" * 40),
+            ),
+            patch.object(capture_terminal, "_require_clean_worktree"),
+            patch.object(
+                capture_terminal,
+                "_snapshot_sources",
+                return_value=expected,
+            ),
+            self.assertRaisesRegex(
+                capture_terminal.CaptureError,
+                "HEAD changed",
+            ),
+        ):
+            capture_terminal._capture_clean_source_state()
 
     def test_scrubber_removes_host_paths_hostname_and_secret_signatures(
         self,
@@ -633,6 +839,9 @@ class ManifestAndCheckTests(unittest.TestCase):
                 "arbitrary_commands_accepted": False,
                 "evaluator_executed": False,
                 "journal_workspace": capture_terminal.JOURNAL_WORKSPACE,
+                "policy_journal_workspace": (
+                    "private temporary directory; removed by the fixed harness"
+                ),
                 "publication_run_executed": False,
                 "shell_used": False,
                 "synthetic_demo_data_only": True,
@@ -725,6 +934,106 @@ class ManifestAndCheckTests(unittest.TestCase):
                 capture_terminal.check_bundle(root),
             )
 
+    def test_check_rejects_tampered_manifest_claims_and_fields(self) -> None:
+        cases = (
+            ("top-level", "manifest top-level fields differ"),
+            ("commit-role", "manifest base input commit role differs"),
+            ("environment", "manifest capture environment differs"),
+            ("normalization", "manifest capture normalization differs"),
+            ("working-directory", "manifest capture working directory differs"),
+            ("interpreter", "manifest capture interpreter is unsupported"),
+            ("reproduction", "manifest reproduction contract differs"),
+            ("safety", "manifest safety declaration differs"),
+            ("safety-bool-alias", "manifest safety declaration differs"),
+            ("tool", "manifest tool identity differs"),
+            ("tool-source", "manifest tool source path differs"),
+            (
+                "command-fields",
+                "durable-policy-workflow: manifest record fields differ",
+            ),
+            ("command-title", "durable-policy-workflow: title differs from allowlist"),
+            (
+                "command-description",
+                "durable-policy-workflow: description differs from allowlist",
+            ),
+            (
+                "exit-code-bool-alias",
+                "durable-policy-workflow: expected exit codes differ",
+            ),
+            (
+                "stderr-count-bool-alias",
+                "durable-policy-workflow recorded stderr must be empty",
+            ),
+            (
+                "stdout-count-bool-alias",
+                "durable-policy-workflow: transcript hash or size differs",
+            ),
+            (
+                "source-fields",
+                "durable-policy-workflow source 0: source record fields differ",
+            ),
+        )
+        for case, expected in cases:
+            with self.subTest(case=case), private_temporary_directory() as temporary:
+                root = Path(temporary) / "terminal"
+                manifest = write_test_bundle(root)
+                capture = cast(dict[str, object], manifest["capture"])
+                tool = cast(dict[str, object], manifest["tool"])
+                commands = cast(list[dict[str, object]], manifest["commands"])
+                command = commands[0]
+                sources = cast(list[dict[str, object]], command["sources"])
+                stderr = cast(dict[str, object], command["stderr"])
+                stdout = cast(dict[str, object], command["stdout"])
+                if case == "top-level":
+                    manifest["unexpected"] = False
+                elif case == "commit-role":
+                    capture["base_input_commit_role"] = "unverified claim"
+                elif case == "environment":
+                    capture["environment"] = {"LANG": "C"}
+                elif case == "normalization":
+                    capture["normalization"] = {}
+                elif case == "working-directory":
+                    capture["working_directory"] = "elsewhere"
+                elif case == "interpreter":
+                    capture["interpreter"] = {
+                        "implementation": "PyPy",
+                        "version": "3.12.3",
+                    }
+                elif case == "reproduction":
+                    manifest["reproduction"] = {"check": "different"}
+                elif case == "safety":
+                    manifest["safety"] = {"evaluator_executed": True}
+                elif case == "safety-bool-alias":
+                    safety = cast(dict[str, object], manifest["safety"])
+                    safety["evaluator_executed"] = 0
+                elif case == "tool":
+                    tool["stdlib_only"] = False
+                elif case == "tool-source":
+                    source = cast(dict[str, object], tool["source"])
+                    source["path"] = "README.md"
+                elif case == "command-fields":
+                    command["unexpected"] = False
+                elif case == "command-title":
+                    command["title"] = "Unbound title"
+                elif case == "command-description":
+                    command["description"] = "Unbound description"
+                elif case == "exit-code-bool-alias":
+                    command["expected_exit_codes"] = [False]
+                elif case == "stderr-count-bool-alias":
+                    stderr["byte_count"] = False
+                elif case == "stdout-count-bool-alias":
+                    stdout["byte_count"] = False
+                else:
+                    sources[0]["unexpected"] = False
+                (root / capture_terminal.MANIFEST_NAME).write_bytes(
+                    capture_terminal._canonical_json(manifest)
+                )
+
+                self.assertIn(
+                    expected,
+                    capture_terminal.check_bundle(root),
+                )
+
     def test_base_commit_reader_uses_repository_metadata_without_git_process(
         self,
     ) -> None:
@@ -751,7 +1060,7 @@ class CommittedTerminalBundleTests(unittest.TestCase):
         spec = capture_terminal.COMMAND_BY_ID[capture_id]
         return (self.root / spec.transcript_name).read_text("utf-8")
 
-    def test_frozen_ten_assets_and_manifest_match_exact_bytes(self) -> None:
+    def test_frozen_terminal_assets_and_manifest_match_exact_bytes(self) -> None:
         paths = {path.name: path for path in self.root.iterdir() if path.is_file()}
 
         self.assertEqual(set(paths), set(FROZEN_TERMINAL_SHA256))
@@ -788,6 +1097,7 @@ class CommittedTerminalBundleTests(unittest.TestCase):
                 "HOME": ".gworker/terminal-capture-runtime/home",
                 "LANG": "C",
                 "LC_ALL": "C",
+                "PATH": "<OS_DEFPATH>",
                 "PYTHONHASHSEED": "0",
                 "PYTHONIOENCODING": "utf-8",
                 "PYTHONPATH": "src",
@@ -856,6 +1166,36 @@ class CommittedTerminalBundleTests(unittest.TestCase):
             content,
         )
         self.assertNotIn("optimal", content.lower())
+
+    def test_durable_workflow_proves_exact_reopen_lineage_and_cleanup(self) -> None:
+        content = self.transcript("durable-policy-workflow")
+
+        self.assertIn(
+            "GWorker durable policy journal | deterministic synthetic workflow",
+            content,
+        )
+        self.assertRegex(
+            content,
+            r"D1 recommend \| sequence 1 \| focus-\d+ \| exact p=0x",
+        )
+        self.assertIn(
+            "D1 review    | fit=just_right | completed=true | "
+            "exact propensity preserved",
+            content,
+        )
+        self.assertRegex(
+            content,
+            r"D2 recommend \| sequence 2 \| focus-\d+ \| "
+            r"history evidence=1 \| exact p=0x",
+        )
+        self.assertIn(
+            "Verify       | decisions/reviews/history edges = 2/1/1 | SQLite=ok",
+            content,
+        )
+        self.assertIn("workspace 0700 | journal 0600 | path omitted", content)
+        self.assertIn("every CLI call reopened the same disposable journal", content)
+        self.assertIn("temporary workspace removed", content)
+        self.assertIn("not a human outcome or locked evaluation", content)
 
     def test_journal_transcript_proves_real_reopen_replay_and_tamper_detection(
         self,
@@ -1055,7 +1395,7 @@ class CommittedTerminalBundleTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(
             output.getvalue(),
-            "verified 5 terminal captures without command execution\n",
+            "verified 6 terminal captures without command execution\n",
         )
         run.assert_not_called()
 

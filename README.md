@@ -6,14 +6,14 @@ auditable event stream, replays that stream into state, and recommends a
 bounded duration from explicit context and reviews.
 
 > **Development status:** the domain reducer, canonical event codec, private
-> SQLite journal, explainable duration policy, locked synthetic evaluator,
-> reporting/evidence builders, canonical result codecs, and the fail-closed
-> publication runner are implemented.
-> Three deterministic synthetic demos, six source-derived non-result diagrams,
-> and five genuine terminal captures are reproducible from the repository. The
-> locked evaluation has **not** run: there are zero locked outcome artifacts and
-> no benchmark result plots. Journal-to-policy provenance linkage, an end-user
-> CLI, publication rendering, and final sealing remain future work.
+> SQLite event and policy-decision journal, explainable duration policy,
+> journal-backed CLI, locked synthetic evaluator, reporting/evidence builders,
+> canonical result codecs, and the fail-closed publication runner are
+> implemented. Four deterministic synthetic demos, seven source-derived
+> non-result diagrams, and six genuine terminal captures are reproducible from
+> the repository. The locked evaluation has **not** run: there are zero locked
+> outcome artifacts and no benchmark result plots. Publication rendering and
+> final sealing remain future work.
 
 ![GWorker architecture and trust boundaries](docs/visuals/generated/architecture-trust-boundaries.svg)
 
@@ -22,9 +22,57 @@ bounded duration from explicit context and reviews.
 
 ## See it run
 
-The journal demo writes synthetic events through the production
-`SQLiteEventStore`, closes and reopens the database, replays the session, and
-detects a logical mutation in a separate copy.
+The shortest complete workflow records a seeded recommendation, attaches an
+explicit review, reopens the journal for a second recommendation, and reopens it
+again to verify exact replay:
+
+[![Real terminal capture of durable policy decisions, review, reopen, and verification](docs/visuals/terminal/durable-policy-workflow.svg)](docs/visuals/terminal/durable-policy-workflow.txt)
+
+*Genuine terminal output from four public CLI-handler calls against one
+disposable `0700` workspace and `0600` journal; click for the sanitized
+transcript. The fixed synthetic run records two decisions, one review, one
+history edge, exact hexadecimal propensities, and removes the workspace. It is
+not a human outcome or a locked-evaluation result.*
+
+The relational path behind that capture is also exercised through the public
+storage API:
+
+![Durable recommendation, review, and replay lineage](docs/visuals/generated/durable-decision-lineage.svg)
+
+*Source-derived evidence from a real temporary SQLite journal: the second
+decision consumes the reviewed first decision, and policy-scoped verification
+recomputes both choices after reopen.*
+
+Install the package in a virtual environment and reproduce the same workflow:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -e .
+
+JOURNAL="$PWD/.gworker/policy.sqlite3"
+D1=018f4f69-e7a2-7f84-8c2d-9f531c4e9101
+D2=018f4f69-e7a2-7f84-8c2d-9f531c4e9102
+
+.venv/bin/gworker --journal "$JOURNAL" recommend \
+  --task-kind deep_work --energy medium --available-minutes 60 \
+  --decision-id "$D1" --seed 20260725
+.venv/bin/gworker --journal "$JOURNAL" review "$D1" \
+  --fit just_right --completed
+.venv/bin/gworker --journal "$JOURNAL" recommend \
+  --task-kind deep_work --energy medium --available-minutes 60 \
+  --previous-focus-minutes 40 --decision-id "$D2" --seed 20260726
+.venv/bin/gworker --journal "$JOURNAL" verify
+```
+
+Each recommendation exposes the caller-supplied UUID, database-owned sequence,
+recorded seed, policy fingerprint, evidence count, reason codes, decimal
+propensity, and exact `float.hex()` value. `verify` recomputes every stored
+decision for the current policy and also reports global journal/SQLite checks;
+it does not claim that other policy fingerprints were replayed.
+
+The separate event-journal demo writes synthetic session events through the
+same production `SQLiteEventStore`, closes and reopens the database, replays the
+session, and detects a logical mutation in a separate copy.
 
 [![Real terminal capture of SQLite journal recovery and tamper detection](docs/visuals/terminal/journal-recovery.svg)](docs/visuals/terminal/journal-recovery.txt)
 
@@ -32,9 +80,10 @@ detects a logical mutation in a separate copy.
 demo contains six events and ends at revision 6. The seven-event/revision-7
 fixture below is a separate domain-reducer example.*
 
-Run all three safe demos:
+Run all four safe demos:
 
 ```bash
+PYTHONPATH=src python3 scripts/demo_policy_journal.py
 PYTHONPATH=src python3 scripts/demo_policy.py
 PYTHONPATH=src python3 scripts/demo_journal.py \
   --repo-root "$PWD" \
@@ -43,9 +92,10 @@ PYTHONPATH=src python3 scripts/demo_journal.py \
 PYTHONPATH=src python3 scripts/protocol_inventory.py
 ```
 
-The demos use only synthetic fixtures. The inventory command validates locked
-configuration and expected cardinalities; it does not call the evaluator or
-publication runner.
+The demos use only synthetic fixtures. The policy-journal harness creates and
+removes a private temporary workspace. The inventory command validates locked
+configuration and expected cardinalities; none of these commands calls the
+evaluator or publication runner.
 
 ## Why an event log?
 
@@ -113,14 +163,21 @@ The kernel inspects at most the final configured number of reviews and requires
 that tail to be ordered oldest-to-newest by a strictly increasing decision
 sequence. Within that bounded tail it fails closed on a duplicate decision,
 foreign policy configuration, unknown template, or guardrail-violating action.
-Future journal-to-policy linkage will own global uniqueness across reviews
-that have already fallen out of the learning window.
+The journal owns UUID uniqueness, a database-wide contiguous decision sequence,
+and the complete append-only history, including reviews that later fall out of
+the bounded learning window.
 
 `Recommendation.review()` preserves the chosen action and its propensity.
 Directly constructing a `ReviewedDecision` validates its structure but cannot
-prove that the probability originated from a recommendation. Propensity-aware
-evaluation will therefore wait for journal-backed recommendation/review
-linkage; the current implementation makes no verified-log claim.
+prove that the probability originated from a recommendation. The durable
+workflow closes that boundary: apart from the exact policy object,
+`record_review()` accepts only a stored decision UUID and closed feedback
+fields. Replay reconstructs a canonical policy from the supplied
+configuration, requires its fingerprint to match the rows selected for that
+policy, and recomputes each choice from context, RNG seed, and exact ordered
+history. It then requires the selected template and hexadecimal propensity to
+match. Offline propensity-aware evaluation is still future work, and session
+events are not yet linked to policy decisions.
 
 The ordinal adjustment is a transparent preference heuristic, not observed
 counterfactual reward and not evidence that a longer or shorter session causes
@@ -161,9 +218,16 @@ result data and never invokes the evaluator.*
 - A canonical, versioned JSON event codec that rejects unknown fields.
 - A private SQLite journal using WAL, `synchronous=FULL`, transactional appends,
   unique aggregate revisions, integrity checks, and full replay verification.
+- Append-only policy decisions, reviews, and exact ordered history edges in the
+  same hardened journal, with transactional v1-to-v2 migration, global
+  decision ordering, canonical hexadecimal propensities, and deterministic
+  reopen verification.
 - A sliding-window hierarchical softmax-UCB duration policy with explicit
   feedback, bounded exploration, logged propensities, and explainable arm
   scores.
+- A path-private `gworker` CLI for seeded recommendations, closed reviews, and
+  policy-scoped replay verification, with stable errors that do not echo
+  untrusted arguments or host paths.
 - A standard-library synthetic evaluation engine with balanced contexts,
   coherent paired potential outcomes, four fixed baselines, a last-choice
   baseline, an analytic myopic oracle that never sees realized outcomes,
@@ -174,8 +238,8 @@ result data and never invokes the evaluator.*
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
-- Three deterministic synthetic demos plus reproducible source-derived and
-  terminal visual-evidence pipelines.
+- Four deterministic synthetic demos, seven source-derived diagrams, and six
+  real terminal captures with reproducible checksum-bound evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
@@ -230,7 +294,7 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 The [source-derived visual manifest](docs/visuals/manifest.json) binds the
 generator, documentation and implementation inputs, every SVG checksum, and
 the observation that locked outcome artifact count is zero. The
-[terminal-capture manifest](docs/visuals/terminal/manifest.json) binds five
+[terminal-capture manifest](docs/visuals/terminal/manifest.json) binds six
 literal command vectors, exact source bytes, normalized capture environment,
 exit codes, transcripts, and rendered SVGs. Its `check` mode is read-only and
 does not rerun the commands or host-dependent preflight.
@@ -291,9 +355,9 @@ release decision for Omar.
 2. On a clean host that passes the frozen resource gate, execute the
    pre-registered locked evaluation exactly once and publish every required
    result, denominator, diagnostic, and negative finding.
-3. Add journal-backed recommendation/review linkage and an end-user CLI
-   workflow.
-4. Add offline replay evaluation with propensity provenance diagnostics and
+3. Link optional session-event IDs to policy decisions without putting
+   objective text into the policy log.
+4. Add offline replay evaluation with propensity-provenance diagnostics and
    declared baseline comparisons.
-5. Produce a short pinned terminal demo from the synthetic workflow once the
-   CLI exists; keep its transcript and source hashes reproducible.
+5. Add a real timer interaction surface while preserving explicit-review-only
+   learning and the local privacy boundary.

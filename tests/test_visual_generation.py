@@ -11,7 +11,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from gworker.domain import SessionPhase
 from gworker.evaluation import DEFAULT_EXPERIMENT_CONFIG
-from gworker.policy import DurationFit, EvidenceBucket
+from gworker.policy import DurationFit, EvidenceBucket, HierarchicalSoftmaxUCB
 from scripts.visuals import generate
 
 FROZEN_OUTPUT_SHA256 = {
@@ -139,6 +139,147 @@ class VisualDataTests(unittest.TestCase):
                 "focus-40": (10, 0.7322645461484336),
                 "focus-50": (1, 0.15267189036909593),
             },
+        )
+
+    def test_durable_lineage_uses_exact_public_store_replay(self) -> None:
+        scenario = generate.build_durable_decision_lineage()
+        expected_policy_id = HierarchicalSoftmaxUCB().policy_id
+
+        self.assertEqual(
+            expected_policy_id,
+            "hierarchical-softmax-ucb-v1.8c10875dd38a025d",
+        )
+        self.assertEqual(
+            (
+                scenario.first.decision_id,
+                scenario.first.decision_sequence,
+                scenario.first.template.template_id,
+                scenario.first.propensity.hex(),
+            ),
+            (
+                generate.DURABLE_FIRST_DECISION_ID,
+                1,
+                "focus-40",
+                "0x1.0000000000000p-2",
+            ),
+        )
+        self.assertEqual(scenario.review.decision_id, scenario.first.decision_id)
+        self.assertEqual(
+            scenario.review.propensity.hex(),
+            scenario.first.propensity.hex(),
+        )
+        self.assertEqual(scenario.review.fit, DurationFit.JUST_RIGHT)
+        self.assertTrue(scenario.review.objective_completed)
+        self.assertEqual(
+            (
+                scenario.second.decision_id,
+                scenario.second.decision_sequence,
+                scenario.second.template.template_id,
+                scenario.second.propensity.hex(),
+                scenario.second.evidence_count,
+            ),
+            (
+                generate.DURABLE_SECOND_DECISION_ID,
+                2,
+                "focus-25",
+                "0x1.1e5ae1020930fp-2",
+                1,
+            ),
+        )
+        self.assertEqual(
+            {
+                scenario.first.policy_id,
+                scenario.review.policy_id,
+                scenario.second.policy_id,
+                scenario.verification.policy_id,
+            },
+            {expected_policy_id},
+        )
+        self.assertEqual(
+            (
+                scenario.verification.decision_count,
+                scenario.verification.review_count,
+                scenario.verification.history_edge_count,
+                scenario.verification.sqlite_check,
+            ),
+            (2, 1, 1, "ok"),
+        )
+
+    def test_durable_lineage_svg_is_accessible_and_path_free(self) -> None:
+        visual = generate._render_durable_decision_lineage()
+        content = visual.content.decode("utf-8")
+        root = ElementTree.fromstring(content)
+        namespace = {"svg": "http://www.w3.org/2000/svg"}
+
+        self.assertEqual(visual.filename, "durable-decision-lineage.svg")
+        self.assertEqual(
+            visual.content,
+            generate._render_durable_decision_lineage().content,
+        )
+        self.assertEqual(root.attrib["role"], "img")
+        self.assertIsNotNone(root.find("svg:title", namespace))
+        self.assertIsNotNone(root.find("svg:desc", namespace))
+        for label in (
+            "D1 · RECOMMEND",
+            "EXPLICIT REVIEW",
+            "D2 · RECOMMEND",
+            "policy_decisions",
+            "policy_reviews",
+            "policy_decision_history",
+            "DECISIONS REPLAYED",
+            "REVIEW REPLAYED",
+            "HISTORY EDGE VERIFIED",
+            "SQLITE QUICK_CHECK",
+            "no locked evaluator or publication run",
+        ):
+            self.assertIn(label, content)
+        self.assertNotIn("/tmp/", content)
+        self.assertNotIn("/home/", content)
+        self.assertNotIn("<script", content)
+        self.assertNotIn("<image", content)
+        self.assertNotIn(" href=", content)
+
+    def test_render_set_and_architecture_show_current_journal_linkage(self) -> None:
+        visuals = generate.render_visuals()
+        self.assertEqual(
+            tuple(visual.filename for visual in visuals),
+            (
+                "architecture-trust-boundaries.svg",
+                "durable-decision-lineage.svg",
+                "event-replay.svg",
+                "guardrail-matrix.svg",
+                "locked-protocol-inventory.svg",
+                "policy-score-decomposition.svg",
+                "publication-lifecycle.svg",
+            ),
+        )
+        architecture = next(
+            visual.content.decode("utf-8")
+            for visual in visuals
+            if visual.filename == "architecture-trust-boundaries.svg"
+        )
+        self.assertIn("Journal linkage + CLI", architecture)
+        self.assertIn("events + decisions", architecture)
+        self.assertIn("reviews + history edges", architecture)
+        self.assertIn("Render + seal · NEXT", architecture)
+        self.assertIn("private journal has no publication path", architecture)
+        self.assertNotIn("Journal linkage · NEXT", architecture)
+        self.assertNotIn('x1="886" y1="270" x2="954" y2="270"', architecture)
+        self.assertEqual(architecture.count('stroke-dasharray="8 6"'), 1)
+
+    def test_lineage_sources_are_bound_and_generator_version_is_bumped(self) -> None:
+        self.assertEqual(generate.TOOL_VERSION, "2")
+        self.assertTrue(
+            {
+                "docs/decision-lineage.md",
+                "scripts/demo_policy_journal.py",
+                "src/gworker/__init__.py",
+                "src/gworker/cli.py",
+                "src/gworker/codec.py",
+                "src/gworker/domain.py",
+                "src/gworker/policy.py",
+                "src/gworker/storage.py",
+            }.issubset(generate.INPUT_FILES)
         )
 
     def test_guardrail_matrix_comes_from_feasible_template_queries(self) -> None:
@@ -285,6 +426,11 @@ class VisualArtifactTests(unittest.TestCase):
         generated = generate.VISUAL_ROOT / generate.GENERATED_DIRECTORY_NAME
         required_labels = {
             "architecture-trust-boundaries.svg": ("NEXT", "same-UID"),
+            "durable-decision-lineage.svg": (
+                "policy_decisions",
+                "HISTORY EDGE VERIFIED",
+                "no locked evaluator or publication run",
+            ),
             "event-replay.svg": ("session_planned", "FINAL PROJECTION"),
             "guardrail-matrix.svg": ("ALLOW", "BLOCK · budget"),
             "locked-protocol-inventory.svg": (
