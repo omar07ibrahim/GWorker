@@ -27,11 +27,11 @@ artifacts, never a user's local work history.
 | Durable policy lineage | Current policy fingerprint, bounded context, caller UUID/seed, and closed review fields | Append-only decisions, reviews, exact ordered history edges, canonical propensities, and deterministic replay | Rejects stale/forged policy objects, sequence or schema damage, orphan/duplicate reviews, altered history, and any recomputation mismatch | [`storage.py`](../src/gworker/storage.py#L1218), [`decision-lineage.md`](decision-lineage.md) |
 | Focus-session linkage | Exact policy, durable decision UUID, and an existing revision-1 plan | Immutable one-to-one provenance link with a session-derived lookup; no inferred review | Rejects reviewed or already-linked decisions, started sessions, policy/template/duration mismatch, link corruption, and concurrent consumption | [`storage.py`](../src/gworker/storage.py), [`session-linkage.md`](session-linkage.md) |
 | Policy CLI | Explicit `recommend`, `review`, or `verify` arguments and an optional private journal path | Human or canonical JSON output without objective text or journal paths | Invalid arguments are not echoed; operational errors use stable categories; verification is explicitly policy-scoped | [`cli.py`](../src/gworker/cli.py#L89) |
-| One-step offline replay | **Design only:** verified reviewed decisions and a declared score-temperature target | Planned propensity, support, and effective-sample-size diagnostics over fixed observed histories | Must remain aggregate-first, label weak support fail-closed, and make no sequential or causal claim | [`offline-replay.md`](offline-replay.md) |
+| One-step offline replay | Strictly ordered reviewed rows plus behavior, uniform, or score-temperature target | Aggregate raw/clipped IPS and SNIPS, effective sample size, template sufficient statistics, raw-support readiness, and exact behavior control | Rejects malformed or excessive snapshots, impossible target floors, non-finite arithmetic, and any promoted interpretation flag | [`offline.py`](../src/gworker/offline.py), [`offline-replay.md`](offline-replay.md) |
 | Synthetic evaluator | An explicit experiment configuration; locked `eval` additionally requires the private consumed permit | Balanced synthetic environments, paired potential outcomes, strategy summaries, traces, and exact cardinality validation | Any missing scenario, invariant breach, non-finite probability, invalid guardrail choice, or denominator mismatch invalidates the whole run | [`evaluation.py`](../src/gworker/evaluation.py#L2818) |
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
 | Publication state and runner | Clean committed source, a capacity assessment, and the fixed run key | Append-only state records, one evaluation permit, immutable artifacts, resumable materialization, and path-free status | Preflight failure does not claim; reopening `EVALUATING` burns the run; existing artifact mismatch fails; there is no force/reset/retry flag | [`publication_state.py`](../src/gworker/publication_state.py#L1240), [`publication_runner.py`](../src/gworker/publication_runner.py#L2051), [`resource_preflight.py`](../src/gworker/resource_preflight.py#L1672) |
-| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Nine source-derived diagrams plus six sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
+| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Twelve source-derived diagrams plus seven sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; offline visuals import no locked module; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`generate_offline_replay.py`](../scripts/visuals/generate_offline_replay.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
 
 ## Event reduction and durable journal
 
@@ -113,6 +113,27 @@ Event-codec v1 is unchanged, unlinked histories remain valid, and only an
 explicit `record_review()` changes policy history. Objective text remains
 outside the policy log, although the identifier link increases joinability.
 
+## Isolated offline replay evidence
+
+The pure replay core accepts a bounded, strictly ordered typed snapshot; it
+validates that arithmetic boundary but does not attest journal provenance.
+Verified journal extraction remains the caller's separate future
+responsibility. The committed demonstration supplies sixteen authored
+synthetic rows directly, so it does not open the private journal or imply that
+extraction is implemented. The behavior target is an executable exact negative
+control. The score-temperature candidate reports finite-snapshot raw and
+clipped descriptive summaries, raw support gates, and per-template sufficient
+statistics with all interpretation flags fixed to `false`.
+
+The genuine [offline terminal capture](visuals/terminal/offline-replay.txt)
+records only the aggregate demo output. A separate offline-only generator calls
+the public replay API for the complete report and each synthetic row, then
+renders aligned propensity/weight, estimator-decomposition, and
+support/coverage SVGs. Its [manifest](offline/manifest.json) binds the fixture,
+sources, terminal evidence, documentation, and output bytes. Clean-process
+tests prove that this path never imports the evaluator, publication workflow,
+reporting, or result codecs.
+
 ## Locked evaluation and publication
 
 The [evaluation protocol](evaluation-protocol.md) pre-registers a synthetic
@@ -153,20 +174,26 @@ accessible self-contained SVG and a
 and output checksum. `--check` generates a clean temporary bundle and requires
 byte equality.
 
-The terminal recorder has six literal allowlisted command vectors: durable
-policy workflow, policy demo, journal demo, protocol inventory, publication
-status, and publication preflight. Recording normalizes locale, timezone, hash
-seed, paths, hostnames, and known secret signatures; arbitrary commands are not
-accepted. Its
+The terminal recorder has seven literal allowlisted command vectors: durable
+policy workflow, policy demo, offline replay demo, journal demo, protocol
+inventory, publication status, and publication preflight. Recording normalizes
+locale, timezone, hash seed, paths, hostnames, and known secret signatures;
+arbitrary commands are not accepted. Its
 [terminal manifest](visuals/terminal/manifest.json) binds source bytes, command
 arguments, sanitized transcripts, exit codes, and SVG checksums. `check` is
 read-only and does not rerun the commands. The preflight capture is explicitly
 host-dependent.
 
+The isolated offline generator emits three additional SVGs and publishes its
+[manifest](offline/manifest.json) last. It binds the public replay core and all
+actual package imports but never imports the locked evaluator or publication
+modules.
+
 Reproduce the committed evidence without invoking the evaluator:
 
 ```bash
 PYTHONPATH=src python3 scripts/visuals/generate.py --check
+PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay --check
 PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 ```
 
@@ -197,8 +224,8 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 
 | Current | `NEXT` |
 | --- | --- |
-| Typed events, pure replay, canonical codec, and a private schema-v3 SQLite journal | Implement the specified one-step off-policy replay and propensity-support diagnostics |
+| Typed events, pure session replay, canonical codec, a private schema-v3 SQLite journal, and pure one-step propensity-support diagnostics | Verified journal extraction plus a canonical aggregate offline codec and CLI |
 | Journal-backed recommendation/review identity, exact propensities, and immutable decision-to-plan linkage | CLI support for explicitly linking a durable decision to a planned session |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |
-| Four demos, nine source-derived diagrams, and six genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |
+| Five demos, twelve source-derived diagrams, and seven genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |

@@ -9,8 +9,8 @@ bounded duration from explicit context and reviews.
 > SQLite event and policy-decision journal, explainable duration policy,
 > journal-backed CLI, locked synthetic evaluator, reporting/evidence builders,
 > canonical result codecs, and the fail-closed publication runner are
-> implemented. Four deterministic synthetic demos, nine source-derived
-> non-result diagrams, and six genuine terminal captures are reproducible from
+> implemented. Five deterministic synthetic demos, twelve source-derived
+> non-result diagrams, and seven genuine terminal captures are reproducible from
 > the repository. The locked evaluation has **not** run: there are zero locked
 > outcome artifacts and no benchmark result plots. Publication rendering and
 > final sealing remain future work.
@@ -99,11 +99,12 @@ diagram does not independently recompute that boolean. This covers one fixed
 synthetic mutation, not arbitrary corruption, authenticity, human effectiveness,
 or locked-evaluation results.*
 
-Run all four safe demos:
+Run all five safe demos:
 
 ```bash
 PYTHONPATH=src python3 scripts/demo_policy_journal.py
 PYTHONPATH=src python3 scripts/demo_policy.py
+PYTHONPATH=src python3 scripts/demo_offline_replay.py
 PYTHONPATH=src python3 scripts/demo_journal.py \
   --repo-root "$PWD" \
   --workspace .gworker/visual-demo/readme \
@@ -218,6 +219,44 @@ interpretation boundary before the full evaluation seeds are run. A separate
 path-opportunity term prevents a strategy from looking good merely because its
 previous choices trapped it behind the one-step guardrail.
 
+## Offline replay: support before claims
+
+The fixed offline demo feeds sixteen authored synthetic reviewed rows through
+the public `gworker.offline` API. It exercises an exact behavior negative
+control, a declared score-temperature target, raw-support readiness, and a
+clipping sensitivity without reading a journal or entering the locked
+evaluation namespace:
+
+[![Real terminal capture of aggregate-only offline replay diagnostics](docs/visuals/terminal/offline-replay.svg)](docs/visuals/terminal/offline-replay.txt)
+
+*Genuine output from `scripts/demo_offline_replay.py`; click for the canonical
+transcript. `reportable` means only that the declared review-count, raw-ESS, and
+maximum-weight guardrails pass. It is not a target-policy value, causal effect,
+or human-productivity result.*
+
+[![Selected-action propensities and raw importance weights for all sixteen synthetic decisions](docs/offline/generated/ordered-propensity-and-weight.svg)](docs/offline/generated/ordered-propensity-and-weight.svg)
+
+*Behavior and target propensities are aligned with the corresponding raw
+importance weight. The dashed clip boundary is a sensitivity reference;
+connecting lines preserve row order and do not imply a time trend.*
+
+[![Exact offline estimator decomposition from row inputs to aggregate outputs](docs/offline/generated/estimator-decomposition.svg)](docs/offline/generated/estimator-decomposition.svg)
+
+*Every plotted reward and raw/clipped weight comes from a one-row call to the
+public replay API. The formulas lead to the full-report outputs while all five
+interpretation flags remain visibly false.*
+
+[![Raw support gates and per-template reviewed coverage](docs/offline/generated/support-and-template-coverage.svg)](docs/offline/generated/support-and-template-coverage.svg)
+
+*Unlike units use separate zero-based panels. Readiness is based on raw review
+count, ESS ratio, and maximum weight; the four clipped rows and removed weight
+mass cannot promote support.*
+
+The standalone [offline visual manifest](docs/offline/manifest.json) binds the
+exact authored fixture, production sources, documentation, terminal evidence,
+and all three SVG byte hashes. Its generator imports no evaluation,
+publication, reporting, or result module.
+
 ## Locked evaluation: protocol, not benchmark results
 
 The [synthetic evaluation protocol](docs/evaluation-protocol.md) freezes the
@@ -272,7 +311,7 @@ result data and never invokes the evaluator.*
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
-- Four deterministic synthetic demos, nine source-derived diagrams, and six
+- Five deterministic synthetic demos, twelve source-derived diagrams, and seven
   real terminal captures with reproducible checksum-bound evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
@@ -299,7 +338,7 @@ for the path-free transcript.*
 
 [![Real terminal capture of a fail-closed publication preflight](docs/visuals/terminal/publication-preflight.svg)](docs/visuals/terminal/publication-preflight.txt)
 
-*This host-dependent capture failed the frozen memory and swap headroom checks
+*This host-dependent capture failed the frozen memory-headroom check
 and exited 2 without claiming the run. Capacity can differ on another host;
 this is not a portable readiness result.*
 
@@ -322,18 +361,22 @@ Run the code and evidence checks without consuming the locked namespace:
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 PYTHONPATH=src python3 -m compileall -q src tests
 PYTHONPATH=src python3 scripts/visuals/generate.py --check
+PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay --check
 PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 ```
 
 The [source-derived visual manifest](docs/visuals/manifest.json) binds the
 generator, documentation and implementation inputs, every SVG checksum, and
 the observation that locked outcome artifact count is zero. The
-[terminal-capture manifest](docs/visuals/terminal/manifest.json) binds six
+[terminal-capture manifest](docs/visuals/terminal/manifest.json) binds seven
 literal command vectors, exact source bytes, normalized capture environment,
 exit codes, transcripts, and rendered SVGs. Its `check` mode is read-only and
 does not rerun the commands or host-dependent preflight.
 
-Both pipelines are standard-library-only, reject external image/script
+The separate [offline visual manifest](docs/offline/manifest.json) binds three
+charts derived through the public replay API and explicitly records the
+synthetic fixture, support configuration, readiness, and five false nonclaims.
+All three pipelines are standard-library-only, reject external image/script
 references, and use synthetic demo records. Publication outcome visuals will
 be generated only from validated, provenance-bound locked evidence and bound
 into the final manifest before sealing; they do not exist today.

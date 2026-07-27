@@ -1,8 +1,9 @@
 # One-step off-policy replay diagnostics
 
-Status: pure aggregate arithmetic is implemented in `gworker.offline`; verified
-journal extraction, the canonical machine codec, CLI integration, and
-synthetic publication evidence remain separate milestones.
+Status: pure aggregate arithmetic, a fixed authored synthetic demo, a genuine
+terminal capture, and three source-derived visuals are implemented. Verified
+journal extraction, the canonical machine codec, and an aggregate-only
+real-journal CLI remain separate milestones.
 
 GWorker records the probability of every selected duration and can reconstruct
 the complete score vector that produced it. That is enough to ask a narrow
@@ -18,10 +19,10 @@ holding its observed history fixed.
 
 ## Data boundary
 
-The diagnostic starts from one read transaction in
-`SQLiteEventStore`. Before any row is released, the store must run the existing
-schema, SQLite, policy-fingerprint, history-edge, recommendation, propensity,
-review, and focus-link checks.
+The future real-journal diagnostic will start from one read transaction in
+`SQLiteEventStore`. Before any row is released, the store will have to run the
+existing schema, SQLite, policy-fingerprint, history-edge, recommendation,
+propensity, review, and focus-link checks.
 
 An internal eligible row contains only:
 
@@ -37,7 +38,8 @@ and unreviewed decisions do not enter the reweighted summaries. Aggregate
 output identifies the verified snapshot by a canonical digest. Real-journal
 row data is never public output: decision sequences, contexts, actions, reviews,
 and row digests remain inside the private computation. The only committed
-row-level evidence will come from the fixed synthetic journal described below.
+row-level evidence comes from the fixed authored synthetic rows described
+below.
 
 ## Declared target distribution
 
@@ -179,38 +181,43 @@ Encoding will reject duplicate or unknown fields, non-canonical identifiers,
 non-finite numbers, reordered rows, inconsistent sufficient statistics, and
 any document that does not round-trip to identical canonical bytes.
 
-The first CLI is aggregate-only. It will not print or export row-level
-sequences, digests, contexts, actions, reviews, objective text, UUIDs, journal
-paths, or timestamps. A future private row export is outside this contract and
-would require a separate privacy and descriptor-pinned I/O review.
+The planned real-journal CLI is aggregate-only. It will not print or export
+row-level sequences, digests, contexts, actions, reviews, objective text,
+UUIDs, journal paths, or timestamps. A future private row export is outside
+this contract and would require a separate privacy and descriptor-pinned I/O
+review.
 
-## Evidence plan
+## Reproducible synthetic evidence
 
-Committed evidence will be generated only from a fixed synthetic journal:
+Committed evidence is generated only from sixteen fixed authored synthetic
+rows:
 
-1. a genuine CLI transcript showing behavior-control and candidate-target
-   status;
+1. a genuine terminal transcript from the fixed demo harness showing
+   behavior-control and candidate-target status;
 2. a sequence plot of behavior propensity, target propensity, raw weight, and
    the declared clip boundary;
 3. an estimator-decomposition diagram tying each aggregate to its sufficient
    statistics;
 4. a support panel with effective sample size and per-template coverage.
 
-The generator must call the public replay API, bind every source and output
-checksum, and reproduce exact bytes in `--check` mode. Synthetic row-level
-labels may appear in these committed artifacts because their identities and
-reviews are authored fixtures, never copied from a user's journal. It must not
-import or invoke `gworker.evaluation`, the publication runner, the held-out
-population, or any locked-result codec.
+The standalone generator calls the public replay API once for the complete
+report and once per authored row, binds every declared source and output
+checksum, and reproduces exact bytes in `--check` mode. Synthetic row-level
+labels appear in these committed artifacts because their identities and
+reviews are authored fixtures, never copied from a user's journal. A
+clean-process test verifies that the generator does not import or invoke
+`gworker.evaluation`, the publication runner, the held-out population, or any
+locked-result codec.
 
 ## Interpretation boundary
 
-These diagnostics describe overlap and finite-snapshot reweighting of explicit
-self-reports among reviewed decisions in one local journal. `reportable` means
-only that the declared raw support guardrails pass. It does not establish that
-a duration caused an outcome, that the target distribution has a policy-value
-estimate, that it would improve future sessions, or that the reward represents
-productivity, health, or workplace performance.
+When applied to a verified local journal, these diagnostics describe overlap
+and finite-snapshot reweighting of explicit self-reports among reviewed
+decisions. `reportable` means only that the declared raw support guardrails
+pass. It does not establish that a duration caused an outcome, that the target
+distribution has a policy-value estimate, that it would improve future
+sessions, or that the reward represents productivity, health, or workplace
+performance.
 
 Missing reviews may be systematically different from recorded reviews. The
 diagnostic neither estimates nor corrects that selection process. The reward is

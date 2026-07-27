@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="880" viewBox="0 0 1200 880" role="img" aria-labelledby="support-and-template-coverage-title support-and-template-coverage-description" data-evidence-fixture="authored-synthetic-replay-v1">
+<title id="support-and-template-coverage-title">Raw support gates and template coverage</title>
+<desc id="support-and-template-coverage-description">Zero-based panels compare the sixteen reviewed rows, raw effective sample-size ratio, and maximum raw weight with their declared support thresholds. Separate panels show reviewed count and target probability mass for each template. Clipping is labelled as sensitivity only.</desc>
+<rect x="0" y="0" width="1200" height="880" rx="0" fill="#FFFFFF"/>
+<text x="60" y="54" fill="#132238" font-size="28" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Raw support gates and template coverage</text>
+<text x="60" y="84" fill="#526277" font-size="15" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">readiness is determined only by raw overlap · unlike units use separate scales</text>
+<rect x="876" y="28" width="264" height="42" rx="21" fill="#EEE9FC" stroke="#6D4BD1" stroke-width="1"/>
+<text x="1008" y="55" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">STATUS · REPORTABLE</text>
+<line x1="60" y1="108" x2="1140" y2="108" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="60" y="136" width="348" height="190" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="82" y="170" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">REVIEWED ROWS</text>
+<text x="82" y="199" fill="#087E8B" font-size="14" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">16 / minimum 12</text>
+<rect x="82" y="226" width="304" height="22" rx="11" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="82" y="226" width="304" height="22" rx="11" fill="#087E8B"/>
+<line x1="310" y1="217" x2="310" y2="259" stroke="#132238" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="82" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">0</text>
+<text x="386" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">16</text>
+<text x="82" y="306" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">threshold shown as dashed reference</text>
+<rect x="426" y="136" width="348" height="190" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="448" y="170" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">RAW ESS RATIO</text>
+<text x="448" y="199" fill="#6D4BD1" font-size="14" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">0.756993 / minimum 0.25</text>
+<rect x="448" y="226" width="304" height="22" rx="11" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="448" y="226" width="230.126" height="22" rx="11" fill="#6D4BD1"/>
+<line x1="524" y1="217" x2="524" y2="259" stroke="#132238" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="448" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">0</text>
+<text x="752" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">1</text>
+<text x="448" y="306" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">threshold shown as dashed reference</text>
+<rect x="792" y="136" width="348" height="190" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="814" y="170" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">MAXIMUM RAW WEIGHT</text>
+<text x="814" y="199" fill="#6D4BD1" font-size="14" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">5.191650 / maximum 10.0</text>
+<rect x="814" y="226" width="304" height="22" rx="11" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="814" y="226" width="157.826" height="22" rx="11" fill="#6D4BD1"/>
+<line x1="1118" y1="217" x2="1118" y2="259" stroke="#132238" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="814" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">0</text>
+<text x="1118" y="284" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">10</text>
+<text x="814" y="306" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">upper raw-support gate · zero baseline</text>
+<rect x="60" y="350" width="522" height="378" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="84" y="386" fill="#087E8B" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">TEMPLATE REVIEWED COUNT</text>
+<text x="84" y="410" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">separate zero-to-16 scale · denominator shown</text>
+<rect x="618" y="350" width="522" height="378" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="642" y="386" fill="#6D4BD1" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">TEMPLATE TARGET MASS</text>
+<text x="642" y="410" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">sum of target probability across 16 rows · separate scale</text>
+<text x="84" y="454" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-15</text>
+<rect x="176" y="438" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="176" y="438" width="75" height="18" rx="9" fill="#087E8B"/>
+<text x="550" y="454" fill="#087E8B" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4 / 16</text>
+<text x="642" y="454" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-15</text>
+<rect x="734" y="438" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="734" y="438" width="62.543" height="18" rx="9" fill="#6D4BD1"/>
+<text x="1110" y="454" fill="#6D4BD1" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">3.335628 / 16</text>
+<text x="84" y="518" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-25</text>
+<rect x="176" y="502" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="176" y="502" width="75" height="18" rx="9" fill="#087E8B"/>
+<text x="550" y="518" fill="#087E8B" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4 / 16</text>
+<text x="642" y="518" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-25</text>
+<rect x="734" y="502" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="734" y="502" width="74.9222" height="18" rx="9" fill="#6D4BD1"/>
+<text x="1110" y="518" fill="#6D4BD1" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">3.995851 / 16</text>
+<text x="84" y="582" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-40</text>
+<rect x="176" y="566" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="176" y="566" width="75" height="18" rx="9" fill="#087E8B"/>
+<text x="550" y="582" fill="#087E8B" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4 / 16</text>
+<text x="642" y="582" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-40</text>
+<rect x="734" y="566" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="734" y="566" width="80.0094" height="18" rx="9" fill="#6D4BD1"/>
+<text x="1110" y="582" fill="#6D4BD1" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4.267168 / 16</text>
+<text x="84" y="646" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-50</text>
+<rect x="176" y="630" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="176" y="630" width="75" height="18" rx="9" fill="#087E8B"/>
+<text x="550" y="646" fill="#087E8B" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4 / 16</text>
+<text x="642" y="646" fill="#132238" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">focus-50</text>
+<rect x="734" y="630" width="300" height="18" rx="9" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="734" y="630" width="82.5254" height="18" rx="9" fill="#6D4BD1"/>
+<text x="1110" y="646" fill="#6D4BD1" font-size="13" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4.401352 / 16</text>
+<line x1="84" y1="684" x2="558" y2="684" stroke="#D7E1EC" stroke-width="1"/>
+<line x1="642" y1="684" x2="1116" y2="684" stroke="#D7E1EC" stroke-width="1"/>
+<text x="84" y="710" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">all four templates: 4 reviewed selections</text>
+<text x="642" y="710" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">target mass uses feasible-arm probabilities</text>
+<rect x="60" y="754" width="1080" height="92" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="84" y="786" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">CLIPPING SENSITIVITY · NOT A READINESS GATE</text>
+<text x="84" y="819" fill="#6D4BD1" font-size="14" font-weight="650" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">clipped rows 4 / 16 · clip c=3.000000 · removed raw weight mass 5.445540</text>
+<text x="1116" y="819" fill="#526277" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">reportable ≠ effective</text>
+</svg>

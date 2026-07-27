@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" role="img" aria-labelledby="ordered-propensity-and-weight-title ordered-propensity-and-weight-description" data-evidence-fixture="authored-synthetic-replay-v1">
+<title id="ordered-propensity-and-weight-title">Selected-action propensities and weights</title>
+<desc id="ordered-propensity-and-weight-description">Two aligned panels show behavior and score-temperature target propensities, then raw importance weights for all sixteen ordered authored synthetic decisions. A dashed line marks the declared clip at three. Connecting lines show order only, not a time trend or effect.</desc>
+<rect x="0" y="0" width="1200" height="780" rx="0" fill="#FFFFFF"/>
+<text x="60" y="54" fill="#132238" font-size="28" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Selected-action propensities and weights</text>
+<text x="60" y="84" fill="#526277" font-size="15" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">16 authored synthetic decisions · public replay API · no journal read</text>
+<rect x="876" y="28" width="264" height="42" rx="21" fill="#EEE9FC" stroke="#6D4BD1" stroke-width="1"/>
+<text x="1008" y="55" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">DESCRIPTIVE SUPPORT ONLY</text>
+<line x1="60" y1="108" x2="1140" y2="108" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="60" y="132" width="1080" height="276" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="88" y="166" fill="#132238" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">SELECTED-ACTION PROPENSITY</text>
+<text x="1112" y="166" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">zero-based · probability</text>
+<line x1="118" y1="350" x2="1100" y2="350" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="355" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.0</text>
+<line x1="118" y1="323.091" x2="1100" y2="323.091" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="328.091" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.1</text>
+<line x1="118" y1="296.182" x2="1100" y2="296.182" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="301.182" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.2</text>
+<line x1="118" y1="269.273" x2="1100" y2="269.273" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="274.273" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.3</text>
+<line x1="118" y1="242.364" x2="1100" y2="242.364" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="247.364" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.4</text>
+<line x1="118" y1="215.455" x2="1100" y2="215.455" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="220.455" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.5</text>
+<polyline points="118,328.473 183.467,323.091 248.933,228.909 314.4,296.182 379.867,255.818 445.333,309.636 510.8,296.182 576.267,323.091 641.733,282.727 707.2,282.727 772.667,309.636 838.133,309.636 903.6,296.182 969.067,296.182 1034.53,282.727 1100,323.091" fill="none" stroke="#087E8B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="118,238.238 183.467,256.263 248.933,253.891 314.4,277.264 379.867,265.578 445.333,269.268 510.8,251.987 576.267,236.089 641.733,262.801 707.2,263.478 772.667,241.116 838.133,253.198 903.6,249.037 969.067,252.116 1034.53,259.912 1100,227.907" fill="none" stroke="#6D4BD1" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="8 5"/>
+<circle cx="118" cy="328.473" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="183.467" cy="323.091" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="248.933" cy="228.909" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="314.4" cy="296.182" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="379.867" cy="255.818" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="445.333" cy="309.636" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="510.8" cy="296.182" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="576.267" cy="323.091" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="641.733" cy="282.727" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="707.2" cy="282.727" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="772.667" cy="309.636" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="838.133" cy="309.636" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="903.6" cy="296.182" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="969.067" cy="296.182" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="1034.53" cy="282.727" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="1100" cy="323.091" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="118" cy="238.238" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="183.467" cy="256.263" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="248.933" cy="253.891" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="314.4" cy="277.264" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="379.867" cy="265.578" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="445.333" cy="269.268" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="510.8" cy="251.987" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="576.267" cy="236.089" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="641.733" cy="262.801" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="707.2" cy="263.478" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="772.667" cy="241.116" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="838.133" cy="253.198" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="903.6" cy="249.037" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="969.067" cy="252.116" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="1034.53" cy="259.912" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="1100" cy="227.907" r="5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<line x1="748" y1="188" x2="782" y2="188" stroke="#087E8B" stroke-width="3"/>
+<circle cx="765" cy="188" r="4" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<text x="792" y="193" fill="#087E8B" font-size="13" font-weight="650" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">behavior bᵢ</text>
+<line x1="930" y1="188" x2="964" y2="188" stroke="#6D4BD1" stroke-width="3" stroke-dasharray="8 5"/>
+<circle cx="947" cy="188" r="4.5" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<text x="974" y="193" fill="#6D4BD1" font-size="13" font-weight="650" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">target qᵢ</text>
+<rect x="60" y="430" width="1080" height="278" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="88" y="464" fill="#132238" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">RAW IMPORTANCE WEIGHT · qᵢ / bᵢ</text>
+<text x="1112" y="464" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">four rows exceed c = 3</text>
+<line x1="118" y1="646" x2="1100" y2="646" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="651" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0</text>
+<line x1="118" y1="621.333" x2="1100" y2="621.333" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="626.333" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">1</text>
+<line x1="118" y1="596.667" x2="1100" y2="596.667" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="601.667" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">2</text>
+<line x1="118" y1="572" x2="1100" y2="572" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="577" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">3</text>
+<line x1="118" y1="547.333" x2="1100" y2="547.333" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="552.333" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">4</text>
+<line x1="118" y1="522.667" x2="1100" y2="522.667" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="527.667" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">5</text>
+<line x1="118" y1="498" x2="1100" y2="498" stroke="#D7E1EC" stroke-width="1"/>
+<text x="104" y="503" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">6</text>
+<line x1="118" y1="572" x2="1100" y2="572" stroke="#526277" stroke-width="2" stroke-dasharray="10 6"/>
+<rect x="954" y="557" width="146" height="24" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="1027" y="574" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">clip c = 3.000000</text>
+<polyline points="118,517.939 183.467,560.074 248.933,626.422 314.4,612.663 379.867,623.89 445.333,596.664 510.8,601.078 576.267,541.582 641.733,614.027 707.2,614.275 772.667,579.46 838.133,586.843 903.6,599.725 969.067,601.137 1034.53,612.968 1100,534.082" fill="none" stroke="#087E8B" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="118" cy="517.939" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="118" cy="572" r="6" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="183.467" cy="560.074" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="183.467" cy="572" r="6" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="248.933" cy="626.422" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="314.4" cy="612.663" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="379.867" cy="623.89" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="445.333" cy="596.664" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="510.8" cy="601.078" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="576.267" cy="541.582" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="576.267" cy="572" r="6" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<circle cx="641.733" cy="614.027" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="707.2" cy="614.275" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="772.667" cy="579.46" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="838.133" cy="586.843" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="903.6" cy="599.725" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="969.067" cy="601.137" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="1034.53" cy="612.968" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="1100" cy="534.082" r="4.5" fill="#087E8B" stroke="#087E8B" stroke-width="2"/>
+<circle cx="1100" cy="572" r="6" fill="#FFFFFF" stroke="#6D4BD1" stroke-width="2.5"/>
+<text x="118" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">1</text>
+<text x="183.467" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">2</text>
+<text x="248.933" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">3</text>
+<text x="314.4" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">4</text>
+<text x="379.867" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">5</text>
+<text x="445.333" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">6</text>
+<text x="510.8" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">7</text>
+<text x="576.267" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">8</text>
+<text x="641.733" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">9</text>
+<text x="707.2" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">10</text>
+<text x="772.667" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">11</text>
+<text x="838.133" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">12</text>
+<text x="903.6" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">13</text>
+<text x="969.067" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">14</text>
+<text x="1034.53" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">15</text>
+<text x="1100" y="674" fill="#526277" font-size="12" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">16</text>
+<text x="60" y="748" fill="#526277" font-size="12" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">ORDERED SYNTHETIC DECISION</text>
+<text x="1140" y="748" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">lines guide row order · not time, causality, or target-policy value</text>
+</svg>
