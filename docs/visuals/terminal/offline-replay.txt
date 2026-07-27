@@ -1,0 +1,20 @@
+GWorker offline replay | fixture=authored-synthetic-replay-v1
+behavior-control | status=reportable | exact=true
+  rows=16 | mean-weight=1.000000 | raw-ess=16.000000 | raw-ips=0.525000
+candidate | target=score-temperature | status=reportable
+  rows=16 | temperature=0.750000 | probability-floor=0.020000
+  raw-ess=12.111890 | raw-ess-ratio=0.756993 | max-weight=5.191650
+  clipped-rows=4 | clip=3.000000 | removed-weight-mass=5.445540
+descriptive
+  observed=0.525000 | raw-ips=1.078713 | raw-snips=0.466212
+  clipped-ips=0.916476 | clipped-snips=0.464406
+support | minimum-behavior=0.080000 | minimum-reviews=12
+  minimum-raw-ess-ratio=0.250000 | maximum-raw-weight=10.000000
+template-support
+  focus-15=4/16 | focus-25=4/16 | focus-40=4/16 | focus-50=4/16
+nonclaims
+  review-selection-corrected=false | target-policy-value-estimated=false
+  sequential-policy-value-estimated=false | causal-effect-estimated=false
+  locked-evaluation-used=false
+boundary | authored synthetic rows; descriptive one-step support only
+  no locked evaluation

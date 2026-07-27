@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+
+# Local GWorker state may contain private objectives.
+.gworker/
+gworker-data/
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Files created by the 2023 prototype.
+config.json
+user_name.txt
+pomodoro_report*.txt
+20??-??-??_??-??-??.txt

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="architecture-title architecture-description">
+  <title id="architecture-title">Current architecture separates private journals from publication</title>
+  <desc id="architecture-description">A source-backed architecture map shows explicit caller inputs, the domain and policy cores, private canonical storage, and the locked synthetic publication path. No private journal data enters publication. Durable session linkage is implemented in the storage API; no linkage CLI exists. The dashed box marks rendering and sealing as next work.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="850" fill="#FFFFFF"/>
+  <text x="52" y="50" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">ARCHITECTURE + TRUST BOUNDARIES · CURRENT SOURCE</text>
+  <text x="52" y="86" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">Current architecture separates private journals from publication</text>
+  <text x="52" y="116" font-size="15" font-weight="400" fill="#667085" text-anchor="start">Solid = implemented · dashed = NEXT · arrows show data flow.</text>
+  <rect x="38" y="146" width="424" height="554" rx="18" fill="#F7FBFF" stroke="#56B4E9" stroke-width="2"/>
+  <text x="58" y="176" font-size="13" font-weight="800" fill="#0072B2" text-anchor="start">CALLER / LOCAL CORE</text>
+  <rect x="486" y="146" width="424" height="554" rx="18" fill="#F6FBF8" stroke="#009E73" stroke-width="2"/>
+  <text x="506" y="176" font-size="13" font-weight="800" fill="#009E73" text-anchor="start">PRIVATE DURABLE STATE</text>
+  <rect x="934" y="146" width="428" height="554" rx="18" fill="#FFFAF2" stroke="#E69F00" stroke-width="2"/>
+  <text x="954" y="176" font-size="13" font-weight="800" fill="#E69F00" text-anchor="start">LOCKED SYNTHETIC PUBLICATION</text>
+  <rect x="62" y="204" width="176" height="132" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="80" y="234" font-size="16" font-weight="750" fill="#0072B2" text-anchor="start">Explicit events</text>
+  <text x="80" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="80" dy="0">objective + measured</tspan><tspan x="80" dy="20">durations + bounded</tspan><tspan x="80" dy="20">interruption kinds</tspan></text>
+  <rect x="262" y="204" width="176" height="132" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="280" y="234" font-size="16" font-weight="750" fill="#0072B2" text-anchor="start">Domain reducer</text>
+  <text x="280" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="280" dy="0">strict revisions</tspan><tspan x="280" dy="20">phase transitions</tspan><tspan x="280" dy="20">pure replay state</tspan></text>
+  <line x1="238" y1="270" x2="258" y2="270" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="62" y="374" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="80" y="404" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">Policy context</text>
+  <text x="80" y="432" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="80" dy="0">task kind + energy</tspan><tspan x="80" dy="20">available time</tspan><tspan x="80" dy="20">previous template</tspan></text>
+  <rect x="262" y="374" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="280" y="404" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">Policy kernel</text>
+  <text x="280" y="432" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="280" dy="0">guardrails</tspan><tspan x="280" dy="20">posterior + ordinal</tspan><tspan x="280" dy="20">UCB + propensity</tspan></text>
+  <line x1="238" y1="445" x2="258" y2="445" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="158" y="554" width="244" height="104" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="176" y="584" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">Journal storage + CLI</text>
+  <text x="176" y="612" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="176" dy="0">recommend + explicit review</tspan><tspan x="176" dy="20">seeded replay + verify</tspan></text>
+  <line x1="350" y1="516" x2="350" y2="550" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M402 606 H470 V350 H798 V340" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="510" y="204" width="176" height="132" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="528" y="234" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">Canonical codec</text>
+  <text x="528" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="528" dy="0">versioned JSON</tspan><tspan x="528" dy="20">unknown fields fail</tspan><tspan x="528" dy="20">byte-stable events</tspan></text>
+  <rect x="710" y="204" width="176" height="132" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="728" y="234" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">SQLite journal</text>
+  <text x="728" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="728" dy="0">events + decisions</tspan><tspan x="728" dy="20">reviews + provenance links</tspan><tspan x="728" dy="20">transactional replay</tspan></text>
+  <line x1="686" y1="270" x2="706" y2="270" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="558" y="390" width="278" height="138" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="576" y="420" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">Local trust boundary</text>
+  <text x="576" y="448" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="576" dy="0">0700 directories / 0600 files</tspan><tspan x="576" dy="20">not encrypted by GWorker</tspan><tspan x="576" dy="20">same-UID attacker is out of scope</tspan></text>
+  <rect x="958" y="204" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#E69F00" stroke-width="2"/>
+  <text x="976" y="234" font-size="16" font-weight="750" fill="#E69F00" text-anchor="start">Double gate</text>
+  <text x="976" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="976" dy="0">clean Git + source</tspan><tspan x="976" dy="20">read-only capacity</tspan><tspan x="976" dy="20">clean Git again</tspan></text>
+  <rect x="1158" y="204" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#E69F00" stroke-width="2"/>
+  <text x="1176" y="234" font-size="16" font-weight="750" fill="#E69F00" text-anchor="start">Runner + state</text>
+  <text x="1176" y="262" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="1176" dy="0">single-use permit</tspan><tspan x="1176" dy="20">append-only stages</tspan><tspan x="1176" dy="20">crash burn/resume</tspan></text>
+  <line x1="1134" y1="275" x2="1154" y2="275" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="958" y="388" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#D55E00" stroke-width="2"/>
+  <text x="976" y="418" font-size="16" font-weight="750" fill="#D55E00" text-anchor="start">Locked evaluator</text>
+  <text x="976" y="446" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="976" dy="0">synthetic only</tspan><tspan x="976" dy="20">pre-registered IDs</tspan><tspan x="976" dy="20">no result produced yet</tspan></text>
+  <rect x="1158" y="388" width="176" height="142" rx="12" fill="#FFFFFF" stroke="#D55E00" stroke-width="2"/>
+  <text x="1176" y="418" font-size="16" font-weight="750" fill="#D55E00" text-anchor="start">Canonical evidence</text>
+  <text x="1176" y="446" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="1176" dy="0">result.bin</tspan><tspan x="1176" dy="20">report + evidence</tspan><tspan x="1176" dy="20">exact inventories</tspan></text>
+  <line x1="1134" y1="459" x2="1154" y2="459" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1058" y="566" width="244" height="92" rx="12" fill="#FFFFFF" stroke="#667085" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="1076" y="596" font-size="16" font-weight="750" fill="#667085" text-anchor="start">Render + seal · NEXT</text>
+  <text x="1076" y="624" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="1076" dy="0">manifest + SVG outputs</tspan><tspan x="1076" dy="20">bind final checksums</tspan></text>
+  <line x1="438" y1="270" x2="506" y2="270" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1246" y1="346" x2="1046" y2="384" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1246" y1="530" x2="1180" y2="562" stroke="#667085" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+  <rect x="38" y="730" width="1324" height="86" rx="12" fill="#F8FAFC" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="58" y="760" font-size="13" font-weight="800" fill="#0072B2" text-anchor="start">PRIVACY / CLAIM BOUNDARIES</text>
+  <text x="58" y="790" font-size="15" font-weight="600" fill="#1B1F23" text-anchor="start">Policy omits objective text · private journal has no publication path · synthetic visuals · no monitoring or causal claim</text>
+</svg>

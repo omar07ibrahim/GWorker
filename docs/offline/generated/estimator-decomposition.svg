@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="890" viewBox="0 0 1200 890" role="img" aria-labelledby="estimator-decomposition-title estimator-decomposition-description" data-evidence-fixture="authored-synthetic-replay-v1">
+<title id="estimator-decomposition-title">Estimator decomposition from exact row evidence</title>
+<desc id="estimator-decomposition-description">All sixteen authored synthetic rows list the reward, raw importance weight, and clipped weight returned by public replay calls. Formula cards show the exact aggregate outputs for behavior, raw, and clipped descriptive summaries, plus explicit interpretation nonclaims.</desc>
+<rect x="0" y="0" width="1200" height="890" rx="0" fill="#FFFFFF"/>
+<text x="60" y="54" fill="#132238" font-size="28" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Estimator decomposition from exact row evidence</text>
+<text x="60" y="84" fill="#526277" font-size="15" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">every displayed value is recomputed from the fixed public-API fixture</text>
+<rect x="876" y="28" width="264" height="42" rx="21" fill="#EEE9FC" stroke="#6D4BD1" stroke-width="1"/>
+<text x="1008" y="55" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">16 ROWS · EXACT INPUTS</text>
+<line x1="60" y1="108" x2="1140" y2="108" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="60" y="132" width="532" height="430" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="84" y="166" fill="#132238" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">ROW INPUTS RETURNED BY PUBLIC REPLAY</text>
+<text x="84" y="190" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">decision · reward yᵢ · raw wᵢ · clipped w̄ᵢ</text>
+<rect x="84" y="202" width="232" height="34" rx="6" fill="#EEE9FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="218" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">01 · y=1.0 · raw w=5.191650</text>
+<text x="94" y="232" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=3.000000</text>
+<rect x="84" y="240" width="232" height="34" rx="6" fill="#EEE9FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="256" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">02 · y=0.2 · raw w=3.483482</text>
+<text x="94" y="270" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=3.000000</text>
+<rect x="84" y="278" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="294" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">03 · y=0.8 · raw w=0.793689</text>
+<text x="94" y="308" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=0.793689</text>
+<rect x="84" y="316" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="332" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">04 · y=0.2 · raw w=1.351509</text>
+<text x="94" y="346" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.351509</text>
+<rect x="84" y="354" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="370" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">05 · y=1.0 · raw w=0.896368</text>
+<text x="94" y="384" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=0.896368</text>
+<rect x="84" y="392" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="408" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">06 · y=1.0 · raw w=2.000126</text>
+<text x="94" y="422" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=2.000126</text>
+<rect x="84" y="430" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="446" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">07 · y=0.0 · raw w=1.821179</text>
+<text x="94" y="460" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.821179</text>
+<rect x="84" y="468" width="232" height="34" rx="6" fill="#EEE9FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="94" y="484" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">08 · y=0.0 · raw w=4.233175</text>
+<text x="94" y="498" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=3.000000</text>
+<rect x="336" y="202" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="218" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">09 · y=0.8 · raw w=1.296208</text>
+<text x="346" y="232" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.296208</text>
+<rect x="336" y="240" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="256" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">10 · y=1.0 · raw w=1.286133</text>
+<text x="346" y="270" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.286133</text>
+<rect x="336" y="278" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="294" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">11 · y=0.2 · raw w=2.697581</text>
+<text x="346" y="308" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=2.697581</text>
+<rect x="336" y="316" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="332" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">12 · y=0.2 · raw w=2.398244</text>
+<text x="346" y="346" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=2.398244</text>
+<rect x="336" y="354" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="370" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">13 · y=0.8 · raw w=1.876009</text>
+<text x="346" y="384" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.876009</text>
+<rect x="336" y="392" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="408" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">14 · y=1.0 · raw w=1.818790</text>
+<text x="346" y="422" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.818790</text>
+<rect x="336" y="430" width="232" height="34" rx="6" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="446" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">15 · y=0.0 · raw w=1.339147</text>
+<text x="346" y="460" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=1.339147</text>
+<rect x="336" y="468" width="232" height="34" rx="6" fill="#EEE9FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="346" y="484" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">16 · y=0.2 · raw w=4.537233</text>
+<text x="346" y="498" fill="#132238" font-size="10" font-weight="500" font-family="ui-monospace,SFMono-Regular,Consolas,monospace" text-anchor="start">clipped w̄=3.000000</text>
+<text x="84" y="542" fill="#6D4BD1" font-size="12" font-weight="650" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">violet rows were clipped at c = 3.000000</text>
+<rect x="620" y="132" width="520" height="430" rx="12" fill="#F5F8FC" stroke="#D7E1EC" stroke-width="1"/>
+<text x="644" y="166" fill="#132238" font-size="14" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">AGGREGATE FORMULAS + PRODUCTION OUTPUT</text>
+<rect x="630" y="184" width="500" height="118" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="630" y="184" width="8" height="118" rx="4" fill="#087E8B"/>
+<text x="654" y="212" fill="#087E8B" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">BEHAVIOR OBSERVATION</text>
+<text x="654" y="242" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Σ yᵢ / n</text>
+<text x="1106" y="242" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.525000</text>
+<text x="654" y="272" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">n</text>
+<text x="1106" y="272" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">16</text>
+<rect x="630" y="314" width="500" height="118" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="630" y="314" width="8" height="118" rx="4" fill="#6D4BD1"/>
+<text x="654" y="342" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">RAW REWEIGHTING · READINESS INPUT</text>
+<text x="654" y="372" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Σ wᵢyᵢ / n · IPS</text>
+<text x="1106" y="372" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">1.078713</text>
+<text x="654" y="402" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Σ wᵢyᵢ / Σ wᵢ · SNIPS</text>
+<text x="1106" y="402" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.466212</text>
+<rect x="630" y="444" width="500" height="118" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<rect x="630" y="444" width="8" height="118" rx="4" fill="#087E8B"/>
+<text x="654" y="472" fill="#087E8B" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">CLIPPED SENSITIVITY · NEVER A READINESS GATE</text>
+<text x="654" y="502" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Σ w̄ᵢyᵢ / n · clipped IPS</text>
+<text x="1106" y="502" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.916476</text>
+<text x="654" y="532" fill="#526277" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">Σ w̄ᵢyᵢ / Σ w̄ᵢ · clipped SNIPS</text>
+<text x="1106" y="532" fill="#132238" font-size="14" font-weight="720" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="end">0.464406</text>
+<rect x="60" y="596" width="1080" height="172" rx="12" fill="#FFFFFF" stroke="#D7E1EC" stroke-width="1"/>
+<text x="84" y="628" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">TRACEABLE DECOMPOSITION</text>
+<rect x="84" y="648" width="256" height="76" rx="12" fill="#D9F3F5" stroke="#087E8B" stroke-width="1"/>
+<text x="212" y="678" fill="#087E8B" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">ROW INGREDIENTS</text>
+<text x="212" y="704" fill="#132238" font-size="14" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">bᵢ · qᵢ · yᵢ · c=3</text>
+<line x1="340" y1="686" x2="400" y2="686" stroke="#526277" stroke-width="2"/>
+<text x="370" y="676" fill="#526277" font-size="22" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">→</text>
+<rect x="410" y="648" width="300" height="76" rx="12" fill="#EEE9FC" stroke="#6D4BD1" stroke-width="1"/>
+<text x="560" y="678" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">DETERMINISTIC WEIGHTS</text>
+<text x="560" y="704" fill="#132238" font-size="14" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">wᵢ=qᵢ/bᵢ · w̄ᵢ=min(wᵢ,c)</text>
+<line x1="710" y1="686" x2="770" y2="686" stroke="#526277" stroke-width="2"/>
+<text x="740" y="676" fill="#526277" font-size="22" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">→</text>
+<rect x="780" y="648" width="336" height="76" rx="12" fill="#F5F8FC" stroke="#132238" stroke-width="1"/>
+<text x="948" y="675" fill="#132238" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">FINITE-SNAPSHOT OUTPUTS</text>
+<text x="948" y="700" fill="#132238" font-size="13" font-weight="500" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">raw ESS 12.111890 · clipped ESS 13.931938</text>
+<text x="948" y="718" fill="#6D4BD1" font-size="12" font-weight="700" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="middle">readiness reportable</text>
+<rect x="60" y="790" width="1080" height="70" rx="12" fill="#EEE9FC" stroke="#6D4BD1" stroke-width="1"/>
+<text x="84" y="818" fill="#6D4BD1" font-size="13" font-weight="760" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">EXPLICIT NONCLAIMS</text>
+<text x="84" y="844" fill="#132238" font-size="13" font-weight="650" font-family="Inter,Segoe UI,Arial,sans-serif" text-anchor="start">review selection corrected=false · target-policy value=false · sequential value=false · causal effect=false · locked evaluation=false</text>
+</svg>

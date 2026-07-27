@@ -1,0 +1,190 @@
+{
+  "command": "PYTHONPATH=src python3 scripts/visuals/generate.py",
+  "inputs": [
+    {
+      "path": "README.md",
+      "sha256": "7d8fd6a1f4ad4717f2e0a7ee338c584353da400b0d4a4c5659b4beff3238cdb1"
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "bfb03523458b92048ead80cf700d2268aa95839a83c30074b362ce36fa632d42"
+    },
+    {
+      "path": "docs/decision-lineage.md",
+      "sha256": "35566c33e9f93eeebb4dcf7516fd62e499879c9359232172e3e73198fae8f8cc"
+    },
+    {
+      "path": "docs/evaluation-protocol.md",
+      "sha256": "fd73ed6d83aa1060f24932691e5ff0155c193e94ade556fb4951df01a7d4ace3"
+    },
+    {
+      "path": "docs/publication-evidence.md",
+      "sha256": "0228ff3b5a169453deeb7a4dc1dc4fa868913fe2663d29c6f8df8bd756243fd8"
+    },
+    {
+      "path": "docs/session-linkage.md",
+      "sha256": "8bfa018720bc5d9bda1c38057d9b0d4ddff8efc688bc4bbaa87238c76f2a12cb"
+    },
+    {
+      "path": "docs/visuals/terminal/journal-recovery.svg",
+      "sha256": "08cc240fd28121cd9f09a9029fcc16631232f4b568383cd340e6fe8759c582d7"
+    },
+    {
+      "path": "docs/visuals/terminal/journal-recovery.txt",
+      "sha256": "bc077acc3dba23616efbf2ea6a52c2c092ae00a64d582383c662b24125c8db91"
+    },
+    {
+      "path": "docs/visuals/terminal/manifest.json",
+      "sha256": "d6c8973a7c279570190b4ecf2959817417029b64a9327d5d7a10b4e9231d0985"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "4782b684e575fe363586ff618312c611fd8cbd1082d0cc562fb71ab7b8868790"
+    },
+    {
+      "path": "scripts/demo_journal.py",
+      "sha256": "662a875d6b205144228339c7cc6a1eaf903dc66a2373451399bd28fe6c59b3f7"
+    },
+    {
+      "path": "scripts/demo_policy_journal.py",
+      "sha256": "7e0c365f1ce2d6ae9536702375efcde23d8a8dfaa2d40145e036eef45ddcdbd7"
+    },
+    {
+      "path": "scripts/visuals/capture_terminal.py",
+      "sha256": "23a699e45a18c9e28607b38a9634e80b0d267820cc188495a310d4dc598f4248"
+    },
+    {
+      "path": "scripts/visuals/generate.py",
+      "sha256": "c11b2c1245bc5decc2a42590ea394d73a4970999efee0f401754b0e80d805017"
+    },
+    {
+      "path": "src/gworker/__init__.py",
+      "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
+    },
+    {
+      "path": "src/gworker/cli.py",
+      "sha256": "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
+    },
+    {
+      "path": "src/gworker/codec.py",
+      "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+    },
+    {
+      "path": "src/gworker/domain.py",
+      "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+    },
+    {
+      "path": "src/gworker/evaluation.py",
+      "sha256": "0440be639688c4755929ed3ea3c975388986fcfe3412194c82eaadc7b183d9e5"
+    },
+    {
+      "path": "src/gworker/evidence.py",
+      "sha256": "a7e27eec70f12351bb8bb8c95eff414b176a22b0868fe753cb08c0ef6e4863b8"
+    },
+    {
+      "path": "src/gworker/policy.py",
+      "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+    },
+    {
+      "path": "src/gworker/publication_codec.py",
+      "sha256": "3514265191e225ab9a7b0588f254e9587940b1c64b4eda607989834748dad20a"
+    },
+    {
+      "path": "src/gworker/publication_runner.py",
+      "sha256": "b12402453cf8ee5b98556e1cad8f572802d2163c6dd803d4994459fd61334ab0"
+    },
+    {
+      "path": "src/gworker/publication_state.py",
+      "sha256": "d2de30d2af8e5a172d5980f9b67274ac760f66b00621779ea29496a8a6e1df8d"
+    },
+    {
+      "path": "src/gworker/reporting.py",
+      "sha256": "710bbe03becb4321323fdda6b2964431a8eecf25d54a6d1d3d6366ac74295c29"
+    },
+    {
+      "path": "src/gworker/resource_preflight.py",
+      "sha256": "75599a900af5691e02cba41a974bb9d4627a2110978f39f3a724d4334f5012c7"
+    },
+    {
+      "path": "src/gworker/result_codec.py",
+      "sha256": "1b068c6ed37a0924496df0111a259c8f30106aaa043ac7a1e314e39b6ca0a64d"
+    },
+    {
+      "path": "src/gworker/storage.py",
+      "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
+    }
+  ],
+  "observations": {
+    "locked_outcome_artifact_count": 0,
+    "locked_result_visuals_generated": false
+  },
+  "outputs": [
+    {
+      "byte_count": 9700,
+      "path": "generated/architecture-trust-boundaries.svg",
+      "sha256": "b5570f843e1fcedea1b08205d08a87f13ad9b029e87c86c35e2452bbc3a459bf",
+      "title": "Current architecture separates private journals from publication"
+    },
+    {
+      "byte_count": 8049,
+      "path": "generated/durable-decision-lineage.svg",
+      "sha256": "95af9d5e568a9152fee2069fed5aaebf4c1a72e450e0c7f90ca555f8a3651c5d",
+      "title": "Durable recommendations retain exact review and replay lineage"
+    },
+    {
+      "byte_count": 8102,
+      "path": "generated/event-replay.svg",
+      "sha256": "69e412bc5277adaee2cc2624e84d45e05b81179d7a3d8cba170acb03eaccbbad",
+      "title": "A real seven-event replay reaches a completed projection"
+    },
+    {
+      "byte_count": 10884,
+      "path": "generated/focus-session-linkage.svg",
+      "sha256": "ddb05c16a0247c4a6fc4e0546681910bec282af7d1d20b91f5acf400b559f86e",
+      "title": "Session progress stays provenance until an explicit review"
+    },
+    {
+      "byte_count": 12153,
+      "path": "generated/guardrail-matrix.svg",
+      "sha256": "edae712494e97ec8f5fcbd467ca2272a9c17f9e7f87a7d70520cff05f706ed30",
+      "title": "Availability and one-step movement are applied before scoring"
+    },
+    {
+      "byte_count": 7059,
+      "path": "generated/journal-recovery-trust-boundaries.svg",
+      "sha256": "3c8248411dc0d8e7756237079f7086fc6abe4129d9306bfe83b7181ed8bd7be3",
+      "title": "Canonical replay catches logical tamper after SQLite accepts the copy"
+    },
+    {
+      "byte_count": 7947,
+      "path": "generated/locked-protocol-inventory.svg",
+      "sha256": "9476097deceb2c329e9dcf9175d2075f1b47487b2d7126fdebaff7405b815767",
+      "title": "The locked protocol declares scale, but has produced zero outcomes"
+    },
+    {
+      "byte_count": 6673,
+      "path": "generated/policy-score-decomposition.svg",
+      "sha256": "17a2300379e9cfe0c8838f8c050e62580cfa90878a51e5305a708a708eb65a99",
+      "title": "Twelve explicit reviews produce an explainable focus-40 choice"
+    },
+    {
+      "byte_count": 6649,
+      "path": "generated/publication-lifecycle.svg",
+      "sha256": "27aa1f73c35f0b30e6c1de8a20a746521bc2a46e06c25ec314185037d387770a",
+      "title": "The runner stops at materialized; rendering and sealing are next"
+    }
+  ],
+  "python": {
+    "requires": ">=3.11",
+    "stdlib_only": true,
+    "validated_minor_versions": [
+      "3.11",
+      "3.12"
+    ]
+  },
+  "schema_version": "gworker-visual-manifest-v1",
+  "tool": {
+    "name": "gworker-visual-evidence",
+    "version": "5"
+  }
+}

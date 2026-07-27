@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1410 730" role="img" aria-labelledby="publication-lifecycle-title publication-lifecycle-description">
+  <title id="publication-lifecycle-title">The runner stops at materialized; rendering and sealing are next</title>
+  <desc id="publication-lifecycle-description">The implemented publication lifecycle is shown without claiming an executed run. Preflight precedes the append-only state chain. A crash in evaluating burns the run, while evaluated materialization can resume. Rendering and final sealing are directly marked NEXT.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1410" height="730" fill="#FFFFFF"/>
+  <text x="52" y="52" font-size="14" font-weight="700" fill="#0072B2" text-anchor="start">PUBLICATION CONTROL FLOW · NOT AN EXECUTED RESULT</text>
+  <text x="52" y="88" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">The runner stops at materialized; rendering and sealing are next</text>
+  <text x="52" y="118" font-size="16" font-weight="650" fill="#D55E00" text-anchor="start">Current locked outcome artifacts observed: 0.</text>
+  <line x1="218" y1="262" x2="236" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="52" y="184" width="166" height="188" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="135" y="222" font-size="14" font-weight="800" fill="#0072B2" text-anchor="middle">PREFLIGHT</text>
+  <text x="135" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="135" dy="0">clean source</tspan><tspan x="135" dy="28">capacity read-only</tspan><tspan x="135" dy="28">failure: no claim</tspan></text>
+  <line x1="408" y1="262" x2="426" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="242" y="184" width="166" height="188" rx="12" fill="#FFFFFF" stroke="#56B4E9" stroke-width="2"/>
+  <text x="325" y="222" font-size="14" font-weight="800" fill="#56B4E9" text-anchor="middle">PREPARED</text>
+  <text x="325" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="325" dy="0">provenance bound</tspan><tspan x="325" dy="28">exclusive run</tspan><tspan x="325" dy="28">may continue</tspan></text>
+  <line x1="598" y1="262" x2="616" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="432" y="184" width="166" height="188" rx="12" fill="#FFFFFF" stroke="#D55E00" stroke-width="2"/>
+  <text x="515" y="222" font-size="14" font-weight="800" fill="#D55E00" text-anchor="middle">EVALUATING</text>
+  <text x="515" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="515" dy="0">state fsynced</tspan><tspan x="515" dy="28">then permit</tspan><tspan x="515" dy="28">reopen = BURNED</tspan></text>
+  <line x1="788" y1="262" x2="806" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="622" y="184" width="166" height="188" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="705" y="222" font-size="14" font-weight="800" fill="#009E73" text-anchor="middle">EVALUATED</text>
+  <text x="705" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="705" dy="0">result.bin bound</tspan><tspan x="705" dy="28">exact counts</tspan><tspan x="705" dy="28">resume materialize</tspan></text>
+  <line x1="978" y1="262" x2="996" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+  <rect x="812" y="184" width="166" height="188" rx="12" fill="#FFFFFF" stroke="#E69F00" stroke-width="3"/>
+  <text x="895" y="222" font-size="14" font-weight="800" fill="#E69F00" text-anchor="middle">MATERIALIZED</text>
+  <text x="895" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="895" dy="0">report + evidence</tspan><tspan x="895" dy="28">verified bytes</tspan><tspan x="895" dy="28">runner stops here</tspan></text>
+  <line x1="1168" y1="262" x2="1186" y2="262" stroke="#667085" stroke-width="2" marker-end="url(#arrow)" stroke-dasharray="7 5"/>
+  <rect x="1002" y="184" width="166" height="188" rx="12" fill="#F8FAFC" stroke="#667085" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="1085" y="222" font-size="14" font-weight="800" fill="#667085" text-anchor="middle">RENDER · NEXT</text>
+  <text x="1085" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="1085" dy="0">SVG / tables</tspan><tspan x="1085" dy="28">manifest checksums</tspan><tspan x="1085" dy="28">not implemented</tspan></text>
+  <rect x="1192" y="184" width="166" height="188" rx="12" fill="#F8FAFC" stroke="#667085" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="1275" y="222" font-size="14" font-weight="800" fill="#667085" text-anchor="middle">SEALED · NEXT</text>
+  <text x="1275" y="266" font-size="13" font-weight="400" fill="#667085" text-anchor="middle"><tspan x="1275" dy="0">state API exists</tspan><tspan x="1275" dy="28">runner path pending</tspan><tspan x="1275" dy="28">bind all outputs</tspan></text>
+  <line x1="515" y1="372" x2="515" y2="446" stroke="#D55E00" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="396" y="452" width="238" height="82" rx="12" fill="#FFF1ED" stroke="#D55E00" stroke-width="2"/>
+  <text x="515" y="482" font-size="13" font-weight="800" fill="#D55E00" text-anchor="middle">INTERRUPTED EVALUATING</text>
+  <text x="515" y="510" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="middle">burned · no retry/reset flag</text>
+  <line x1="705" y1="372" x2="705" y2="446" stroke="#009E73" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="656" y="452" width="298" height="82" rx="12" fill="#EEF8F5" stroke="#009E73" stroke-width="2"/>
+  <text x="805" y="482" font-size="13" font-weight="800" fill="#009E73" text-anchor="middle">POST-EVALUATION RESTART</text>
+  <text x="805" y="510" font-size="13" font-weight="400" fill="#1B1F23" text-anchor="middle">reverify source + exact bytes · resume</text>
+  <rect x="52" y="584" width="1306" height="100" rx="12" fill="#F8FAFC" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="74" y="617" font-size="13" font-weight="800" fill="#E69F00" text-anchor="start">IMPLEMENTED STOP</text>
+  <text x="74" y="650" font-size="16" font-weight="600" fill="#1B1F23" text-anchor="start">run_publication() can advance PREPARED → EVALUATED → MATERIALIZED. It does not render or call seal().</text>
+</svg>

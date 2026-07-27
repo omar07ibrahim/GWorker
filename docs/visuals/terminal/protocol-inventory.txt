@@ -1,0 +1,34 @@
+GWorker locked protocol inventory | no evaluation executed
+Evaluator:  synthetic-eval-v3
+Policy:     hierarchical-softmax-ucb-v1.8c10875dd38a025d
+Run key:    synthetic-eval-v3-eval
+Design ID:  synthetic-eval-v3-design.503fe85fb1ff862383812f74eb9b6ce89fdc2a7811f44a83d53ca42c1634ebfd
+Population: synthetic-eval-v3-population.dc3f496427d8b78e742eed763ad494902660e50aa4ad45000008854edcaaab83
+
+Locked configuration
+ split=eval  horizon=288  policy_replicas=4
+ seeds=128 (0..127)  personas=9  availability_modes=2
+ drift_decision=137  recovery=3 x 12-decision blocks
+
+Expected publication inventory
+ artifact                         rows
+ cluster_summaries                    16,128
+ abrupt_traces                         3,584
+ raw_trace_points                  1,032,192
+ trajectories                         23,040
+ decisions                         6,635,520
+ scenario_strategy_rows                  126
+ macro_strategy_rows                       7
+ macro_contrasts                           6
+ scenario_contrasts                      108
+ adaptive_diagnostic_scopes               19
+ calibration_rows                        152
+ template_exposure_rows                  532
+ recovery_rows                            28
+ recovery_contrast_rows                   24
+ trace_series                             28
+ trace_points                          8,064
+
+Bootstrap: paired-seed-bootstrap-v1, 5,000 resamples, 95% confidence
+Call surface: validate_experiment_config, expected_publication_cardinalities
+Result data: none (inventory arithmetic only).

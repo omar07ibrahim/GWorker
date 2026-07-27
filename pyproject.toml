@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gworker-focus"
+version = "0.1.0"
+description = "A local-first, event-sourced engine for adaptive focus experiments"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Omar Ibrahim", email = "31526072+omar07ibrahim@users.noreply.github.com" },
+]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.scripts]
+gworker = "gworker.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "build==1.5.0",
+    "coverage[toml]==7.15.2",
+    "mypy==2.3.0",
+    "pip-audit==2.10.1",
+    "ruff==0.16.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gworker = ["py.typed"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "RUF", "SIM", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]
+
+[tool.coverage.run]
+branch = true
+source = ["gworker"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true

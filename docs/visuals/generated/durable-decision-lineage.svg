@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 920" role="img" aria-labelledby="durable-decision-lineage-title durable-decision-lineage-description">
+  <title id="durable-decision-lineage-title">Durable recommendations retain exact review and replay lineage</title>
+  <desc id="durable-decision-lineage-description">A source-derived fixed workflow uses the public SQLiteEventStore on a disposable private journal: recommend D1, record one explicit review, reopen for D2, then reopen and verify two decisions, one review, one history edge, the exact policy fingerprint, and SQLite integrity.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#667085"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="920" fill="#FFFFFF"/>
+  <text x="52" y="50" font-size="14" font-weight="700" fill="#CC79A7" text-anchor="start">DURABLE DECISION LINEAGE · REAL PUBLIC STORAGE API</text>
+  <text x="52" y="86" font-size="27" font-weight="700" fill="#1B1F23" text-anchor="start">Durable recommendations retain exact review and replay lineage</text>
+  <text x="52" y="116" font-size="15" font-weight="400" fill="#667085" text-anchor="start">Fixed synthetic context · every value below is recomputed from source.</text>
+  <rect x="52" y="140" width="1296" height="52" rx="12" fill="#FBF7FC" stroke="#CC79A7" stroke-width="1"/>
+  <text x="72" y="173" font-size="15" font-weight="700" fill="#CC79A7" text-anchor="start" font-family="monospace">Exact policy fingerprint: hierarchical-softmax-ucb-v1.8c10875dd38a025d</text>
+  <rect x="52" y="224" width="230" height="154" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="70" y="254" font-size="16" font-weight="750" fill="#0072B2" text-anchor="start">D1 · RECOMMEND</text>
+  <text x="70" y="282" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="70" dy="0">sequence 1 · focus-40</tspan><tspan x="70" dy="20">seed 20,260,725</tspan><tspan x="70" dy="20">p = 0x1.0000000000000p-2</tspan></text>
+  <rect x="306" y="224" width="230" height="154" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="324" y="254" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">EXPLICIT REVIEW</text>
+  <text x="324" y="282" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="324" dy="0">fit = just_right</tspan><tspan x="324" dy="20">objective completed = true</tspan><tspan x="324" dy="20">exact D1 propensity preserved</tspan></text>
+  <rect x="560" y="224" width="138" height="154" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="578" y="254" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">REOPEN</text>
+  <text x="578" y="282" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="578" dy="0">new store</tspan><tspan x="578" dy="20">same file</tspan><tspan x="578" dy="20">path omitted</tspan></text>
+  <rect x="722" y="224" width="230" height="154" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="740" y="254" font-size="16" font-weight="750" fill="#0072B2" text-anchor="start">D2 · RECOMMEND</text>
+  <text x="740" y="282" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="740" dy="0">sequence 2 · focus-25</tspan><tspan x="740" dy="20">history evidence = 1</tspan><tspan x="740" dy="20">p = 0x1.1e5ae1020930fp-2</tspan></text>
+  <rect x="976" y="224" width="372" height="154" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="994" y="254" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">REOPEN + VERIFY</text>
+  <text x="994" y="282" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="994" dy="0">exact policy replay</tspan><tspan x="994" dy="20">decisions / reviews = 2 / 1</tspan><tspan x="994" dy="20">history edges = 1</tspan><tspan x="994" dy="20">SQLite quick_check = ok</tspan></text>
+  <line x1="282" y1="301" x2="302" y2="301" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="536" y1="301" x2="556" y2="301" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="698" y1="301" x2="718" y2="301" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="952" y1="301" x2="972" y2="301" stroke="#667085" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="52" y="414" width="1296" height="252" rx="18" fill="#F8FAFC" stroke="#E4E7EC" stroke-width="1"/>
+  <text x="72" y="446" font-size="13" font-weight="800" fill="#009E73" text-anchor="start">THREE APPEND-ONLY POLICY RELATIONS</text>
+  <rect x="72" y="466" width="486" height="170" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="90" y="496" font-size="16" font-weight="750" fill="#0072B2" text-anchor="start">policy_decisions</text>
+  <text x="90" y="524" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="90" dy="0">D1 · seq 1 · focus-40 · seed 20,260,725</tspan><tspan x="90" dy="20">D2 · seq 2 · focus-25 · seed 20,260,726</tspan><tspan x="90" dy="20">canonical hexadecimal propensity + history digest</tspan></text>
+  <rect x="582" y="466" width="330" height="170" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="600" y="496" font-size="16" font-weight="750" fill="#CC79A7" text-anchor="start">policy_reviews</text>
+  <text x="600" y="524" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="600" dy="0">D1 · fit = just_right</tspan><tspan x="600" dy="20">objective completed = true</tspan><tspan x="600" dy="20">caller supplies no propensity</tspan></text>
+  <rect x="936" y="466" width="392" height="170" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="954" y="496" font-size="16" font-weight="750" fill="#009E73" text-anchor="start">policy_decision_history</text>
+  <text x="954" y="524" font-size="13" font-weight="400" fill="#667085" text-anchor="start"><tspan x="954" dy="0">D2 · position 0 → reviewed D1</tspan><tspan x="954" dy="20">count + SHA-256 bind order</tspan><tspan x="954" dy="20">no future or orphaned review</tspan></text>
+  <rect x="52" y="690" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#0072B2" stroke-width="2"/>
+  <text x="74" y="734" font-size="30" font-weight="800" fill="#0072B2" text-anchor="start">2</text>
+  <text x="134" y="734" font-size="13" font-weight="750" fill="#667085" text-anchor="start">DECISIONS REPLAYED</text>
+  <rect x="376" y="690" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#CC79A7" stroke-width="2"/>
+  <text x="398" y="734" font-size="30" font-weight="800" fill="#CC79A7" text-anchor="start">1</text>
+  <text x="458" y="734" font-size="13" font-weight="750" fill="#667085" text-anchor="start">REVIEW REPLAYED</text>
+  <rect x="700" y="690" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#009E73" stroke-width="2"/>
+  <text x="722" y="734" font-size="30" font-weight="800" fill="#009E73" text-anchor="start">1</text>
+  <text x="782" y="734" font-size="13" font-weight="750" fill="#667085" text-anchor="start">HISTORY EDGE VERIFIED</text>
+  <rect x="1024" y="690" width="300" height="92" rx="12" fill="#FFFFFF" stroke="#E69F00" stroke-width="2"/>
+  <text x="1046" y="734" font-size="30" font-weight="800" fill="#E69F00" text-anchor="start">OK</text>
+  <text x="1106" y="734" font-size="13" font-weight="750" fill="#667085" text-anchor="start">SQLITE QUICK_CHECK</text>
+  <rect x="52" y="806" width="1296" height="78" rx="12" fill="#F7FBFF" stroke="#56B4E9" stroke-width="1"/>
+  <text x="72" y="836" font-size="12" font-weight="800" fill="#0072B2" text-anchor="start">PRIVACY / CLAIM BOUNDARY</text>
+  <text x="72" y="861" font-size="14" font-weight="600" fill="#1B1F23" text-anchor="start">Disposable private journal removed after verification · no host path rendered · no locked evaluator or publication run</text>
+</svg>
