@@ -115,6 +115,7 @@ CYAN: Final = "#36D7E8"
 GREEN: Final = "#65E6A8"
 PURPLE: Final = "#A78BFA"
 ORANGE: Final = "#FDBA74"
+WORKFLOW_TITLE: Final = "Recommend > review > reopen > verify"
 
 SOURCE_PATHS: Final = (
     "docs/cli-motion.md",
@@ -1027,7 +1028,7 @@ def _render_frames(
         image = Image.new("RGB", (WIDTH, HEIGHT), BACKGROUND)
         draw = ImageDraw.Draw(image)
         title = (
-            "Recommend → review → reopen → verify"
+            WORKFLOW_TITLE
             if kind == "intro"
             else (
                 "Durable decision lineage"

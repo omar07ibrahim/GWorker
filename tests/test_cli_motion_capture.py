@@ -292,6 +292,10 @@ class RenderingTests(unittest.TestCase):
         return tempfile.TemporaryDirectory(prefix="bundle-", dir=TEST_ROOT)
 
     def test_render_is_byte_deterministic_and_multiframe(self) -> None:
+        self.assertEqual(
+            motion.WORKFLOW_TITLE,
+            "Recommend > review > reopen > verify",
+        )
         first = fixture_bundle()
         second = fixture_bundle()
         self.assertEqual(first, second)
