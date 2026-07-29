@@ -33,7 +33,7 @@ FROZEN_BUNDLE_SHA256 = {
         "3ccf099500f7e230336b7f2eff9cf51cbb306f5f44213c8f81d695123b717520"
     ),
     "manifest.json": (
-        "c5ee17f32c12f919efe63e657f347e5650bd41901982b8ff162042c8cf1a8f75"
+        "74b1d8f36654caf4dd9723374860a9d2e3aee135a0c0b92be237e6f6dfde291d"
     ),
 }
 FROZEN_BUNDLE_BYTE_COUNTS = {
