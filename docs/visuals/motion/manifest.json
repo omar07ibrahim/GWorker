@@ -1,0 +1,114 @@
+{
+  "claim_boundary": [
+    "four fixed synthetic CLI processes against one disposable journal",
+    "real PTY stdout with deterministic presentation timing",
+    "not a timer UI, benchmark, latency measurement, human outcome, or locked evaluation",
+    "byte-identical rendering requires the recorded Pillow and FreeType versions"
+  ],
+  "outputs": {
+    "durable-policy-workflow.events.json": {
+      "byte_count": 7285,
+      "path": "docs/visuals/motion/durable-policy-workflow.events.json",
+      "sha256": "cbf028f4a4514deb917e98c0c88497f12acb820a85b1b1ed1e77a9564d8006ea"
+    },
+    "durable-policy-workflow.gif": {
+      "byte_count": 268393,
+      "path": "docs/visuals/motion/durable-policy-workflow.gif",
+      "sha256": "1b301f5adbc0df6c07f9ced259f83968a8eab9b3868cdb02791709b746e2b692"
+    },
+    "durable-policy-workflow.png": {
+      "byte_count": 36505,
+      "path": "docs/visuals/motion/durable-policy-workflow.png",
+      "sha256": "761b3b175120d61375684303be1a19f5b1ec6aa5bebb82ce0a735d7cab1d7a7c"
+    },
+    "durable-policy-workflow.txt": {
+      "byte_count": 2107,
+      "path": "docs/visuals/motion/durable-policy-workflow.txt",
+      "sha256": "e02708286479a90f870957e2093d2debaf5d7b0980df306e60a010b090de1976"
+    }
+  },
+  "presentation": {
+    "frame_count": 11,
+    "frame_durations_ms": [
+      900,
+      900,
+      1400,
+      800,
+      1300,
+      800,
+      1400,
+      800,
+      1600,
+      1800,
+      3000
+    ],
+    "height": 540,
+    "kind": "fixed-presentation-timing",
+    "loop": 0,
+    "measured_command_latency": false,
+    "width": 960
+  },
+  "provenance": {
+    "source_commit": "828017e3a594c2b7c32365e656ac5bf4073ccbe1",
+    "source_commit_role": "clean Git commit executed by record; source bytes matched its blobs",
+    "sources": [
+      {
+        "byte_count": 2745,
+        "path": "docs/cli-motion.md",
+        "sha256": "6e7145000bd6d9187f3d57475adff2833c60d895d3f403b0905ff96a2775e442"
+      },
+      {
+        "byte_count": 1165,
+        "path": "pyproject.toml",
+        "sha256": "eafd3ec4005cd6aca3c77ef838bd15418efa801920f759cb854a3693a20e67f3"
+      },
+      {
+        "byte_count": 45526,
+        "path": "scripts/visuals/capture_cli_motion.py",
+        "sha256": "92a83277240e3718792f0e2b4889218f21b704d743be4f993b8f014b374da7c4"
+      },
+      {
+        "byte_count": 1943,
+        "path": "src/gworker/__init__.py",
+        "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
+      },
+      {
+        "byte_count": 13199,
+        "path": "src/gworker/cli.py",
+        "sha256": "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
+      },
+      {
+        "byte_count": 9923,
+        "path": "src/gworker/codec.py",
+        "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+      },
+      {
+        "byte_count": 17751,
+        "path": "src/gworker/domain.py",
+        "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+      },
+      {
+        "byte_count": 26252,
+        "path": "src/gworker/policy.py",
+        "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+      },
+      {
+        "byte_count": 74533,
+        "path": "src/gworker/storage.py",
+        "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
+      }
+    ]
+  },
+  "reproduction": {
+    "check": "PYTHONPATH=src python scripts/visuals/capture_cli_motion.py check",
+    "record_real_processes": "PYTHONPATH=src python scripts/visuals/capture_cli_motion.py record",
+    "render_without_processes": "PYTHONPATH=src python scripts/visuals/capture_cli_motion.py render"
+  },
+  "schema_version": "gworker-cli-motion-manifest-v1",
+  "tool": {
+    "freetype_version": "2.14.3",
+    "name": "gworker-cli-motion-capture",
+    "pillow_version": "12.3.0",
+    "version": "1"
+  }
+}

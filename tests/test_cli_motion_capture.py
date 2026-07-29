@@ -16,6 +16,31 @@ from PIL import Image
 from scripts.visuals import capture_cli_motion as motion
 
 TEST_ROOT = motion.ROOT / ".gworker" / "cli-motion-tests"
+COMMITTED_SOURCE_COMMIT = "828017e3a594c2b7c32365e656ac5bf4073ccbe1"
+COMMITTED_BUNDLE_SHA256 = {
+    motion.EVENTS_NAME: (
+        "cbf028f4a4514deb917e98c0c88497f12acb820a85b1b1ed1e77a9564d8006ea"
+    ),
+    motion.GIF_NAME: (
+        "1b301f5adbc0df6c07f9ced259f83968a8eab9b3868cdb02791709b746e2b692"
+    ),
+    motion.POSTER_NAME: (
+        "761b3b175120d61375684303be1a19f5b1ec6aa5bebb82ce0a735d7cab1d7a7c"
+    ),
+    motion.TRANSCRIPT_NAME: (
+        "e02708286479a90f870957e2093d2debaf5d7b0980df306e60a010b090de1976"
+    ),
+    motion.MANIFEST_NAME: (
+        "88b5e47f80b0b693e4681e6ef675507c59a352e78707b67af1484616f1cb5747"
+    ),
+}
+COMMITTED_BUNDLE_BYTE_COUNTS = {
+    motion.EVENTS_NAME: 7_285,
+    motion.GIF_NAME: 268_393,
+    motion.POSTER_NAME: 36_505,
+    motion.TRANSCRIPT_NAME: 2_107,
+    motion.MANIFEST_NAME: 3_849,
+}
 
 
 def sha256(content: bytes) -> str:
@@ -424,6 +449,66 @@ class RenderingTests(unittest.TestCase):
             os.symlink(TEST_ROOT, root)
             with self.assertRaises(motion.MotionCaptureError):
                 motion._write_bundle(bundle, root)
+
+
+class CommittedMotionBundleTests(unittest.TestCase):
+    def test_committed_bundle_matches_frozen_bytes_and_source_commit(self) -> None:
+        self.assertEqual(motion.check_bundle(), ())
+        observed = {
+            path.name: path.read_bytes()
+            for path in motion.MOTION_ROOT.iterdir()
+            if path.is_file()
+        }
+        self.assertEqual(set(observed), set(COMMITTED_BUNDLE_SHA256))
+        for name, content in observed.items():
+            self.assertEqual(
+                sha256(content),
+                COMMITTED_BUNDLE_SHA256[name],
+                name,
+            )
+            self.assertEqual(
+                len(content),
+                COMMITTED_BUNDLE_BYTE_COUNTS[name],
+                name,
+            )
+
+        events = motion._load_json_bytes(
+            observed[motion.EVENTS_NAME],
+            label="committed motion events",
+        )
+        provenance = events["provenance"]
+        self.assertIsInstance(provenance, dict)
+        assert isinstance(provenance, dict)
+        self.assertEqual(provenance["source_commit"], COMMITTED_SOURCE_COMMIT)
+        self.assertEqual(provenance["sources"], motion._source_records())
+
+    def test_committed_check_starts_no_process(self) -> None:
+        with (
+            patch.object(
+                motion,
+                "_run_pty_process",
+                side_effect=AssertionError("application execution is forbidden"),
+            ),
+            patch.object(
+                motion,
+                "_run_git",
+                side_effect=AssertionError("Git execution is forbidden"),
+            ),
+        ):
+            self.assertEqual(motion.check_bundle(), ())
+
+    def test_committed_text_has_no_host_path_or_secret_signature(self) -> None:
+        text = b"\n".join(
+            (motion.MOTION_ROOT / name).read_bytes()
+            for name in (
+                motion.EVENTS_NAME,
+                motion.TRANSCRIPT_NAME,
+                motion.MANIFEST_NAME,
+            )
+        ).decode("utf-8")
+        self.assertNotIn(str(motion.ROOT), text)
+        self.assertNotRegex(text, r"/home/|/Users/|C:\\Users\\")
+        self.assertIsNone(motion.SECRET_PATTERN.search(text))
 
 
 class RecordBoundaryTests(unittest.TestCase):

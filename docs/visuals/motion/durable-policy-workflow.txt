@@ -1,0 +1,46 @@
+# GWorker real CLI process output
+# Fixed presentation timing; command latency was not measured.
+
+$ python -m gworker.cli --journal <PRIVATE-JOURNAL> recommend --task-kind deep_work --energy medium --available-minutes 60 --decision-id 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 --seed 20260725
+GWorker recommendation recorded
+Decision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 (sequence 1)
+Template: focus-40 | 40m focus + 8m break
+Propensity: 0.250000000000 | exact 0x1.0000000000000p-2
+Evidence: global (0 reviewed decisions)
+Reasons: global_evidence, bounded_exploration, cold_start
+Replay seed: 20260725
+Journal: private local file (path omitted)
+[exit 0]
+
+$ python -m gworker.cli --journal <PRIVATE-JOURNAL> review 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 --fit just_right --completed
+GWorker review recorded
+Decision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 (sequence 1)
+Outcome: fit=just_right | completed=true | reward=1.000
+Provenance: focus-40 at p=0.250000000000
+Exact propensity: 0x1.0000000000000p-2
+Journal: private local file (path omitted)
+[exit 0]
+
+$ python -m gworker.cli --journal <PRIVATE-JOURNAL> recommend --task-kind deep_work --energy medium --available-minutes 60 --previous-focus-minutes 40 --decision-id 018f4f69-e7a2-7f84-8c2d-9f531c4e9102 --seed 20260726
+GWorker recommendation recorded
+Decision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9102 (sequence 2)
+Template: focus-25 | 25m focus + 5m break
+Propensity: 0.279643550634 | exact 0x1.1e5ae1020930fp-2
+Evidence: global (1 reviewed decisions)
+Reasons: global_evidence, bounded_exploration, one_step_guardrail
+Replay seed: 20260726
+Journal: private local file (path omitted)
+[exit 0]
+
+$ python -m gworker.cli --journal <PRIVATE-JOURNAL> verify
+GWorker journal verified
+Sessions/events: 0 / 0
+Policy decisions/reviews/history edges: 2 / 1 / 1
+Policy: hierarchical-softmax-ucb-v1.8c10875dd38a025d
+SQLite quick_check: ok
+Replay: every decision for this policy matched
+Journal: private local file (path omitted)
+[exit 0]
+
+# workspace 0700; journal 0600; workspace removed after capture
+# synthetic CLI/storage evidence; no human outcome or locked evaluation

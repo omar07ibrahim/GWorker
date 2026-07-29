@@ -31,7 +31,7 @@ artifacts, never a user's local work history.
 | Synthetic evaluator | An explicit experiment configuration; locked `eval` additionally requires the private consumed permit | Balanced synthetic environments, paired potential outcomes, strategy summaries, traces, and exact cardinality validation | Any missing scenario, invariant breach, non-finite probability, invalid guardrail choice, or denominator mismatch invalidates the whole run | [`evaluation.py`](../src/gworker/evaluation.py#L2818) |
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
 | Publication state and runner | Clean committed source, a capacity assessment, and the fixed run key | Append-only state records, one evaluation permit, immutable artifacts, resumable materialization, and path-free status | Preflight failure does not claim; reopening `EVALUATING` burns the run; existing artifact mismatch fails; there is no force/reset/retry flag | [`publication_state.py`](../src/gworker/publication_state.py#L1240), [`publication_runner.py`](../src/gworker/publication_runner.py#L2051), [`resource_preflight.py`](../src/gworker/resource_preflight.py#L1672) |
-| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Twelve source-derived diagrams plus seven sanitized terminal captures and checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; offline visuals import no locked module; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`generate_offline_replay.py`](../scripts/visuals/generate_offline_replay.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py) |
+| Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Twelve source-derived diagrams, seven sanitized terminal captures, and one real four-process CLI motion bundle with checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; motion `render`/`check` are process-free; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`generate_offline_replay.py`](../scripts/visuals/generate_offline_replay.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py), [`capture_cli_motion.py`](../scripts/visuals/capture_cli_motion.py) |
 
 ## Event reduction and durable journal
 
@@ -189,12 +189,24 @@ The isolated offline generator emits three additional SVGs and publishes its
 actual package imports but never imports the locked evaluator or publication
 modules.
 
+The [CLI motion recorder](cli-motion.md) requires a clean commit and compares
+each recorded source byte range with that commit's Git blob before and after
+capture. Its only recording workflow starts four allowlisted Python processes
+with PTY stdout, separate bounded stderr, closed stdin, and one disposable
+private journal. It publishes a path-free event document, accessible
+transcript, eleven-frame GIF, static poster, and
+[manifest](visuals/motion/manifest.json). `render` and `check` start no
+application process. Frame durations are fixed presentation timing, not
+latency; the exact Pillow version is pinned and the FreeType version is
+recorded.
+
 Reproduce the committed evidence without invoking the evaluator:
 
 ```bash
 PYTHONPATH=src python3 scripts/visuals/generate.py --check
 PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay --check
 PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
+PYTHONPATH=src python3 scripts/visuals/capture_cli_motion.py check
 ```
 
 ## Security, privacy, and claim boundaries
@@ -228,4 +240,4 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 | Journal-backed recommendation/review identity, exact propensities, and immutable decision-to-plan linkage | CLI support for explicitly linking a durable decision to a planned session |
 | Frozen synthetic evaluator, report/evidence contracts, single-use runner through materialization | Deterministic result renderer, artifact manifest, and runner-driven sealing |
 | Unclaimed held-out namespace with zero locked outcomes | One locked run only from the publishable clean commit on a host that passes the resource gate |
-| Five demos, twelve source-derived diagrams, and seven genuine terminal captures | A real timer interaction surface that preserves explicit-review-only learning |
+| Five demos, twelve source-derived diagrams, seven genuine terminal captures, and one real four-process CLI motion bundle | A real timer interaction surface that preserves explicit-review-only learning |

@@ -1,0 +1,217 @@
+{
+  "capture": {
+    "environment": {
+      "HOME": ".gworker/cli-motion-runtime/<capture>/home",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "PATH": "<OS_DEFPATH>",
+      "PYTHONHASHSEED": "0",
+      "PYTHONIOENCODING": "utf-8",
+      "PYTHONPATH": "src",
+      "TMPDIR": ".gworker/cli-motion-runtime/<capture>/tmp",
+      "TZ": "UTC"
+    },
+    "terminal": {
+      "columns": 120,
+      "crlf_normalization": "PTY CRLF converted to LF; bare CR rejected",
+      "rows": 40,
+      "stderr_is_separate_pipe": true,
+      "stdout_is_pty": true
+    },
+    "workspace": {
+      "journal_mode": "0600",
+      "removed_after_capture": true,
+      "workspace_mode": "0700"
+    }
+  },
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.cli",
+        "--journal",
+        "<PRIVATE-JOURNAL>",
+        "recommend",
+        "--task-kind",
+        "deep_work",
+        "--energy",
+        "medium",
+        "--available-minutes",
+        "60",
+        "--decision-id",
+        "018f4f69-e7a2-7f84-8c2d-9f531c4e9101",
+        "--seed",
+        "20260725"
+      ],
+      "capture_id": "recommend-initial",
+      "exit_code": 0,
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": "GWorker recommendation recorded\nDecision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 (sequence 1)\nTemplate: focus-40 | 40m focus + 8m break\nPropensity: 0.250000000000 | exact 0x1.0000000000000p-2\nEvidence: global (0 reviewed decisions)\nReasons: global_evidence, bounded_exploration, cold_start\nReplay seed: 20260725\nJournal: private local file (path omitted)\n",
+      "stdout_byte_count": 353,
+      "stdout_sha256": "5809fc9e14138472320499e3df4d085c753afc3bc431450e904802b09591d456",
+      "title": "Seeded recommendation \u00b7 no prior reviews"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.cli",
+        "--journal",
+        "<PRIVATE-JOURNAL>",
+        "review",
+        "018f4f69-e7a2-7f84-8c2d-9f531c4e9101",
+        "--fit",
+        "just_right",
+        "--completed"
+      ],
+      "capture_id": "review-explicit",
+      "exit_code": 0,
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": "GWorker review recorded\nDecision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9101 (sequence 1)\nOutcome: fit=just_right | completed=true | reward=1.000\nProvenance: focus-40 at p=0.250000000000\nExact propensity: 0x1.0000000000000p-2\nJournal: private local file (path omitted)\n",
+      "stdout_byte_count": 263,
+      "stdout_sha256": "ebe815b0a0987bc81cefa08a08d6b7432251cc1130db27a238c8c9dccc8698b3",
+      "title": "Explicit review \u00b7 propensity preserved"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.cli",
+        "--journal",
+        "<PRIVATE-JOURNAL>",
+        "recommend",
+        "--task-kind",
+        "deep_work",
+        "--energy",
+        "medium",
+        "--available-minutes",
+        "60",
+        "--previous-focus-minutes",
+        "40",
+        "--decision-id",
+        "018f4f69-e7a2-7f84-8c2d-9f531c4e9102",
+        "--seed",
+        "20260726"
+      ],
+      "capture_id": "recommend-reopened",
+      "exit_code": 0,
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": "GWorker recommendation recorded\nDecision: 018f4f69-e7a2-7f84-8c2d-9f531c4e9102 (sequence 2)\nTemplate: focus-25 | 25m focus + 5m break\nPropensity: 0.279643550634 | exact 0x1.1e5ae1020930fp-2\nEvidence: global (1 reviewed decisions)\nReasons: global_evidence, bounded_exploration, one_step_guardrail\nReplay seed: 20260726\nJournal: private local file (path omitted)\n",
+      "stdout_byte_count": 361,
+      "stdout_sha256": "6ef5429af2dc1530abe0b526f2cf1b08d77a50263a7e96b4f5bd016a523de2f5",
+      "title": "Reopened journal \u00b7 one reviewed decision"
+    },
+    {
+      "argv": [
+        "python",
+        "-m",
+        "gworker.cli",
+        "--journal",
+        "<PRIVATE-JOURNAL>",
+        "verify"
+      ],
+      "capture_id": "verify-reopened",
+      "exit_code": 0,
+      "stderr": {
+        "byte_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stdout": "GWorker journal verified\nSessions/events: 0 / 0\nPolicy decisions/reviews/history edges: 2 / 1 / 1\nPolicy: hierarchical-softmax-ucb-v1.8c10875dd38a025d\nSQLite quick_check: ok\nReplay: every decision for this policy matched\nJournal: private local file (path omitted)\n",
+      "stdout_byte_count": 264,
+      "stdout_sha256": "fd147e29a32dca8cc66fa654a8dc33644e86982e71d79823fde740a0d9371bf0",
+      "title": "Reopened journal \u00b7 exact replay verification"
+    }
+  ],
+  "presentation": {
+    "frame_count": 11,
+    "frame_durations_ms": [
+      900,
+      900,
+      1400,
+      800,
+      1300,
+      800,
+      1400,
+      800,
+      1600,
+      1800,
+      3000
+    ],
+    "height": 540,
+    "kind": "fixed-presentation-timing",
+    "loop": 0,
+    "measured_command_latency": false,
+    "width": 960
+  },
+  "provenance": {
+    "source_commit": "828017e3a594c2b7c32365e656ac5bf4073ccbe1",
+    "source_commit_role": "clean Git commit executed by record; source bytes matched its blobs",
+    "sources": [
+      {
+        "byte_count": 2745,
+        "path": "docs/cli-motion.md",
+        "sha256": "6e7145000bd6d9187f3d57475adff2833c60d895d3f403b0905ff96a2775e442"
+      },
+      {
+        "byte_count": 1165,
+        "path": "pyproject.toml",
+        "sha256": "eafd3ec4005cd6aca3c77ef838bd15418efa801920f759cb854a3693a20e67f3"
+      },
+      {
+        "byte_count": 45526,
+        "path": "scripts/visuals/capture_cli_motion.py",
+        "sha256": "92a83277240e3718792f0e2b4889218f21b704d743be4f993b8f014b374da7c4"
+      },
+      {
+        "byte_count": 1943,
+        "path": "src/gworker/__init__.py",
+        "sha256": "9da9d4eaa9708bfd1da9d30879dca161d8ce8903ebb7d0fd176e14e8f7b60ade"
+      },
+      {
+        "byte_count": 13199,
+        "path": "src/gworker/cli.py",
+        "sha256": "3b3baffd2e7c247929fef414a724d3af7f945aff76f4d9d1d6b637f23c190a31"
+      },
+      {
+        "byte_count": 9923,
+        "path": "src/gworker/codec.py",
+        "sha256": "0d74b7542d0abca553f945adb150040115698c402055ae9f5e115e00c3cd665d"
+      },
+      {
+        "byte_count": 17751,
+        "path": "src/gworker/domain.py",
+        "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
+      },
+      {
+        "byte_count": 26252,
+        "path": "src/gworker/policy.py",
+        "sha256": "c39b2fb37c0a3db2f64812d0aba2c04c06c9e063bcafee7e71f6ec4b1bb10b13"
+      },
+      {
+        "byte_count": 74533,
+        "path": "src/gworker/storage.py",
+        "sha256": "748033ee8d23abf2fce3d187ad3376b2f1ea3cac85aa2e8f2c1e3ba9bdb7988f"
+      }
+    ]
+  },
+  "safety": {
+    "arbitrary_commands_accepted": false,
+    "evaluator_executed": false,
+    "journal_path_published": false,
+    "publication_run_executed": false,
+    "shell_used": false,
+    "stdin_inherited": false,
+    "synthetic_demo_data_only": true
+  },
+  "schema_version": "gworker-cli-motion-events-v1"
+}

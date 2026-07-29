@@ -3,11 +3,11 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "2044c21476fc2c713c5c0a82b8138548c87a253ec228643261dce6a17f97eafb"
+      "sha256": "eb0bc97c4be6a419d787a4db037f8f43ce999f0ba26805029cf25ef977b2ea06"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "bfb03523458b92048ead80cf700d2268aa95839a83c30074b362ce36fa632d42"
+      "sha256": "267d2c330dcaaef6fcb3465809586029be839948a3e787a42cf58c934bbc5587"
     },
     {
       "path": "docs/decision-lineage.md",

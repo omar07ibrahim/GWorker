@@ -10,10 +10,11 @@ bounded duration from explicit context and reviews.
 > journal-backed CLI, locked synthetic evaluator, reporting/evidence builders,
 > canonical result codecs, and the fail-closed publication runner are
 > implemented. Five deterministic synthetic demos, twelve source-derived
-> non-result diagrams, and seven genuine terminal captures are reproducible from
-> the repository. The locked evaluation has **not** run: there are zero locked
-> outcome artifacts and no benchmark result plots. Publication rendering and
-> final sealing remain future work.
+> non-result diagrams, seven genuine terminal captures, and one real
+> four-process CLI motion bundle are reproducible from the repository. The
+> locked evaluation has **not** run: there are zero locked outcome artifacts
+> and no benchmark result plots. Publication rendering and final sealing remain
+> future work.
 
 ![GWorker architecture and trust boundaries](docs/visuals/generated/architecture-trust-boundaries.svg)
 
@@ -26,13 +27,17 @@ The shortest complete workflow records a seeded recommendation, attaches an
 explicit review, reopens the journal for a second recommendation, and reopens it
 again to verify exact replay:
 
-[![Real terminal capture of durable policy decisions, review, reopen, and verification](docs/visuals/terminal/durable-policy-workflow.svg)](docs/visuals/terminal/durable-policy-workflow.txt)
+[![Real four-process GWorker CLI workflow: recommend, review, reopen, and verify](docs/visuals/motion/durable-policy-workflow.gif)](docs/visuals/motion/durable-policy-workflow.txt)
 
-*Genuine terminal output from four public CLI-handler calls against one
-disposable `0700` workspace and `0600` journal; click for the sanitized
-transcript. The fixed synthetic run records two decisions, one review, one
-history edge, exact hexadecimal propensities, and removes the workspace. It is
-not a human outcome or a locked-evaluation result.*
+*Genuine PTY stdout from four separate Python processes against one disposable
+`0700` workspace and `0600` journal; click the animation for the accessible
+transcript. The fixed synthetic run records two decisions, one explicit review,
+one history edge, exact hexadecimal propensities, verifies after reopen, and
+removes the workspace. Frame durations are presentation timing—not measured
+latency. This is CLI/storage evidence, not a timer UI, human outcome, or
+locked-evaluation result. See the [capture contract](docs/cli-motion.md), [static
+poster](docs/visuals/motion/durable-policy-workflow.png), and [source-bound
+manifest](docs/visuals/motion/manifest.json).*
 
 The relational path behind that capture is also exercised through the public
 storage API:
@@ -311,8 +316,9 @@ result data and never invokes the evaluator.*
 - A Linux fail-closed publication runner with private descriptor-relative I/O,
   immutable artifact publication, crash recovery, burn-on-reopen semantics for
   an interrupted evaluation, and a read-only resource preflight.
-- Five deterministic synthetic demos, twelve source-derived diagrams, and seven
-  real terminal captures with reproducible checksum-bound evidence pipelines.
+- Five deterministic synthetic demos, twelve source-derived diagrams, seven
+  real terminal captures, and one real four-process CLI motion bundle with
+  reproducible checksum-bound evidence pipelines.
 - Standard-library tests; the runtime currently has no third-party
   dependencies.
 
@@ -364,6 +370,7 @@ PYTHONPATH=src python3 -m compileall -q src tests
 PYTHONPATH=src python3 scripts/visuals/generate.py --check
 PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay --check
 PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
+PYTHONPATH=src python3 scripts/visuals/capture_cli_motion.py check
 ```
 
 The [source-derived visual manifest](docs/visuals/manifest.json) binds the
@@ -377,10 +384,16 @@ does not rerun the commands or host-dependent preflight.
 The separate [offline visual manifest](docs/offline/manifest.json) binds three
 charts derived through the public replay API and explicitly records the
 synthetic fixture, support configuration, readiness, and five false nonclaims.
-All three pipelines are standard-library-only, reject external image/script
-references, and use synthetic demo records. Publication outcome visuals will
-be generated only from validated, provenance-bound locked evidence and bound
-into the final manifest before sealing; they do not exist today.
+The [motion manifest](docs/visuals/motion/manifest.json) binds four real
+allowlisted CLI processes, exact stdout, the clean source commit and blob
+hashes, PTY/storage/cleanup contracts, fixed frame timing, and every raster and
+text artifact. Its `check` and `render` modes start no application process. The
+three SVG/text pipelines are standard-library-only; motion rendering uses the
+exact pinned Pillow version and records its FreeType version. All four use
+synthetic demo records and reject host paths or secret-shaped output.
+Publication outcome visuals will be generated only from validated,
+provenance-bound locked evidence and bound into the final manifest before
+sealing; they do not exist today.
 
 ## Design boundaries
 
