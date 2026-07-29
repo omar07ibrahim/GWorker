@@ -1,1 +1,11 @@
-recursive-include docs *.md
+include MANIFEST.in
+include README.md
+include pyproject.toml
+include .github/workflows/ci.yml
+
+recursive-include src/gworker *.py py.typed
+recursive-include tests *.py
+recursive-include scripts *.py
+recursive-include docs *.md *.json *.svg *.txt *.gif *.png
+
+global-exclude __pycache__ *.py[cod]

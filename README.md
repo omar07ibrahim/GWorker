@@ -373,6 +373,13 @@ PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 PYTHONPATH=src python3 scripts/visuals/capture_cli_motion.py check
 ```
 
+The [continuous-verification contract](docs/continuous-verification.md) maps
+these checks into a pinned GitHub Actions workflow: branch coverage on Python
+3.11–3.14, all four evidence pipelines, a complete source archive, an
+independently reproduced wheel, and a fresh-environment CLI smoke workflow.
+Only the wheel is claimed byte-reproducible; sdist bytes are explicitly outside
+that claim.
+
 The [source-derived visual manifest](docs/visuals/manifest.json) binds the
 generator, documentation and implementation inputs, every SVG checksum, and
 the observation that locked outcome artifact count is zero. The

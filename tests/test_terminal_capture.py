@@ -1101,6 +1101,8 @@ class ManifestAndCheckTests(unittest.TestCase):
     def test_base_commit_reader_uses_repository_metadata_without_git_process(
         self,
     ) -> None:
+        if not (capture_terminal.ROOT / ".git").exists():
+            self.skipTest("source distributions intentionally omit Git metadata")
         with patch.object(subprocess, "run") as run:
             commit = capture_terminal._head_commit()
 

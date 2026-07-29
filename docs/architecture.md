@@ -32,6 +32,7 @@ artifacts, never a user's local work history.
 | Result, report, and evidence codecs | Complete validated evaluator output | Canonical binary result plus canonical statistical-report and publication-evidence documents | Decode, schema, identity, count, sufficient-statistic, and exact round-trip checks reject partial or altered data | [`result_codec.py`](../src/gworker/result_codec.py#L1182), [`reporting.py`](../src/gworker/reporting.py#L963), [`evidence.py`](../src/gworker/evidence.py#L2470), [`publication_codec.py`](../src/gworker/publication_codec.py#L1056) |
 | Publication state and runner | Clean committed source, a capacity assessment, and the fixed run key | Append-only state records, one evaluation permit, immutable artifacts, resumable materialization, and path-free status | Preflight failure does not claim; reopening `EVALUATING` burns the run; existing artifact mismatch fails; there is no force/reset/retry flag | [`publication_state.py`](../src/gworker/publication_state.py#L1240), [`publication_runner.py`](../src/gworker/publication_runner.py#L2051), [`resource_preflight.py`](../src/gworker/resource_preflight.py#L1672) |
 | Reproducible evidence tools | Reviewed, literal demo inputs and committed source bytes | Twelve source-derived diagrams, seven sanitized terminal captures, and one real four-process CLI motion bundle with checksum manifests | No arbitrary shell command surface; visual checks compare exact bytes; motion `render`/`check` are process-free; no evaluator or publication `run` call | [`generate.py`](../scripts/visuals/generate.py), [`generate_offline_replay.py`](../scripts/visuals/generate_offline_replay.py), [`capture_terminal.py`](../scripts/visuals/capture_terminal.py), [`capture_cli_motion.py`](../scripts/visuals/capture_cli_motion.py) |
+| Continuous verification | Exact checkout, pinned development tools, and commit-bound build timestamps | Python 3.11–3.14 quality/coverage, four evidence checks, complete sdist, byte-reproduced wheel, and installed CLI smoke | Read-only permissions and checkout; unsafe/incomplete archives, altered source, metadata/`RECORD` drift, coverage below 90%, or any changed tracked file fail the workflow | [`ci.yml`](../.github/workflows/ci.yml), [`verify_distribution.py`](../scripts/verify_distribution.py), [`continuous-verification.md`](continuous-verification.md) |
 
 ## Event reduction and durable journal
 
@@ -208,6 +209,15 @@ PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay --check
 PYTHONPATH=src python3 scripts/visuals/capture_terminal.py check
 PYTHONPATH=src python3 scripts/visuals/capture_cli_motion.py check
 ```
+
+The pinned [continuous-verification workflow](continuous-verification.md)
+executes those four checks separately from its Python 3.11–3.14 quality matrix
+and distribution-integrity job. The distribution path builds its primary wheel
+from the complete sdist, reproduces the same wheel independently from
+`git archive HEAD`, verifies every runtime/source byte and wheel `RECORD`, then
+tests the extracted sdist and an installed-wheel CLI workflow. Sdist
+completeness and buildability are verified, but compressed sdist byte
+reproducibility is explicitly not claimed.
 
 ## Security, privacy, and claim boundaries
 
