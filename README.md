@@ -338,9 +338,10 @@ for the path-free transcript.*
 
 [![Real terminal capture of a fail-closed publication preflight](docs/visuals/terminal/publication-preflight.svg)](docs/visuals/terminal/publication-preflight.txt)
 
-*This host-dependent capture failed the frozen memory-headroom check
-and exited 2 without claiming the run. Capacity can differ on another host;
-this is not a portable readiness result.*
+*This host-dependent capture passed the frozen capacity checks and exited 0
+without claiming or starting a run. Capacity can differ on another host; this
+is not a portable readiness result or authorization to consume the locked
+evaluation namespace.*
 
 `preflight` is read-only. It first requires an exact clean committed checkout,
 then checks effective cgroup-aware memory, swap, filesystem bytes, inodes, and

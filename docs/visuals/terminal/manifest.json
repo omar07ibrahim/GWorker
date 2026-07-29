@@ -1,6 +1,6 @@
 {
   "capture": {
-    "base_input_commit": "3e8976cf8fb94b12c0dba73fd38346f0303ea562",
+    "base_input_commit": "54692122db5fef443dfa7981ccdd3240abb3de6c",
     "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
     "environment": {
       "HOME": ".gworker/terminal-capture-runtime/home",
@@ -190,9 +190,9 @@
           "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
         },
         {
-          "byte_count": 25044,
+          "byte_count": 24842,
           "path": "src/gworker/offline.py",
-          "sha256": "1cd867c04559dc24701c65aab2ab2817470e4694f33e20a2fb407dd1d6a7f413"
+          "sha256": "8f099a90e4d3c8a22788128ec526776a0995161d4f6780584f6720d1d0c83618"
         },
         {
           "byte_count": 26252,
@@ -470,7 +470,7 @@
       ],
       "capture_id": "publication-preflight",
       "description": "Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked.",
-      "exit_code": 2,
+      "exit_code": 0,
       "expected_exit_codes": [
         0,
         2
@@ -549,15 +549,15 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "stdout": {
-        "byte_count": 238,
+        "byte_count": 219,
         "path": "docs/visuals/terminal/publication-preflight.txt",
-        "sha256": "188d51c79f8631ab4403c254b695c9583b1e32de854a3f21b7ac97514da1b164"
+        "sha256": "59b324cbd5aed7354529621ff9d9b7e8514daa4da907430089295091254a633d"
       },
       "title": "Publication gate \u00b7 capacity preflight",
       "visual": {
-        "byte_count": 3396,
+        "byte_count": 3367,
         "path": "docs/visuals/terminal/publication-preflight.svg",
-        "sha256": "6b2964881587ae082ec096ad92d6245fefab44a8cfdbaf3d6bd613f27ead3050"
+        "sha256": "46f1b1108f033533804afb4f9c419ef8ec89a828930b2e50aca4fdc1b8a299cd"
       }
     }
   ],

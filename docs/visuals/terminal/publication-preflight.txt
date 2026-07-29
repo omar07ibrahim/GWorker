@@ -1,1 +1,1 @@
-{"effective_memory_bytes":7032299520,"effective_swap_bytes":5382258688,"failure_codes":["memory-headroom"],"filesystem_available_bytes":16870703104,"filesystem_available_inodes":24600648,"nofile_soft_limit":1024,"ok":false,"ready":false}
+{"effective_memory_bytes":16694521856,"effective_swap_bytes":6697267200,"failure_codes":[],"filesystem_available_bytes":9064751104,"filesystem_available_inodes":24584276,"nofile_soft_limit":1024,"ok":true,"ready":true}

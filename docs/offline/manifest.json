@@ -2,9 +2,9 @@
   "command": "PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay",
   "inputs": [
     {
-      "byte_count": 23546,
+      "byte_count": 23610,
       "path": "README.md",
-      "sha256": "7d8fd6a1f4ad4717f2e0a7ee338c584353da400b0d4a4c5659b4beff3238cdb1"
+      "sha256": "2044c21476fc2c713c5c0a82b8138548c87a253ec228643261dce6a17f97eafb"
     },
     {
       "byte_count": 17238,
@@ -19,7 +19,7 @@
     {
       "byte_count": 21177,
       "path": "docs/visuals/terminal/manifest.json",
-      "sha256": "d6c8973a7c279570190b4ecf2959817417029b64a9327d5d7a10b4e9231d0985"
+      "sha256": "b6a7d08b1015c9e1f0714aec2862b778a9ccadb6dc98f83485df3ae42741c671"
     },
     {
       "byte_count": 5878,
