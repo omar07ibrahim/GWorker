@@ -67,9 +67,9 @@
       "sha256": "847af410217e93820e25e67bbf6c6a85747c4426bc9cd0546a02e43e718195a0"
     },
     {
-      "byte_count": 25044,
+      "byte_count": 24842,
       "path": "src/gworker/offline.py",
-      "sha256": "1cd867c04559dc24701c65aab2ab2817470e4694f33e20a2fb407dd1d6a7f413"
+      "sha256": "8f099a90e4d3c8a22788128ec526776a0995161d4f6780584f6720d1d0c83618"
     },
     {
       "byte_count": 26252,

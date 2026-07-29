@@ -180,9 +180,7 @@ class ReplayRow:
         """Return the selected arm using the exact stored probability object."""
 
         return next(
-            arm
-            for arm in self.arms
-            if arm.template_id == self.selected_template_id
+            arm for arm in self.arms if arm.template_id == self.selected_template_id
         )
 
 
@@ -467,9 +465,7 @@ def _summarize(
                 "importance weight exceeds finite arithmetic"
             ) from error
         if not math.isfinite(raw_weight):
-            raise ReplayInputError(
-                "importance weight exceeds finite arithmetic"
-            )
+            raise ReplayInputError("importance weight exceeds finite arithmetic")
         rewards.append(row.reward)
         raw_weights.append(raw_weight)
         clipped_weights.append(min(raw_weight, config.clip_weight))
@@ -503,8 +499,7 @@ def _summarize(
     clipped_tuple = tuple(clipped_weights)
     reward_tuple = tuple(rewards)
     raw_reward_terms = tuple(
-        weight * reward
-        for weight, reward in zip(raw_tuple, reward_tuple, strict=True)
+        weight * reward for weight, reward in zip(raw_tuple, reward_tuple, strict=True)
     )
     clipped_reward_terms = tuple(
         weight * reward
@@ -556,8 +551,7 @@ def _summarize(
             clipped_reward_terms[index] for index in selected_indices
         )
         selected_behavior = tuple(
-            rows[index].selected_arm.behavior_probability
-            for index in selected_indices
+            rows[index].selected_arm.behavior_probability for index in selected_indices
         )
         templates.append(
             TemplateReplaySummary(
@@ -590,9 +584,7 @@ def _summarize(
                 minimum_selected_behavior_probability=(
                     min(selected_behavior) if selected_behavior else None
                 ),
-                maximum_raw_weight=(
-                    max(selected_raw) if selected_raw else None
-                ),
+                maximum_raw_weight=(max(selected_raw) if selected_raw else None),
             )
         )
 
@@ -612,9 +604,7 @@ def _summarize(
         ),
         clipped_inverse_propensity=clipped_reward_sum / count,
         clipped_self_normalized=(
-            clipped_reward_sum / clipped_weight_sum
-            if clipped_weight_sum > 0
-            else None
+            clipped_reward_sum / clipped_weight_sum if clipped_weight_sum > 0 else None
         ),
         raw_effective_sample_size=raw_ess,
         clipped_effective_sample_size=clipped_ess,
@@ -670,15 +660,10 @@ def build_replay_report(
     previous_sequence: int | None = None
     for row in rows:
         if len(snapshot) >= MAX_REPLAY_ROWS:
-            raise ReplayInputError(
-                f"rows must contain at most {MAX_REPLAY_ROWS} items"
-            )
+            raise ReplayInputError(f"rows must contain at most {MAX_REPLAY_ROWS} items")
         if not isinstance(row, ReplayRow):
             raise ReplayInputError("rows must contain ReplayRow instances")
-        if (
-            previous_sequence is not None
-            and row.decision_sequence <= previous_sequence
-        ):
+        if previous_sequence is not None and row.decision_sequence <= previous_sequence:
             raise ReplayInputError(
                 "decision_sequence values must be strictly increasing"
             )

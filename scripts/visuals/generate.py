@@ -77,12 +77,8 @@ TOOL_VERSION: Final = "5"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
 VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
 JOURNAL_RECOVERY_CAPTURE_ID: Final = "journal-recovery"
-JOURNAL_RECOVERY_TRANSCRIPT: Final = (
-    "docs/visuals/terminal/journal-recovery.txt"
-)
-JOURNAL_RECOVERY_TERMINAL_SVG: Final = (
-    "docs/visuals/terminal/journal-recovery.svg"
-)
+JOURNAL_RECOVERY_TRANSCRIPT: Final = "docs/visuals/terminal/journal-recovery.txt"
+JOURNAL_RECOVERY_TERMINAL_SVG: Final = "docs/visuals/terminal/journal-recovery.svg"
 TERMINAL_MANIFEST_PATH: Final = "docs/visuals/terminal/manifest.json"
 JOURNAL_RECOVERY_COMMAND: Final = (
     "python",
@@ -578,20 +574,14 @@ def build_journal_recovery_evidence() -> JournalRecoveryEvidence:
         raise RuntimeError("journal recovery command enters a forbidden runtime")
 
     stderr = capture["stderr"]
-    if (
-        type(stderr) is not dict
-        or stderr
-        != {
-            "byte_count": 0,
-            "sha256": _sha256(b""),
-        }
-    ):
+    if type(stderr) is not dict or stderr != {
+        "byte_count": 0,
+        "sha256": _sha256(b""),
+    }:
         raise RuntimeError("journal recovery stderr record is invalid")
 
     sources = capture["sources"]
-    if type(sources) is not list or len(sources) != len(
-        JOURNAL_RECOVERY_SOURCE_PATHS
-    ):
+    if type(sources) is not list or len(sources) != len(JOURNAL_RECOVERY_SOURCE_PATHS):
         raise RuntimeError("journal recovery source inventory is invalid")
     observed_source_paths: list[str] = []
     for raw_source, expected_path in zip(
@@ -625,10 +615,7 @@ def build_journal_recovery_evidence() -> JournalRecoveryEvidence:
     fixed_lines = {
         0: "GWorker journal demo | real SQLite store, synthetic events",
         1: "Workspace: .gworker/visual-demo/terminal-capture",
-        2: (
-            "Database:  .gworker/visual-demo/terminal-capture/"
-            "live/events.sqlite3"
-        ),
+        2: ("Database:  .gworker/visual-demo/terminal-capture/live/events.sqlite3"),
         4: "",
         5: "Append-only event stream",
         6: " seq  occurred_at                  event_type",
@@ -1809,10 +1796,7 @@ def _render_journal_recovery_trust_boundaries() -> RenderedVisual:
         lines=(
             "production SQLiteEventStore",
             f"{evidence.event_count} canonical events appended",
-            (
-                f"file {evidence.file_mode} · "
-                f"directory {evidence.directory_mode}"
-            ),
+            (f"file {evidence.file_mode} · directory {evidence.directory_mode}"),
             "append → close",
             "synthetic records only",
         ),
@@ -1868,10 +1852,7 @@ def _render_journal_recovery_trust_boundaries() -> RenderedVisual:
         lines=(
             f"sequence {evidence.tamper_sequence} event_json altered",
             f"SQLite quick_check = {evidence.tamper_sqlite_check}",
-            (
-                "canonical replay = "
-                f"{evidence.tamper_error_type}"
-            ),
+            (f"canonical replay = {evidence.tamper_error_type}"),
             "one known logical mutation is detected",
             "the live database is never the mutation target",
         ),
