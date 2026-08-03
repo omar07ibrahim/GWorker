@@ -33,14 +33,14 @@ FROZEN_BUNDLE_SHA256 = {
         "3ccf099500f7e230336b7f2eff9cf51cbb306f5f44213c8f81d695123b717520"
     ),
     "manifest.json": (
-        "227279850e2644a14b611c870ca88e17284779770417cda53c3216e16bf7a4d9"
+        "565e26972330e9c54dea23efaa06aa73fabc200ddb010bfdf7c76e34e7d3528a"
     ),
 }
 FROZEN_BUNDLE_BYTE_COUNTS = {
     "generated/estimator-decomposition.svg": 15_727,
     "generated/ordered-propensity-and-weight.svg": 15_090,
     "generated/support-and-template-coverage.svg": 11_038,
-    "manifest.json": 4_527,
+    "manifest.json": 4_547,
 }
 EXPECTED_INPUT_PATHS = (
     "README.md",

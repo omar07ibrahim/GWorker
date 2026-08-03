@@ -2,14 +2,14 @@
   "command": "PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay",
   "inputs": [
     {
-      "byte_count": 24877,
+      "byte_count": 24900,
       "path": "README.md",
-      "sha256": "20c614fd19a24053161c6aee3235714184ae225d823040f0716b6abb9ea48596"
+      "sha256": "30c92d6dbe96a7fb82ec29756e88a03300dedd734a9e4dec3cd47c0791bb9f22"
     },
     {
       "byte_count": 19246,
       "path": "docs/architecture.md",
-      "sha256": "00fbaf0f83b3edfacc4b3b5b0cbe20facdc1707cebcd18cc98647cacf7288a2e"
+      "sha256": "c5d740f9cee152a050cc5773a0720405424faeb13ad393864f8b552d818207ec"
     },
     {
       "byte_count": 10472,
@@ -19,7 +19,7 @@
     {
       "byte_count": 21177,
       "path": "docs/visuals/terminal/manifest.json",
-      "sha256": "b6a7d08b1015c9e1f0714aec2862b778a9ccadb6dc98f83485df3ae42741c671"
+      "sha256": "60466c10d6ead3d01deeb7e60ae200bf6bd9b2c31e0b85dec52eca9af90fdeae"
     },
     {
       "byte_count": 5878,
@@ -32,9 +32,9 @@
       "sha256": "9e90e83110163251da9bd1e2846475d4881a45dcc097a783b6b1b139c1065024"
     },
     {
-      "byte_count": 1165,
+      "byte_count": 1171,
       "path": "pyproject.toml",
-      "sha256": "eafd3ec4005cd6aca3c77ef838bd15418efa801920f759cb854a3693a20e67f3"
+      "sha256": "e2db82734acb5d62303fb6d79710665ac1ebb4152f685f323d67760a93b59ea5"
     },
     {
       "byte_count": 12395,
@@ -47,9 +47,9 @@
       "sha256": "b7e026e77d2f7024e82e84b2178d3086991a2f5fbb60b460c11e4c45b73e95a9"
     },
     {
-      "byte_count": 43395,
+      "byte_count": 43409,
       "path": "scripts/visuals/generate_offline_replay.py",
-      "sha256": "03cda0f382119d8397048b1c2ab1a6a135a0383a53266f52c80553d26feee3cd"
+      "sha256": "641450d35cc2fc28c3dee20a5fd40d53eef56791c8b281f50d42d90536e7670e"
     },
     {
       "byte_count": 1943,
@@ -129,11 +129,12 @@
     }
   ],
   "python": {
-    "requires": ">=3.11",
+    "requires": ">=3.11,<3.14",
     "stdlib_only": true,
     "validated_minor_versions": [
       "3.11",
-      "3.12"
+      "3.12",
+      "3.13"
     ]
   },
   "schema_version": "gworker-offline-visual-manifest-v1",

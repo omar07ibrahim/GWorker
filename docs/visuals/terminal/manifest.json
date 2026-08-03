@@ -1,6 +1,6 @@
 {
   "capture": {
-    "base_input_commit": "54692122db5fef443dfa7981ccdd3240abb3de6c",
+    "base_input_commit": "d7ebb45508895f2056f5b2372c63ce546918ee78",
     "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
     "environment": {
       "HOME": ".gworker/terminal-capture-runtime/home",
@@ -470,7 +470,7 @@
       ],
       "capture_id": "publication-preflight",
       "description": "Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked.",
-      "exit_code": 0,
+      "exit_code": 2,
       "expected_exit_codes": [
         0,
         2
@@ -549,15 +549,15 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "stdout": {
-        "byte_count": 219,
+        "byte_count": 267,
         "path": "docs/visuals/terminal/publication-preflight.txt",
-        "sha256": "59b324cbd5aed7354529621ff9d9b7e8514daa4da907430089295091254a633d"
+        "sha256": "8677e9cc814e4c030468f2e854f65498efeea77094718877961e23a9997c581a"
       },
       "title": "Publication gate \u00b7 capacity preflight",
       "visual": {
-        "byte_count": 3367,
+        "byte_count": 3445,
         "path": "docs/visuals/terminal/publication-preflight.svg",
-        "sha256": "46f1b1108f033533804afb4f9c419ef8ec89a828930b2e50aca4fdc1b8a299cd"
+        "sha256": "cfd0c32abe01f9564e9a042987126fe21b21412a6da0fd689c61b07731234813"
       }
     }
   ],
@@ -579,11 +579,11 @@
   "tool": {
     "name": "gworker-terminal-capture",
     "source": {
-      "byte_count": 48615,
+      "byte_count": 48618,
       "path": "scripts/visuals/capture_terminal.py",
-      "sha256": "23a699e45a18c9e28607b38a9634e80b0d267820cc188495a310d4dc598f4248"
+      "sha256": "79a4712e030e576919d1c2ec98931c8020ce7a9f631ce3b970ac4275bcdc29ff"
     },
     "stdlib_only": true,
-    "version": "3"
+    "version": "4"
   }
 }

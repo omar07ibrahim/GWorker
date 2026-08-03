@@ -3,11 +3,11 @@
   "inputs": [
     {
       "path": "README.md",
-      "sha256": "20c614fd19a24053161c6aee3235714184ae225d823040f0716b6abb9ea48596"
+      "sha256": "30c92d6dbe96a7fb82ec29756e88a03300dedd734a9e4dec3cd47c0791bb9f22"
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "00fbaf0f83b3edfacc4b3b5b0cbe20facdc1707cebcd18cc98647cacf7288a2e"
+      "sha256": "c5d740f9cee152a050cc5773a0720405424faeb13ad393864f8b552d818207ec"
     },
     {
       "path": "docs/decision-lineage.md",
@@ -35,11 +35,11 @@
     },
     {
       "path": "docs/visuals/terminal/manifest.json",
-      "sha256": "b6a7d08b1015c9e1f0714aec2862b778a9ccadb6dc98f83485df3ae42741c671"
+      "sha256": "60466c10d6ead3d01deeb7e60ae200bf6bd9b2c31e0b85dec52eca9af90fdeae"
     },
     {
       "path": "pyproject.toml",
-      "sha256": "eafd3ec4005cd6aca3c77ef838bd15418efa801920f759cb854a3693a20e67f3"
+      "sha256": "e2db82734acb5d62303fb6d79710665ac1ebb4152f685f323d67760a93b59ea5"
     },
     {
       "path": "scripts/demo_journal.py",
@@ -51,11 +51,11 @@
     },
     {
       "path": "scripts/visuals/capture_terminal.py",
-      "sha256": "23a699e45a18c9e28607b38a9634e80b0d267820cc188495a310d4dc598f4248"
+      "sha256": "79a4712e030e576919d1c2ec98931c8020ce7a9f631ce3b970ac4275bcdc29ff"
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "adf1949041bef2e5fedabb1e795b6c805771d50fc0386f16f6b469c56e733cbd"
+      "sha256": "1cc6a16ed2cd78ad090d8ae31b46c5da343c92a1dfd8e5e7ad0acf6bc15c6332"
     },
     {
       "path": "src/gworker/__init__.py",
@@ -175,11 +175,12 @@
     }
   ],
   "python": {
-    "requires": ">=3.11",
+    "requires": ">=3.11,<3.14",
     "stdlib_only": true,
     "validated_minor_versions": [
       "3.11",
-      "3.12"
+      "3.12",
+      "3.13"
     ]
   },
   "schema_version": "gworker-visual-manifest-v1",
