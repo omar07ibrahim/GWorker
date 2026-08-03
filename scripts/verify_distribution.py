@@ -49,6 +49,7 @@ GENERATED_EGG_INFO_FILES = frozenset(
     }
 )
 SAFE_PROJECT_COMPONENT = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9._+-]*\Z")
+REQUIRES_PYTHON_CLAUSE = re.compile(r"\A(?:~=|==|!=|<=|>=|<|>)\d+(?:\.\d+)*(?:\.\*)?\Z")
 
 
 class VerificationError(RuntimeError):
@@ -67,6 +68,7 @@ class ProjectConfig:
     name: str
     version: str
     requires_python: str
+    metadata_requires_python: str
     console_scripts: Mapping[str, str]
     dependencies: tuple[str, ...]
     optional_dependencies: Mapping[str, tuple[str, ...]]
@@ -168,6 +170,20 @@ def _mapping(value: object, *, context: str) -> Mapping[str, object]:
     return value
 
 
+def _canonical_metadata_requires_python(value: str) -> str:
+    """Return the deterministic clause order emitted into package metadata."""
+
+    clauses = value.split(",")
+    if any(REQUIRES_PYTHON_CLAUSE.fullmatch(clause) is None for clause in clauses):
+        _fail(
+            "project.requires-python must contain comma-separated, "
+            "whitespace-free release clauses"
+        )
+    if len(set(clauses)) != len(clauses):
+        _fail("project.requires-python must not contain duplicate clauses")
+    return ",".join(sorted(clauses))
+
+
 def _load_project_config(repo_root: Path) -> ProjectConfig:
     config_path = repo_root / "pyproject.toml"
     if config_path.is_symlink() or not config_path.is_file():
@@ -186,6 +202,7 @@ def _load_project_config(repo_root: Path) -> ProjectConfig:
         "requires-python",
         context="project",
     )
+    metadata_requires_python = _canonical_metadata_requires_python(requires_python)
     if SAFE_PROJECT_COMPONENT.fullmatch(name) is None:
         _fail("project.name contains an unsupported filename character")
     if SAFE_PROJECT_COMPONENT.fullmatch(version) is None:
@@ -263,6 +280,7 @@ def _load_project_config(repo_root: Path) -> ProjectConfig:
         name=name,
         version=version,
         requires_python=requires_python,
+        metadata_requires_python=metadata_requires_python,
         console_scripts=console_scripts,
         dependencies=dependencies,
         optional_dependencies=optional_dependencies,
@@ -548,10 +566,10 @@ def _verify_metadata(
             f"{metadata_version!r}, expected {config.version!r}"
         )
     requires_python = _single_header(message, "Requires-Python")
-    if requires_python != config.requires_python:
+    if requires_python != config.metadata_requires_python:
         _fail(
             "wheel METADATA Requires-Python is "
-            f"{requires_python!r}, expected {config.requires_python!r}"
+            f"{requires_python!r}, expected {config.metadata_requires_python!r}"
         )
 
     provided_extras = message.get_all("Provides-Extra", [])

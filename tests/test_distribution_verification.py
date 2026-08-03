@@ -36,7 +36,7 @@ def _wheel_files() -> dict[str, bytes]:
         "Metadata-Version: 2.4\n"
         f"Name: {config.name}\n"
         f"Version: {config.version}\n"
-        f"Requires-Python: {config.requires_python}\n"
+        f"Requires-Python: {config.metadata_requires_python}\n"
         "Provides-Extra: dev\n"
         'Requires-Dist: build==1.5.0; extra == "dev"\n'
         'Requires-Dist: coverage[toml]==7.15.2; extra == "dev"\n'
@@ -176,9 +176,10 @@ class DistributionVerificationTests(unittest.TestCase):
 
         self.assertTrue(report["ok"])
         self.assertEqual(self.config.requires_python, ">=3.11,<3.14")
+        self.assertEqual(self.config.metadata_requires_python, "<3.14,>=3.11")
         self.assertEqual(
             report["wheel_verification"]["metadata"]["requires_python"],  # type: ignore[index]
-            ">=3.11,<3.14",
+            "<3.14,>=3.11",
         )
         self.assertTrue(report["wheel_reproducibility"]["byte_for_byte"])  # type: ignore[index]
         sdist = report["sdist_verification"]
@@ -220,6 +221,45 @@ class DistributionVerificationTests(unittest.TestCase):
                 ),
             },
         )
+
+    def test_requires_python_metadata_uses_only_canonical_clause_order(self) -> None:
+        self.assertEqual(
+            verify_distribution._canonical_metadata_requires_python(">=3.11,<3.14"),
+            "<3.14,>=3.11",
+        )
+        self.assertEqual(
+            verify_distribution._canonical_metadata_requires_python("<3.14,>=3.11"),
+            "<3.14,>=3.11",
+        )
+        for invalid in (
+            ">=3.11, <3.14",
+            ">=3.11,<3.14,<3.14",
+            ">=3.11; python_version < '3.14'",
+            "3.11",
+        ):
+            with (
+                self.subTest(invalid=invalid),
+                self.assertRaises(verify_distribution.VerificationError),
+            ):
+                verify_distribution._canonical_metadata_requires_python(invalid)
+
+    def test_requires_python_metadata_range_tampering_is_rejected(self) -> None:
+        files = dict(self.base_wheel_files)
+        metadata_path = f"{self.config.dist_info}/METADATA"
+        files[metadata_path] = files[metadata_path].replace(
+            b"Requires-Python: <3.14,>=3.11\n",
+            b"Requires-Python: <3.15,>=3.11\n",
+            1,
+        )
+        record_path = f"{self.config.dist_info}/RECORD"
+        files.pop(record_path)
+        files[record_path] = _record(files, record_path)
+        self._replace_wheels(_wheel_bytes(files))
+        with self.assertRaisesRegex(
+            verify_distribution.VerificationError,
+            "Requires-Python",
+        ):
+            verify_distribution.verify_distribution(self.primary, self.rebuild)
 
     def test_json_cli_is_canonical_and_read_only(self) -> None:
         before = {
