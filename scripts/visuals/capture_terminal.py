@@ -39,7 +39,7 @@ TERMINAL_ROOT: Final = ROOT / "docs" / "visuals" / "terminal"
 MANIFEST_NAME: Final = "manifest.json"
 SCHEMA_VERSION: Final = "gworker-terminal-capture-manifest-v1"
 TOOL_NAME: Final = "gworker-terminal-capture"
-TOOL_VERSION: Final = "3"
+TOOL_VERSION: Final = "4"
 RECORD_COMMAND: Final = (
     "PYTHONPATH=src python scripts/visuals/capture_terminal.py record"
 )
@@ -66,7 +66,7 @@ GIT_STATUS_ARGV: Final = (
 EMPTY_SHA256: Final = hashlib.sha256(b"").hexdigest()
 HEX_SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 HEX_COMMIT: Final = re.compile(r"^[0-9a-f]{40,64}$")
-CAPTURE_PYTHON_VERSION: Final = re.compile(r"^3\.(?:11|12)\.\d+$")
+CAPTURE_PYTHON_VERSION: Final = re.compile(r"^3\.(?:11|12|13)\.\d+$")
 ANSI_ESCAPE: Final = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|[@-_])")
 ABSOLUTE_PATH: Final = re.compile(
     r"(?<![A-Za-z0-9_.-])/(?:[A-Za-z0-9_.@+-]+/)+[A-Za-z0-9_.@+-]*"

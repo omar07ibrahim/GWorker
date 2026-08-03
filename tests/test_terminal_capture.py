@@ -998,6 +998,26 @@ class ManifestAndCheckTests(unittest.TestCase):
                 capture_terminal.check_bundle(root),
             )
 
+    def test_capture_interpreter_contract_is_bounded_to_supported_minors(
+        self,
+    ) -> None:
+        for version in ("3.11.0", "3.12.3", "3.13.14"):
+            with self.subTest(version=version), private_temporary_directory() as temp:
+                root = Path(temp) / "terminal"
+                manifest = write_test_bundle(root)
+                capture = cast(dict[str, object], manifest["capture"])
+                interpreter = cast(dict[str, object], capture["interpreter"])
+                interpreter["version"] = version
+                (root / capture_terminal.MANIFEST_NAME).write_bytes(
+                    capture_terminal._canonical_json(manifest)
+                )
+                self.assertEqual(capture_terminal.check_bundle(root), ())
+        for version in ("3.10.14", "3.14.0", "3.13", "3.13.1rc1"):
+            with self.subTest(version=version):
+                self.assertIsNone(
+                    capture_terminal.CAPTURE_PYTHON_VERSION.fullmatch(version)
+                )
+
     def test_check_rejects_tampered_manifest_claims_and_fields(self) -> None:
         cases = (
             ("top-level", "manifest top-level fields differ"),

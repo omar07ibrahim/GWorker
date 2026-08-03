@@ -669,9 +669,9 @@ class VisualArtifactTests(unittest.TestCase):
         self.assertEqual(
             payload["python"],
             {
-                "requires": ">=3.11",
+                "requires": ">=3.11,<3.14",
                 "stdlib_only": True,
-                "validated_minor_versions": ["3.11", "3.12"],
+                "validated_minor_versions": ["3.11", "3.12", "3.13"],
             },
         )
         self.assertEqual(

@@ -175,6 +175,11 @@ class DistributionVerificationTests(unittest.TestCase):
         )
 
         self.assertTrue(report["ok"])
+        self.assertEqual(self.config.requires_python, ">=3.11,<3.14")
+        self.assertEqual(
+            report["wheel_verification"]["metadata"]["requires_python"],  # type: ignore[index]
+            ">=3.11,<3.14",
+        )
         self.assertTrue(report["wheel_reproducibility"]["byte_for_byte"])  # type: ignore[index]
         sdist = report["sdist_verification"]
         assert isinstance(sdist, dict)

@@ -75,7 +75,7 @@ MANIFEST_NAME: Final = "manifest.json"
 TOOL_NAME: Final = "gworker-visual-evidence"
 TOOL_VERSION: Final = "5"
 GENERATION_COMMAND: Final = "PYTHONPATH=src python3 scripts/visuals/generate.py"
-VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
+VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12", "3.13")
 JOURNAL_RECOVERY_CAPTURE_ID: Final = "journal-recovery"
 JOURNAL_RECOVERY_TRANSCRIPT: Final = "docs/visuals/terminal/journal-recovery.txt"
 JOURNAL_RECOVERY_TERMINAL_SVG: Final = "docs/visuals/terminal/journal-recovery.svg"
@@ -3217,7 +3217,7 @@ def build_manifest(visuals: tuple[RenderedVisual, ...]) -> bytes:
         },
         "outputs": outputs,
         "python": {
-            "requires": ">=3.11",
+            "requires": ">=3.11,<3.14",
             "stdlib_only": True,
             "validated_minor_versions": list(VALIDATED_PYTHON_MINORS),
         },

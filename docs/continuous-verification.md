@@ -5,9 +5,15 @@ compatibility, committed visual evidence, and installable distributions. The
 workflow never calls the locked evaluator, publication `run`, motion `record`,
 or host-dependent publication preflight.
 
+The supported runtime contract is Python 3.11 through 3.13
+(`>=3.11,<3.14`). Python 3.14 is intentionally excluded because its
+standard-library inverse-normal implementation does not preserve the locked
+evaluator's existing canonical vector; this bounded compatibility contract does
+not rewrite that vector or silently accept a different result.
+
 ```mermaid
 flowchart LR
-    C["Exact checkout<br/>read-only token"] --> Q["Quality matrix<br/>Python 3.11–3.14"]
+    C["Exact checkout<br/>read-only token"] --> Q["Quality matrix<br/>Python 3.11–3.13"]
     C --> E["Four check-only<br/>evidence pipelines"]
     C --> S["sdist<br/>complete source + evidence"]
     S --> W1["wheel A<br/>built from sdist"]
@@ -23,7 +29,7 @@ flowchart LR
 
 | Job | Runs | Fails when |
 | --- | --- | --- |
-| Python quality matrix | Python 3.11, 3.12, 3.13, and 3.14 on Ubuntu 24.04; pinned Ruff, formatting, strict mypy, compileall, the complete unittest suite, and branch coverage | A supported interpreter differs, static analysis fails, a test fails, coverage falls below 90%, or a check changes tracked source |
+| Python quality matrix | Python 3.11, 3.12, and 3.13 on Ubuntu 24.04; pinned Ruff, formatting, strict mypy, compileall, the complete unittest suite, and branch coverage | A supported interpreter differs, static analysis fails, a test fails, coverage falls below 90%, or a check changes tracked source |
 | Reproducible evidence | The source-derived, offline replay, terminal-capture, and real CLI motion pipelines in check-only mode | Any declared input, output byte, manifest, frame, transcript, or claim boundary differs |
 | Distribution integrity | A source archive, its wheel, an independent direct wheel, safe archive verification, extracted-source tests/evidence, and a fresh-venv CLI workflow | Inventory, source bytes, metadata, `RECORD`, entry point, runtime dependency boundary, wheel bytes, storage mode, or path-disclosure contract differs |
 

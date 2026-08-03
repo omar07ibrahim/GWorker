@@ -7,7 +7,7 @@ name = "gworker-focus"
 version = "0.1.0"
 description = "A local-first, event-sourced engine for adaptive focus experiments"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 authors = [
     { name = "Omar Ibrahim", email = "31526072+omar07ibrahim@users.noreply.github.com" },
 ]

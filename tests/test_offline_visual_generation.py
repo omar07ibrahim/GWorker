@@ -380,6 +380,14 @@ class OfflineReplayVisualBundleTests(unittest.TestCase):
             payload["schema_version"],
             "gworker-offline-visual-manifest-v1",
         )
+        self.assertEqual(
+            payload["python"],
+            {
+                "requires": ">=3.11,<3.14",
+                "stdlib_only": True,
+                "validated_minor_versions": ["3.11", "3.12", "3.13"],
+            },
+        )
         observations = payload["observations"]
         self.assertIsInstance(observations, dict)
         assert isinstance(observations, dict)

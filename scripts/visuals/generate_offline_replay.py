@@ -35,7 +35,7 @@ GENERATION_COMMAND: Final = (
     "PYTHONPATH=src python3 -m scripts.visuals.generate_offline_replay"
 )
 CHECK_COMMAND: Final = f"{GENERATION_COMMAND} --check"
-VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12")
+VALIDATED_PYTHON_MINORS: Final = ("3.11", "3.12", "3.13")
 
 INPUT_FILES: Final = (
     "README.md",
@@ -1156,7 +1156,7 @@ def build_manifest(
             for visual in visuals
         ],
         "python": {
-            "requires": ">=3.11",
+            "requires": ">=3.11,<3.14",
             "stdlib_only": True,
             "validated_minor_versions": list(VALIDATED_PYTHON_MINORS),
         },
