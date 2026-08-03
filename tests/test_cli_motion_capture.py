@@ -16,10 +16,10 @@ from PIL import Image
 from scripts.visuals import capture_cli_motion as motion
 
 TEST_ROOT = motion.ROOT / ".gworker" / "cli-motion-tests"
-COMMITTED_SOURCE_COMMIT = "828017e3a594c2b7c32365e656ac5bf4073ccbe1"
+COMMITTED_SOURCE_COMMIT = "5546df1473378cb23093562685a017161cc9f30e"
 COMMITTED_BUNDLE_SHA256 = {
     motion.EVENTS_NAME: (
-        "cbf028f4a4514deb917e98c0c88497f12acb820a85b1b1ed1e77a9564d8006ea"
+        "060b457762d2e31404e7e443d18bfce3347edc63788b0a6d79a4ab22ac8ae6af"
     ),
     motion.GIF_NAME: (
         "1b301f5adbc0df6c07f9ced259f83968a8eab9b3868cdb02791709b746e2b692"
@@ -31,7 +31,7 @@ COMMITTED_BUNDLE_SHA256 = {
         "e02708286479a90f870957e2093d2debaf5d7b0980df306e60a010b090de1976"
     ),
     motion.MANIFEST_NAME: (
-        "88b5e47f80b0b693e4681e6ef675507c59a352e78707b67af1484616f1cb5747"
+        "fdb57513e7361be782c8f41a3317ed2d9d816165e403db3fa7259253c2ecac47"
     ),
 }
 COMMITTED_BUNDLE_BYTE_COUNTS = {

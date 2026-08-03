@@ -154,7 +154,7 @@
     "width": 960
   },
   "provenance": {
-    "source_commit": "828017e3a594c2b7c32365e656ac5bf4073ccbe1",
+    "source_commit": "5546df1473378cb23093562685a017161cc9f30e",
     "source_commit_role": "clean Git commit executed by record; source bytes matched its blobs",
     "sources": [
       {
@@ -163,9 +163,9 @@
         "sha256": "6e7145000bd6d9187f3d57475adff2833c60d895d3f403b0905ff96a2775e442"
       },
       {
-        "byte_count": 1165,
+        "byte_count": 1171,
         "path": "pyproject.toml",
-        "sha256": "eafd3ec4005cd6aca3c77ef838bd15418efa801920f759cb854a3693a20e67f3"
+        "sha256": "e2db82734acb5d62303fb6d79710665ac1ebb4152f685f323d67760a93b59ea5"
       },
       {
         "byte_count": 45526,
