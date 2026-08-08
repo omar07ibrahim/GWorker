@@ -55,7 +55,7 @@
     },
     {
       "path": "scripts/visuals/generate.py",
-      "sha256": "1cc6a16ed2cd78ad090d8ae31b46c5da343c92a1dfd8e5e7ad0acf6bc15c6332"
+      "sha256": "272db148cd8d91d2b6dd20abd174ad1a10ac68c019bd569e31ff2ac9bae5f702"
     },
     {
       "path": "src/gworker/__init__.py",

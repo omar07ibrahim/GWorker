@@ -17,6 +17,7 @@ import re
 import sqlite3
 import sys
 import tempfile
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -1053,7 +1054,7 @@ def build_focus_session_linkage() -> FocusSessionLinkageEvidence:
         journal_verification = reopened.verify()
         policy_verification = reopened.verify_policy_history(policy)
         reviewed = reopened.reviewed_decisions(policy)
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection:
             stored_schema_version = int(
                 connection.execute(
                     """

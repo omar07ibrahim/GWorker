@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 import tempfile
 import unittest
 import xml.etree.ElementTree as ElementTree
 from dataclasses import fields
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 from uuid import NAMESPACE_URL, uuid5
 
@@ -45,7 +47,7 @@ FROZEN_OUTPUT_SHA256 = {
     ),
 }
 FROZEN_MANIFEST_SHA256 = (
-    "c23f58cd6413802f5f32f8c19fa82a626c22989c7fc32c7a088b9e8097fc5709"
+    "50887db0f737889bed8cdd3c7ed4238fa982e1535fe64a369ff0677d3d6e0489"
 )
 
 
@@ -467,6 +469,30 @@ class VisualDataTests(unittest.TestCase):
             ),
             (1, 3, "ok"),
         )
+
+    def test_focus_linkage_closes_every_sqlite_connection(self) -> None:
+        connections: list[sqlite3.Connection] = []
+        original_connect = sqlite3.connect
+
+        def tracked_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+            connection = original_connect(*args, **kwargs)
+            connections.append(connection)
+            return connection
+
+        with patch.object(
+            generate.sqlite3,
+            "connect",
+            side_effect=tracked_connect,
+        ):
+            generate.build_focus_session_linkage()
+
+        self.assertGreaterEqual(len(connections), 3)
+        for connection in connections:
+            with self.assertRaisesRegex(
+                sqlite3.ProgrammingError,
+                "closed database",
+            ):
+                connection.execute("SELECT 1")
 
     def test_focus_linkage_svg_is_accessible_synthetic_and_path_free(self) -> None:
         visual = generate._render_focus_session_linkage()
