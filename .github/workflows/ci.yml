@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
   push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -79,13 +80,25 @@ jobs:
   evidence:
     name: Reproducible evidence
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
 
     steps:
-      - name: Check out the exact revision
+      - name: Check out the exact source revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 1
+          ref: ${{ env.SOURCE_REVISION }}
+
+      - name: Assert the immutable source revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
+          [[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -98,14 +111,118 @@ jobs:
         run: python -m pip install --no-input -e '.[dev]'
 
       - name: Verify every committed evidence pipeline
+        id: evidence_gate
+        shell: bash
         run: |
-          PYTHONPATH=src python -B scripts/visuals/generate.py --check
-          PYTHONPATH=src python -B -m scripts.visuals.generate_offline_replay --check
-          PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check
-          PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py check
+          set -euo pipefail
+          if PYTHONPATH=src python -B scripts/visuals/generate.py --check \
+            && PYTHONPATH=src python -B -m scripts.visuals.generate_offline_replay --check \
+            && PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check \
+            && PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py check; then
+            test -z "$(git status --porcelain=v1 --untracked-files=all)"
+            echo "drift=false" >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
 
-      - name: Prove evidence checks were read-only
-        run: test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          candidate="$RUNNER_TEMP/generated-evidence-candidate"
+          install -d -m 0700 -- "$candidate/docs"
+          for name in diagrams offline terminal motion; do
+            git worktree add --detach "$RUNNER_TEMP/gworker-$name" "$SOURCE_REVISION"
+          done
+
+          (
+            cd "$RUNNER_TEMP/gworker-diagrams"
+            PYTHONPATH=src python -B scripts/visuals/generate.py
+            PYTHONPATH=src python -B scripts/visuals/generate.py --check
+          )
+          (
+            cd "$RUNNER_TEMP/gworker-offline"
+            PYTHONPATH=src python -B -m scripts.visuals.generate_offline_replay
+            PYTHONPATH=src python -B -m scripts.visuals.generate_offline_replay --check
+          )
+          (
+            cd "$RUNNER_TEMP/gworker-terminal"
+            PYTHONPATH=src python -B scripts/visuals/capture_terminal.py record
+            PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check
+          )
+          (
+            cd "$RUNNER_TEMP/gworker-motion"
+            PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py record
+            PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py check
+          )
+
+          cp -a "$RUNNER_TEMP/gworker-diagrams/docs/visuals" "$candidate/docs/"
+          cp -a "$RUNNER_TEMP/gworker-offline/docs/offline" "$candidate/docs/"
+          rm -rf "$candidate/docs/visuals/terminal" "$candidate/docs/visuals/motion"
+          cp -a "$RUNNER_TEMP/gworker-terminal/docs/visuals/terminal" \
+            "$candidate/docs/visuals/"
+          cp -a "$RUNNER_TEMP/gworker-motion/docs/visuals/motion" \
+            "$candidate/docs/visuals/"
+
+          CANDIDATE_ROOT="$candidate" python - <<'PY'
+          import os
+          import stat
+          import subprocess
+          from pathlib import Path
+
+          root = Path(os.environ["CANDIDATE_ROOT"])
+          scopes = ("docs/visuals", "docs/offline")
+          tracked_raw = subprocess.run(
+              ("git", "ls-files", "-z", "--", *scopes),
+              check=True,
+              stdout=subprocess.PIPE,
+          ).stdout
+          tracked = {
+              item.decode("utf-8", errors="strict")
+              for item in tracked_raw.split(b"\0")
+              if item
+          }
+          observed: set[str] = set()
+          changed: set[str] = set()
+          for path in root.rglob("*"):
+              mode = path.lstat().st_mode
+              if stat.S_ISLNK(mode):
+                  raise SystemExit("evidence candidate contains a symlink")
+              if stat.S_ISDIR(mode):
+                  continue
+              if not stat.S_ISREG(mode):
+                  raise SystemExit("evidence candidate contains a special file")
+              if stat.S_IMODE(mode) != 0o644:
+                  raise SystemExit("evidence candidate has non-canonical permissions")
+              relative = path.relative_to(root).as_posix()
+              observed.add(relative)
+              adopted = Path(relative)
+              if not adopted.is_file() or adopted.read_bytes() != path.read_bytes():
+                  changed.add(relative)
+          if observed != tracked:
+              raise SystemExit("evidence candidate inventory differs from tracked scope")
+          if not changed:
+              raise SystemExit("evidence candidate reports no byte drift")
+          status = subprocess.run(
+              ("git", "status", "--porcelain=v1", "--untracked-files=all"),
+              check=True,
+              stdout=subprocess.PIPE,
+          ).stdout
+          if status:
+              raise SystemExit("candidate generation changed the source checkout")
+          print(f"review candidate: {len(observed)} files; {len(changed)} changed")
+          PY
+          echo "drift=true" >>"${GITHUB_OUTPUT}"
+
+      - name: Preserve regenerated evidence for review
+        if: steps.evidence_gate.outputs.drift == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: generated-evidence-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/generated-evidence-candidate/
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 1
+
+      - name: Reject stale committed evidence
+        if: steps.evidence_gate.outputs.drift == 'true'
+        run: exit 1
 
   package:
     name: Distribution integrity
