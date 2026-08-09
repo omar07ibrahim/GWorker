@@ -947,8 +947,10 @@ def _atomic_write(path: Path, content: bytes) -> None:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
-        os.chmod(temporary, 0o644)
         os.replace(temporary, path)
+        # The staged file remains owner-only until its validated public name
+        # is installed; portfolio evidence is intentionally world-readable.
+        path.chmod(0o644)
     finally:
         with suppress(FileNotFoundError):
             temporary.unlink()

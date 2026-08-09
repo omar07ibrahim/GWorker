@@ -1251,8 +1251,10 @@ def _write_bundle(
                 stream.write(bundle[name])
                 stream.flush()
                 os.fsync(stream.fileno())
-            os.chmod(temporary, 0o644)
             os.replace(temporary, path)
+            # The staged file remains owner-only until its validated public name
+            # is installed; portfolio evidence is intentionally world-readable.
+            path.chmod(0o644)
         finally:
             if temporary.exists():
                 temporary.unlink()
