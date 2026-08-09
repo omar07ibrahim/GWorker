@@ -135,6 +135,8 @@ jobs:
             PYTHONPATH=src python -B scripts/visuals/capture_terminal.py record
             PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check
           )
+          cp -a "$RUNNER_TEMP/gworker-terminal/docs/visuals/terminal/." \
+            "$RUNNER_TEMP/gworker-offline/docs/visuals/terminal/"
           (
             cd "$RUNNER_TEMP/gworker-motion"
             PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py record
@@ -149,19 +151,19 @@ jobs:
             "$RUNNER_TEMP/gworker-diagrams/docs/visuals/terminal/"
           cp -a "$RUNNER_TEMP/gworker-motion/docs/visuals/motion/." \
             "$RUNNER_TEMP/gworker-diagrams/docs/visuals/motion/"
+          cp -a "$RUNNER_TEMP/gworker-offline/docs/offline/." \
+            "$RUNNER_TEMP/gworker-diagrams/docs/offline/"
           (
             cd "$RUNNER_TEMP/gworker-diagrams"
             PYTHONPATH=src python -B scripts/visuals/generate.py
             PYTHONPATH=src python -B scripts/visuals/generate.py --check
+            PYTHONPATH=src python -B -m scripts.visuals.generate_offline_replay --check
+            PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check
+            PYTHONPATH=src python -B scripts/visuals/capture_cli_motion.py check
           )
 
           cp -a "$RUNNER_TEMP/gworker-diagrams/docs/visuals" "$candidate/docs/"
-          cp -a "$RUNNER_TEMP/gworker-offline/docs/offline" "$candidate/docs/"
-          rm -rf "$candidate/docs/visuals/terminal" "$candidate/docs/visuals/motion"
-          cp -a "$RUNNER_TEMP/gworker-terminal/docs/visuals/terminal" \
-            "$candidate/docs/visuals/"
-          cp -a "$RUNNER_TEMP/gworker-motion/docs/visuals/motion" \
-            "$candidate/docs/visuals/"
+          cp -a "$RUNNER_TEMP/gworker-diagrams/docs/offline" "$candidate/docs/"
 
           CANDIDATE_ROOT="$candidate" python - <<'PY'
           import os
