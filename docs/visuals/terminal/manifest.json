@@ -1,6 +1,6 @@
 {
   "capture": {
-    "base_input_commit": "d7ebb45508895f2056f5b2372c63ce546918ee78",
+    "base_input_commit": "910361a6c7c60c1d2c0e7738ec4ac35a7557577b",
     "base_input_commit_role": "Git HEAD at record time; per-file hashes bind exact source bytes.",
     "environment": {
       "HOME": ".gworker/terminal-capture-runtime/home",
@@ -15,7 +15,7 @@
     },
     "interpreter": {
       "implementation": "CPython",
-      "version": "3.12.3"
+      "version": "3.12.13"
     },
     "normalization": {
       "absolute_paths": "<REPO> or <RUNTIME>",
@@ -470,7 +470,7 @@
       ],
       "capture_id": "publication-preflight",
       "description": "Real path-free output from the read-only resource preflight. Capacity is an observation from the capture host, not a portable success claim, and no publication run or evaluator is invoked.",
-      "exit_code": 2,
+      "exit_code": 0,
       "expected_exit_codes": [
         0,
         2
@@ -549,15 +549,15 @@
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "stdout": {
-        "byte_count": 267,
+        "byte_count": 221,
         "path": "docs/visuals/terminal/publication-preflight.txt",
-        "sha256": "8677e9cc814e4c030468f2e854f65498efeea77094718877961e23a9997c581a"
+        "sha256": "00fef974627c434404d5e64163132e03a4a9aeb3150df1a29f11192b29805b9b"
       },
       "title": "Publication gate \u00b7 capacity preflight",
       "visual": {
-        "byte_count": 3445,
+        "byte_count": 3369,
         "path": "docs/visuals/terminal/publication-preflight.svg",
-        "sha256": "cfd0c32abe01f9564e9a042987126fe21b21412a6da0fd689c61b07731234813"
+        "sha256": "555a259640293f30c8458041476d088ce15eaef234fa71a7a43ed2e36c24bb1d"
       }
     }
   ],
@@ -579,9 +579,9 @@
   "tool": {
     "name": "gworker-terminal-capture",
     "source": {
-      "byte_count": 48618,
+      "byte_count": 49829,
       "path": "scripts/visuals/capture_terminal.py",
-      "sha256": "79a4712e030e576919d1c2ec98931c8020ce7a9f631ce3b970ac4275bcdc29ff"
+      "sha256": "c47849ee40a25e96d97c6972b37b972d1fa5378c55ed12203ced73fa1bb4a361"
     },
     "stdlib_only": true,
     "version": "4"

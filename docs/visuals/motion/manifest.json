@@ -9,7 +9,7 @@
     "durable-policy-workflow.events.json": {
       "byte_count": 7285,
       "path": "docs/visuals/motion/durable-policy-workflow.events.json",
-      "sha256": "060b457762d2e31404e7e443d18bfce3347edc63788b0a6d79a4ab22ac8ae6af"
+      "sha256": "1a69fa39807214f879847deb05080dc685bb6bdfb5f69d0ad4ab424da540d037"
     },
     "durable-policy-workflow.gif": {
       "byte_count": 268393,
@@ -49,7 +49,7 @@
     "width": 960
   },
   "provenance": {
-    "source_commit": "5546df1473378cb23093562685a017161cc9f30e",
+    "source_commit": "910361a6c7c60c1d2c0e7738ec4ac35a7557577b",
     "source_commit_role": "clean Git commit executed by record; source bytes matched its blobs",
     "sources": [
       {
@@ -63,9 +63,9 @@
         "sha256": "e2db82734acb5d62303fb6d79710665ac1ebb4152f685f323d67760a93b59ea5"
       },
       {
-        "byte_count": 45526,
+        "byte_count": 45678,
         "path": "scripts/visuals/capture_cli_motion.py",
-        "sha256": "92a83277240e3718792f0e2b4889218f21b704d743be4f993b8f014b374da7c4"
+        "sha256": "c88d302f478ce824793c10e44523c300fe8cf706c42dd41aff3fb721791e71c7"
       },
       {
         "byte_count": 1943,

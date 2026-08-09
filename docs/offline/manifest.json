@@ -17,9 +17,9 @@
       "sha256": "a9ee8b91f58c9de722af42f832485ed05fea346cb9ec344febd71e7fc19d0681"
     },
     {
-      "byte_count": 21177,
+      "byte_count": 21178,
       "path": "docs/visuals/terminal/manifest.json",
-      "sha256": "60466c10d6ead3d01deeb7e60ae200bf6bd9b2c31e0b85dec52eca9af90fdeae"
+      "sha256": "f3fcaea19403c28988adc4b75ba48a69ad0fbab28c04abb93714406457794db1"
     },
     {
       "byte_count": 5878,
@@ -47,9 +47,9 @@
       "sha256": "b7e026e77d2f7024e82e84b2178d3086991a2f5fbb60b460c11e4c45b73e95a9"
     },
     {
-      "byte_count": 43409,
+      "byte_count": 43553,
       "path": "scripts/visuals/generate_offline_replay.py",
-      "sha256": "641450d35cc2fc28c3dee20a5fd40d53eef56791c8b281f50d42d90536e7670e"
+      "sha256": "7e150e09b37c3bb3320850fb321aff257ef9c7a92b757a407ee521099938f9da"
     },
     {
       "byte_count": 1943,

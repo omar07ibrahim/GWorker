@@ -35,7 +35,7 @@
     },
     {
       "path": "docs/visuals/terminal/manifest.json",
-      "sha256": "60466c10d6ead3d01deeb7e60ae200bf6bd9b2c31e0b85dec52eca9af90fdeae"
+      "sha256": "f3fcaea19403c28988adc4b75ba48a69ad0fbab28c04abb93714406457794db1"
     },
     {
       "path": "pyproject.toml",
@@ -51,7 +51,7 @@
     },
     {
       "path": "scripts/visuals/capture_terminal.py",
-      "sha256": "79a4712e030e576919d1c2ec98931c8020ce7a9f631ce3b970ac4275bcdc29ff"
+      "sha256": "c47849ee40a25e96d97c6972b37b972d1fa5378c55ed12203ced73fa1bb4a361"
     },
     {
       "path": "scripts/visuals/generate.py",
