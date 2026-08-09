@@ -549,13 +549,39 @@ def _head_commit() -> str:
     return commit
 
 
+def _ensure_private_directory(path: Path) -> None:
+    try:
+        path.mkdir(mode=0o700, parents=False, exist_ok=True)
+        flags = os.O_RDONLY
+        if hasattr(os, "O_DIRECTORY"):
+            flags |= os.O_DIRECTORY
+        if hasattr(os, "O_CLOEXEC"):
+            flags |= os.O_CLOEXEC
+        if hasattr(os, "O_NOFOLLOW"):
+            flags |= os.O_NOFOLLOW
+        descriptor = os.open(path, flags)
+        try:
+            metadata = os.fstat(descriptor)
+            if not stat.S_ISDIR(metadata.st_mode):
+                raise CaptureError("terminal runtime component is not a directory")
+            if metadata.st_uid != os.geteuid():
+                raise CaptureError("terminal runtime component is not user-owned")
+            os.fchmod(descriptor, 0o700)
+            if stat.S_IMODE(os.fstat(descriptor).st_mode) != 0o700:
+                raise CaptureError("terminal runtime component is not private")
+        finally:
+            os.close(descriptor)
+    except CaptureError:
+        raise
+    except OSError as error:
+        raise CaptureError("cannot prepare private terminal runtime") from error
+
+
 def _minimal_environment() -> dict[str, str]:
     home = RUNTIME_ROOT / "home"
     temporary = RUNTIME_ROOT / "tmp"
-    home.mkdir(mode=0o700, parents=True, exist_ok=True)
-    temporary.mkdir(mode=0o700, parents=True, exist_ok=True)
-    os.chmod(home, 0o700)
-    os.chmod(temporary, 0o700)
+    for directory in (ROOT / ".gworker", RUNTIME_ROOT, home, temporary):
+        _ensure_private_directory(directory)
     return {
         "HOME": str(home),
         "LANG": "C",
