@@ -39,7 +39,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "e2db82734acb5d62303fb6d79710665ac1ebb4152f685f323d67760a93b59ea5"
+      "sha256": "d653904372d3a63998621f318465f1738fe2edaa88a968f5b07951a3ce97374b"
     },
     {
       "path": "scripts/demo_journal.py",
