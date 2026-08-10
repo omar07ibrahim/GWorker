@@ -39,11 +39,11 @@ def _wheel_files() -> dict[str, bytes]:
         f"Requires-Python: {config.metadata_requires_python}\n"
         "Provides-Extra: dev\n"
         'Requires-Dist: build==1.5.0; extra == "dev"\n'
-        'Requires-Dist: coverage[toml]==7.15.2; extra == "dev"\n'
+        'Requires-Dist: coverage[toml]==7.15.4; extra == "dev"\n'
         'Requires-Dist: mypy==2.3.0; extra == "dev"\n'
         'Requires-Dist: Pillow==12.3.0; extra == "dev"\n'
         'Requires-Dist: pip-audit==2.10.1; extra == "dev"\n'
-        'Requires-Dist: ruff==0.16.0; extra == "dev"\n'
+        'Requires-Dist: ruff==0.16.1; extra == "dev"\n'
         "\n"
     ).encode()
     files.update(

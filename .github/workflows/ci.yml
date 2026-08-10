@@ -132,7 +132,9 @@ jobs:
 
           (
             cd "$RUNNER_TEMP/gworker-terminal"
-            PYTHONPATH=src python -B scripts/visuals/capture_terminal.py record
+            if ! PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check; then
+              PYTHONPATH=src python -B scripts/visuals/capture_terminal.py record
+            fi
             PYTHONPATH=src python -B scripts/visuals/capture_terminal.py check
           )
           cp -a "$RUNNER_TEMP/gworker-terminal/docs/visuals/terminal/." \
