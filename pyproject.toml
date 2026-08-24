@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==83.0.0"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,10 +25,10 @@ gworker = "gworker.cli:main"
 dev = [
     "build==1.5.0",
     "coverage[toml]==7.15.4",
-    "mypy==2.3.0",
+    "mypy==2.3.1",
     "Pillow==12.3.0",
     "pip-audit==2.10.1",
-    "ruff==0.16.1",
+    "ruff==0.16.4",
 ]
 
 [tool.setuptools.packages.find]
